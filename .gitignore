@@ -1,6 +1,9 @@
 # ========================
-# Python
+# Backend
 # ========================
+
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -8,9 +11,8 @@ __pycache__/
 *.pyd
 *.pyc
 
-# ========================
+
 # Virtual Environments
-# ========================
 .env
 .venv
 env/
@@ -19,29 +21,25 @@ ENV/
 env.bak/
 venv.bak/
 
-# ========================
+
 # Environment Variables
-# ========================
 .env
 .env.*
 !.env.example
 
-# ========================
+
 # FastAPI / Uvicorn
-# ========================
 *.log
 logs/
 
-# ========================
+
 # Database
-# ========================
 *.db
 *.sqlite
 *.sqlite3
 
-# ========================
+
 # Distribution / Packaging
-# ========================
 dist/
 build/
 *.egg-info/
@@ -51,9 +49,8 @@ wheels/
 pip-wheel-metadata/
 MANIFEST
 
-# ========================
+
 # Testing
-# ========================
 .pytest_cache/
 .coverage
 htmlcov/
@@ -63,17 +60,15 @@ coverage.xml
 nosetests.xml
 test-results/
 
-# ========================
+
 # Type Checking
-# ========================
 .mypy_cache/
 .dmypy.json
 dmypy.json
 .pytype/
 
-# ========================
+
 # IDE / Editors
-# ========================
 .vscode/
 .idea/
 *.swp
@@ -82,40 +77,65 @@ dmypy.json
 .DS_Store
 Thumbs.db
 
-# ========================
+
 # Docker
-# ========================
 .dockerignore
 
-# ========================
+
 # Alembic (migrations)
-# ========================
 alembic/versions/*.pyc
 
-# ========================
+
 # Celery
-# ========================
 celerybeat-schedule
 celerybeat.pid
 
-# ========================
+
 # Static / Media Files
-# ========================
 static/
 media/
 uploads/
 
-# ========================
+
 # Jupyter Notebooks
-# ========================
 .ipynb_checkpoints/
 *.ipynb
 
-# ========================
+
 # Misc
-# ========================
 *.bak
 *.tmp
 *.orig
 .cache/
 backend/app/__pycache__/main.cpython-312.pyc
+
+
+# ========================
+# Frontend
+# ========================
+
+# node_modules
+node_modules/
+
+# Vite cache
+.vite/
+vite.config.ts.timestamp-*?
+
+# npm / yarn lock leftovers
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# Config caches
+.eslintcache
+.tsbuildinfo
+
+# Local environment files
+.env.local
+.env.*.local
+
+# Editor configs
+*.tsbuildinfo
+*.eslintcache
