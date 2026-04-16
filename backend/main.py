@@ -61,7 +61,13 @@ setup_cors(
 
 
 register_middlewares(app)
-register_exception_handlers(app)
+
+# -------------------------------------------------------------
+# Exception Handlers
+# -------------------------------------------------------------
+register_exception_handlers(app=app, logger=logger)
+
+
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 
