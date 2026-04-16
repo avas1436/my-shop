@@ -46,8 +46,20 @@ app = FastAPIOffline(
     lifespan=lifespan,
 )
 
+# -------------------------------------------------------------
+# CORS
+# -------------------------------------------------------------
+setup_cors(
+    app=app,
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
+    expose_headers=settings.cors_expose_headers,
+    max_age=settings.cors_max_age,
+)
 
-setup_cors(app)
+
 register_middlewares(app)
 register_exception_handlers(app)
 app.include_router(api_router, prefix=settings.api_v1_prefix)

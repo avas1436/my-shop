@@ -39,7 +39,15 @@ class Settings(BaseSettings):
     redoc_url: str = "redoc"
     api_v1_prefix: str = "/api/v1"
 
-    allowed_origins: list[str] = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    # cors middleware
+    cors_origins: list[str] = ["https://myapp.com"]
+    cors_allow_methods: list[str] = ["GET", "POST", "OPTIONS"]
+    cors_allow_headers: list[str] = ["Authorization", "Content-Type"]
+    cors_expose_headers: list[str] = ["X-Request-ID"]
+    cors_allow_credentials: bool = True
+    cors_max_age: int = 600  # کش مرورگر
+
+    # trusted_hosts
     trusted_hosts: list[str] = Field(default=["localhost", "127.0.0.1"])
 
     # database settings
@@ -63,7 +71,6 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
-    cors_origins: list[str] = ["*"]
 
     model_config = SettingsConfigDict(
         env_file=env_file_name,
