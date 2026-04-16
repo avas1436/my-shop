@@ -60,7 +60,11 @@ setup_cors(
 )
 
 
-register_middlewares(app)
+# -------------------------------------------------------------
+# MiddleWares
+# -------------------------------------------------------------
+register_middlewares(app=app, trusted_host=settings.trusted_hosts)
+
 
 # -------------------------------------------------------------
 # Exception Handlers
