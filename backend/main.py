@@ -9,7 +9,7 @@ from app.core.exceptions import register_exception_handlers
 from app.core.middlewares import register_middlewares
 from app.core.redis import RedisController
 from app.core.database import engine
-from app.migrations.env import run_migrations
+from app.migrations.migration import run_migrations
 
 
 # -------------------------------------------------------------
@@ -82,7 +82,7 @@ async def lifespan(app: FastAPI):
 # -------------------------------------------------------------
 def create_app() -> FastAPI:
     settings = get_settings()
-    logger = setup_logger()
+    logger = setup_logger(level=settings.log_level)
 
     # -------------------------------------------------------------
     # Create App instance

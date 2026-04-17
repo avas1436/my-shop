@@ -77,15 +77,15 @@ def _run_sync_migrations(connection: Connection) -> None:
 # -------------------------------
 # تابعی که خودت از main.py صدا میزنی
 # -------------------------------
-async def run_migrations():
-    """
-    Manually run Alembic migrations from inside the application (e.g., FastAPI lifespan).
-    Uses the same logic Alembic CLI uses.
-    """
-    if context.is_offline_mode():
-        run_migrations_offline()
-    else:
-        await run_migrations_online()
+# async def run_migrations():
+#     """
+#     Manually run Alembic migrations from inside the application (e.g., FastAPI lifespan).
+#     Uses the same logic Alembic CLI uses.
+#     """
+#     if context.is_offline_mode():
+#         run_migrations_offline()
+#     else:
+#         await run_migrations_online()
 
 
 # -------------------------------
