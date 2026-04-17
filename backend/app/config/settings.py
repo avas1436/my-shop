@@ -6,8 +6,8 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # خواندن نام محیط از سیستم عامل
-env_state = os.getenv("env", "dev")
-env_file_name = f".env.{env_state}" if env_state != "dev" else ".env"
+# env_state = os.getenv("env", "dev")
+# env_file_name = f".env.{env_state}" if env_state != "dev" else ".env"
 
 
 class Environment(str, Enum):
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
 
     # environment of running app
-    environment: Environment = Field(
+    env: Environment = Field(
         default=Environment.development, description="محیط اجرای توسعه یا محصول نهایی"
     )
 
@@ -73,7 +73,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     model_config = SettingsConfigDict(
-        env_file=env_file_name,
+        env_file=".env.dev",
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
