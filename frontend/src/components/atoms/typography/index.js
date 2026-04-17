@@ -1,5 +1,0 @@
-export { default as BaseHeading } from './BaseHeading.vue'
-export { default as BaseText } from './BaseText.vue'
-export { default as BaseLabel } from './BaseLabel.vue'
-export { default as BaseBadge } from './BaseBadge.vue'
-export { default as BasePriceTag } from './BasePriceTag.vue'
