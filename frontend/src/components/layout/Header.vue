@@ -3,7 +3,7 @@
     <div class="container mx-auto flex items-center justify-between p-4">
 
       <!-- Right (Logo) -->
-      <div class="flex items-center gap-3">
+      <div class="header-logo">
         <img src='@/assets/images/logo.jpg' class="w-10" alt="logo" />
       </div>
 
