@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+# Dynamically add project root directory to Python path
+ROOT_DIR = Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT_DIR))
+
 import asyncio
 from logging.config import fileConfig
 
