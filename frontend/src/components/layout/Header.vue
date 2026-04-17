@@ -2,7 +2,9 @@
   <header class="site-header">
     <div class="header-top">
       <div class="container header-top__inner">
-        <span>ارسال رایگان برای سفارش‌های بالای ۳۰ میلیون تومان</span>
+        <span>
+ارسال رایگان برای سفارش بالای 2 ملیون تومان
+        </span>
         <div class="header-top__meta">
           <span>پشتیبانی ۲۴ ساعته</span>
           <span>ضمانت اصالت کالا</span>
