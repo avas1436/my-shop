@@ -1,16 +1,16 @@
-<script setup>
-import AppHeader from './components/layout/AppHeader.vue'
-import AppFooter from './components/layout/AppFooter.vue'
-</script>
-
 <template>
-  <div class="min-h-screen flex flex-col">
-    <AppHeader />
+  <div class="min-h-screen bg-gray-50 text-gray-800">
+    <Header />
 
-    <main class="flex-1 container mx-auto p-4">
+    <main class="pt-20 pb-10">
       <router-view />
     </main>
 
-    <AppFooter />
+    <Footer />
   </div>
 </template>
+
+<script setup>
+import Header from './components/layout/Header.vue'
+import Footer from './components/layout/Footer.vue'
+</script>

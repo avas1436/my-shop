@@ -1,27 +1,43 @@
 <template>
-  <header class="shadow bg-white p-4 sticky top-0 z-50">
-    <div class="container mx-auto flex justify-between items-center">
-      <div class="text-xl font-bold">فروشگاه من</div>
+  <header class="fixed top-0 right-0 left-0 bg-white border-b shadow-sm z-50">
+    <div class="container mx-auto flex items-center justify-between p-4">
 
-      <nav class="hidden md:flex gap-6">
-        <RouterLink to="/">خانه</RouterLink>
-        <RouterLink to="/products">محصولات</RouterLink>
-        <RouterLink to="/cart">سبد خرید</RouterLink>
-      </nav>
+      <!-- Right (Logo) -->
+      <div class="flex items-center gap-3">
+        <img src="/logo.png" class="w-10" alt="logo" />
+      </div>
 
-      <button class="md:hidden" @click="toggleMenu">☰</button>
+      <!-- Search (Desktop) -->
+      <div class="hidden md:block flex-1 px-6">
+        <BaseInput placeholder="جستجو محصول…" />
+      </div>
+
+      <!-- Left Icons -->
+      <div class="flex items-center gap-4">
+        <button @click="toggleMiniCart">
+          🛒
+        </button>
+
+        <!-- Mobile Menu -->
+        <button class="md:hidden" @click="toggleMobile">
+          ☰
+        </button>
+      </div>
     </div>
 
-    <div v-if="menuOpen" class="md:hidden mt-2 p-4 bg-gray-100">
-      <RouterLink class="block mb-2" to="/">خانه</RouterLink>
-      <RouterLink class="block mb-2" to="/products">محصولات</RouterLink>
-      <RouterLink class="block mb-2" to="/cart">سبد خرید</RouterLink>
-    </div>
+    <MiniCart />
+    <MobileNav />
   </header>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-const menuOpen = ref(false)
-const toggleMenu = () => (menuOpen.value = !menuOpen.value)
+import { useUIStore } from '@/stores/uiStore'
+import BaseInput from '../base/BaseInput.vue'
+import MiniCart from './MiniCart.vue'
+import MobileNav from './MobileNav.vue'
+
+const ui = useUIStore()
+
+const toggleMiniCart = () => ui.toggleMiniCart()
+const toggleMobile = () => ui.toggleMobileMenu()
 </script>
