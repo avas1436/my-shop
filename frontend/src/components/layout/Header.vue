@@ -4,7 +4,7 @@
 
       <!-- Right (Logo) -->
       <div class="flex items-center gap-3">
-        <img src="/logo.png" class="w-10" alt="logo" />
+        <img src='@/assets/images/logo.jpg' class="w-10" alt="logo" />
       </div>
 
       <!-- Search (Desktop) -->
