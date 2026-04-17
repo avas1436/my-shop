@@ -130,7 +130,15 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------
     @app.get("/health", tags=["health"])
     async def healthcheck() -> dict[str, str]:
-        return {"status": "ok", "app": settings.app_name}
+        return {
+            "Status": "ok",
+            "Environment": settings.env,
+            "App": settings.app_name,
+            "App version": settings.app_version,
+            "Debug": str(settings.debug),
+            "Log Level": settings.log_level,
+            "Time Zone": settings.timezone,
+        }
 
     return app
 
