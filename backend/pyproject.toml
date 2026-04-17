@@ -10,6 +10,7 @@ dependencies = [
     "prometheus-fastapi-instrumentator>=7.1.0",
     "pydantic>=2.13.0",
     "pydantic-settings>=2.13.1",
+    "redis>=7.4.0",
     "slowapi>=0.1.9",
     "sqlalchemy>=2.0.49",
     "uvicorn>=0.44.0",

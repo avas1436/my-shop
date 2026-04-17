@@ -7,6 +7,7 @@ from app.config.logging_config import setup_logger
 from app.config.settings import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.middlewares import register_middlewares
+from app.core.redis import RedisController
 
 
 # -------------------------------------------------------------
@@ -22,15 +23,34 @@ logger = setup_logger(level=settings.log_level)
 
 
 # -------------------------------------------------------------
+# Redis
+# -------------------------------------------------------------
+redis_controller = RedisController(
+    redis_url=settings.redis_url,
+    redis_max_connections=settings.redis_max_connections,
+    redis_socket_timeout=settings.redis_socket_timeout,
+    session_prefix=settings.session_prefix,
+)
+
+
+# -------------------------------------------------------------
 # Lifespan
 # -------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("App starting...")
+
+    logger.info("App starting...")
+
+    await redis_controller.init_redis()
+    logger.info("Redis initialized")
 
     yield
 
-    print("App shouting down...")
+    logger.info("Closing Redis...")
+    await redis_controller.close_redis()
+    logger.info("Redis closed")
+
+    logger.info("App shutting down...")
 
 
 # -------------------------------------------------------------
