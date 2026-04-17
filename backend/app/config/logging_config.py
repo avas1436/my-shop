@@ -1,6 +1,8 @@
+from functools import lru_cache
 import logging
 
 
+@lru_cache
 def setup_logger(level: str):
     logging.basicConfig(
         level=getattr(logging, level.upper(), logging.INFO),
