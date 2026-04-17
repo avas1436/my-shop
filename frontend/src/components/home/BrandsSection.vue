@@ -1,30 +1,65 @@
 <template>
-  <section class="mt-10">
-    <h2 class="text-lg font-bold mb-4">برندهای محبوب</h2>
-
-    <div class="flex gap-6 overflow-x-auto no-scrollbar py-2">
-      <div
-        v-for="b in brands"
-        :key="b.id"
-        class="min-w-[90px] h-20 flex items-center justify-center bg-white shadow rounded"
-      >
-        <img :src="b.logo" class="w-14 h-14 object-contain" />
+  <section class="brands-section">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">برندهای محبوب</h2>
+        <p class="section-subtitle">ترکیبی از برندهای نوآور، خوش‌نام و پرفروش</p>
       </div>
+    </div>
+
+    <div class="brands-grid">
+      <article v-for="brand in brands" :key="brand.id" class="brand-card">
+        <img :src="brand.logo" :alt="brand.name" />
+        <strong>{{ brand.name }}</strong>
+      </article>
     </div>
   </section>
 </template>
 
 <script setup>
-const brands = [
-  { id: 1, logo: "https://via.placeholder.com/60" },
-  { id: 2, logo: "https://via.placeholder.com/60" },
-  { id: 3, logo: "https://via.placeholder.com/60" },
-  { id: 4, logo: "https://via.placeholder.com/60" }
-]
+defineProps({
+  brands: { type: Array, default: () => [] },
+})
 </script>
 
-<style>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+<style scoped>
+.brands-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.brand-card {
+  display: grid;
+  place-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+.brand-card img {
+  width: 120px;
+  height: 60px;
+  object-fit: contain;
+}
+
+@media (max-width: 980px) {
+  .brands-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .brands-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>

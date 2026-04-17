@@ -1,39 +1,32 @@
 <template>
-  <div>
-    <HeroBanner />
-
-    <CategoryCarousel class="mt-8" />
-
+  <div class="page-shell">
+    <HeroBanner :highlight="featuredProducts[0]" :side-highlights="featuredProducts.slice(1, 3)" />
+    <CategoryCarousel :categories="store.categories" />
     <ProductCarousel
-      title="پیشنهاد ویژه"
-      :products="specialProducts"
-      class="mt-12"
+      title="پیشنهادهای ویژه"
+      subtitle="محصولات منتخب با طراحی جذاب، ارزش خرید بالا و تحویل سریع"
+      :products="featuredProducts.slice(0, 4)"
     />
-
-    <PromotionBanner class="mt-12" />
-
+    <PromotionBanner />
     <ProductCarousel
       title="پرفروش‌ترین‌ها"
-      :products="bestsellers"
-      class="mt-12"
+      subtitle="پرطرفدارترین کالاها بر اساس خرید و رضایت مشتریان"
+      :products="bestsellerProducts.slice(0, 4)"
     />
-
-    <BrandsSection class="mt-12" />
-
+    <BrandsSection :brands="store.brands" />
   </div>
 </template>
 
 <script setup>
-import HeroBanner from '@/components/home/HeroBanner.vue'
+import { computed } from 'vue'
 import CategoryCarousel from '@/components/home/CategoryCarousel.vue'
+import BrandsSection from '@/components/home/BrandsSection.vue'
+import HeroBanner from '@/components/home/HeroBanner.vue'
 import ProductCarousel from '@/components/home/ProductCarousel.vue'
 import PromotionBanner from '@/components/home/PromotionBanner.vue'
-import BrandsSection from '@/components/home/BrandsSection.vue'
+import { useProductsStore } from '@/stores/products'
 
-const specialProducts = [
-  { id: 1, title: 'محصول A', price: 120000, image: '/p1.jpg' },
-  { id: 2, title: 'محصول B', price: 180000, image: '/p2.jpg' }
-]
-
-const bestsellers = specialProducts
+const store = useProductsStore()
+const featuredProducts = computed(() => store.featuredProducts)
+const bestsellerProducts = computed(() => store.bestsellerProducts)
 </script>

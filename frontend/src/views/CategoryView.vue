@@ -1,45 +1,79 @@
 <template>
-  <div class="container mx-auto p-4">
+  <div class="page-shell">
+    <section class="page-panel page-hero">
+      <span class="pill">دسته‌بندی</span>
+      <h1 class="page-title">{{ category?.title || 'دسته‌بندی نامشخص' }}</h1>
+      <p class="page-description">{{ category?.description || 'محصولات مرتبط با این دسته را ببینید.' }}</p>
+    </section>
 
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-lg font-bold">محصولات دسته‌بندی</h1>
+    <section v-if="category" class="page-panel category-panel">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">مرور محصولات</h2>
+          <p class="section-subtitle">{{ filteredProducts.length }} محصول در این دسته موجود است</p>
+        </div>
 
-      <select v-model="sort" class="border rounded p-2 text-sm">
-        <option value="new">جدیدترین</option>
-        <option value="cheap">ارزان‌ترین</option>
-        <option value="expensive">گران‌ترین</option>
-      </select>
-    </div>
-
-    <!-- Layout -->
-    <div class="flex gap-6">
-
-      <!-- Filters Desktop -->
-      <aside class="hidden lg:block w-64 bg-white p-4 rounded shadow">
-        <h3 class="font-bold mb-2">فیلتر قیمت</h3>
-        <input type="range" class="w-full" />
-
-        <h3 class="font-bold mt-6 mb-2">موجودی</h3>
-        <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" /> فقط موجود
-        </label>
-      </aside>
-
-      <!-- Products -->
-      <div class="flex-1">
-        <ProductGrid :products="products" />
+        <select v-model="sort" class="category-select">
+          <option value="new">جدیدترین</option>
+          <option value="cheap">ارزان‌ترین</option>
+          <option value="expensive">گران‌ترین</option>
+          <option value="rating">بالاترین امتیاز</option>
+        </select>
       </div>
-    </div>
 
+      <ProductGrid :products="filteredProducts" />
+    </section>
+
+    <section v-else class="empty-state">
+      دسته‌بندی موردنظر پیدا نشد.
+    </section>
   </div>
 </template>
 
 <script setup>
+import { computed, ref } from 'vue'
 import ProductGrid from '@/components/product/ProductGrid.vue'
-import { useProductStore } from '@/stores/cartStore'
+import { useProductsStore } from '@/stores/products'
+import { useRoute } from 'vue-router'
 
-const productStore = useProductStore()
-const products = productStore.products
 const sort = ref('new')
+const route = useRoute()
+const productStore = useProductsStore()
+
+const category = computed(() => productStore.getCategoryById(route.params.id))
+const filteredProducts = computed(() => {
+  const products = [...productStore.getByCategory(route.params.id)]
+
+  switch (sort.value) {
+    case 'cheap':
+      products.sort((left, right) => left.price - right.price)
+      break
+    case 'expensive':
+      products.sort((left, right) => right.price - left.price)
+      break
+    case 'rating':
+      products.sort((left, right) => right.rating - left.rating)
+      break
+    default:
+      products.sort((left, right) => Number(right.flags.newest) - Number(left.flags.newest))
+      break
+  }
+
+  return products
+})
 </script>
+
+<style scoped>
+.category-panel {
+  padding: 1.5rem;
+}
+
+.category-select {
+  min-height: 48px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  padding: 0 1rem;
+  color: var(--text);
+}
+</style>

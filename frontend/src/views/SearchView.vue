@@ -1,20 +1,37 @@
 <template>
-  <div class="container mx-auto p-4">
+  <div class="page-shell">
+    <section class="page-panel page-hero">
+      <span class="pill">جستجو</span>
+      <h1 class="page-title">نتایج برای "{{ query || 'همه محصولات' }}"</h1>
+      <p class="page-description">
+        {{ results.length }} نتیجه پیدا شد. می‌توانید از هدر سایت عبارت جدیدی جستجو کنید.
+      </p>
+    </section>
 
-    <h1 class="text-lg font-bold mb-4">
-      نتایج جستجو برای "{{ route.query.q }}"
-    </h1>
+    <section v-if="results.length" class="page-panel search-panel">
+      <ProductGrid :products="results" />
+    </section>
 
-    <ProductGrid :products="results" />
+    <section v-else class="empty-state">
+      نتیجه‌ای برای عبارت جستجو پیدا نشد.
+    </section>
   </div>
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router'
+import { computed } from 'vue'
 import ProductGrid from '@/components/product/ProductGrid.vue'
-import { useProductStore } from '@/stores/productStore'
+import { useProductsStore } from '@/stores/products'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const productStore = useProductStore()
-const results = productStore.search(route.query.q)
+const productStore = useProductsStore()
+const query = computed(() => route.query.q || '')
+const results = computed(() => productStore.search(query.value))
 </script>
+
+<style scoped>
+.search-panel {
+  padding: 1.5rem;
+}
+</style>

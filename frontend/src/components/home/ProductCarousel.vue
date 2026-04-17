@@ -1,32 +1,61 @@
 <template>
-  <section class="mt-10">
-    <h2 class="text-lg font-bold mb-4">{{ title }}</h2>
-
-    <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-
-      <div
-        v-for="p in products"
-        :key="p.id"
-        class="min-w-[160px] bg-white shadow rounded p-3 cursor-pointer hover:shadow-lg transition"
-      >
-        <img :src="p.image" class="w-full h-32 object-cover rounded mb-3" />
-        <h3 class="text-sm font-medium mb-1 line-clamp-2">{{ p.title }}</h3>
-        <p class="text-blue-600 font-bold text-sm">{{ p.price }} تومان</p>
+  <section class="carousel-section">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">{{ title }}</h2>
+        <p class="section-subtitle">{{ subtitle }}</p>
       </div>
+      <router-link to="/products" class="carousel-section__link">مشاهده همه</router-link>
+    </div>
 
+    <div class="carousel-grid">
+      <ProductCard v-for="product in products" :key="product.id" :product="product" />
     </div>
   </section>
 </template>
 
 <script setup>
+import ProductCard from '@/components/product/ProductCard.vue'
+
 defineProps({
-  title: { type: String, default: "محصولات" },
-  products: { type: Array, default: () => [] }
+  title: { type: String, default: 'محصولات' },
+  subtitle: { type: String, default: '' },
+  products: { type: Array, default: () => [] },
 })
 </script>
 
-<style>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+<style scoped>
+.carousel-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.carousel-section__link {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.carousel-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .carousel-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .carousel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .carousel-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
