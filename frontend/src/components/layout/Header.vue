@@ -24,7 +24,8 @@
 
         <form class="header-search" @submit.prevent="submitSearch">
           <span class="header-search__icon">⌕</span>
-          <BaseInput v-model="searchQuery" placeholder="جستجوی موبایل، لپ‌تاپ، هدفون و..." />
+          <BaseInput v-model="searchQuery"
+          placeholder=" جستجوی کالای مورد نظر ... " />
         </form>
 
         <div class="header-actions">
@@ -88,7 +89,6 @@ watch(
 
 <style scoped>
 .site-header {
-  position: sticky;
   top: 0;
   z-index: 50;
   backdrop-filter: blur(18px);
