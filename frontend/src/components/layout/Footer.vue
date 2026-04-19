@@ -2,10 +2,10 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <section>
-        <h3>ShopVerse</h3>
+        <h3>{{ admin.settings.storeName }}</h3>
         <p>
-          تجربه‌ی یک فروشگاه آنلاین زیبا، سریع و مطمئن با تمرکز روی کالاهای باکیفیت و
-          ارسال سریع.
+          تجربه‌ی یک فروشگاه آنلاین زیبا، سریع و مطمئن با تمرکز روی کالاهای باکیفیت،
+          پشتیبانی پاسخ‌گو و تحویل سریع.
         </p>
       </section>
 
@@ -14,8 +14,8 @@
         <nav class="footer-links">
           <router-link to="/">خانه</router-link>
           <router-link to="/products">فروشگاه</router-link>
-          <router-link to="/cart">سبد خرید</router-link>
-          <router-link to="/profile">حساب کاربری</router-link>
+          <router-link to="/support">پشتیبانی</router-link>
+          <router-link to="/admin">پنل ادمین</router-link>
         </nav>
       </section>
 
@@ -23,18 +23,28 @@
         <h4>اعتماد و پشتیبانی</h4>
         <ul class="footer-points">
           <li>هفت روز ضمانت بازگشت</li>
-          <li>پشتیبانی تلفنی و آنلاین</li>
-          <li>پرداخت امن و سریع</li>
+          <li>{{ admin.settings.supportPhone }}</li>
+          <li>{{ admin.settings.supportEmail }}</li>
         </ul>
       </section>
     </div>
 
     <div class="container footer-bottom">
-      <span>© ۱۴۰۵ ShopVerse — تمامی حقوق محفوظ است.</span>
-      <span>طراحی شده برای یک تجربه‌ی خرید لوکس و ساده</span>
+      <span>© ۱۴۰۵ {{ admin.settings.storeName }} — تمامی حقوق محفوظ است.</span>
+      <span>{{ admin.settings.fulfillmentWindow }}</span>
     </div>
   </footer>
 </template>
+
+<script setup>
+import { useAdminStore } from '@/stores/adminStore'
+
+defineOptions({
+  name: 'SiteFooter',
+})
+
+const admin = useAdminStore()
+</script>
 
 <style scoped>
 .site-footer {

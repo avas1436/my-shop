@@ -3,6 +3,7 @@
     <router-link :to="`/product/${product.id}`" class="product-card__image-wrap">
       <img :src="product.image" :alt="product.title" class="product-card__image" />
       <span v-if="discountPercent" class="product-card__badge">{{ discountPercent }}٪ تخفیف</span>
+      <span v-if="product.stock === 0" class="product-card__stock">ناموجود</span>
     </router-link>
 
     <div class="product-card__content">
@@ -27,7 +28,9 @@
           <strong class="price">{{ formatPrice(product.price) }}</strong>
           <div v-if="product.oldPrice" class="price-old">{{ formatPrice(product.oldPrice) }}</div>
         </div>
-        <BaseButton size="sm" @click="addToCart">افزودن</BaseButton>
+        <BaseButton size="sm" :disabled="product.stock === 0" @click="addToCart">
+          {{ product.stock === 0 ? 'ناموجود' : 'افزودن' }}
+        </BaseButton>
       </div>
     </div>
   </article>
@@ -87,16 +90,26 @@ function addToCart() {
   border-radius: 24px;
 }
 
-.product-card__badge {
+.product-card__badge,
+.product-card__stock {
   position: absolute;
   top: 0.85rem;
   right: 0.85rem;
-  background: rgba(239, 68, 68, 0.92);
   color: #fff;
   padding: 0.35rem 0.6rem;
   border-radius: 999px;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+.product-card__badge {
+  background: rgba(239, 68, 68, 0.92);
+}
+
+.product-card__stock {
+  top: auto;
+  bottom: 0.85rem;
+  background: rgba(15, 23, 42, 0.78);
 }
 
 .product-card__content {

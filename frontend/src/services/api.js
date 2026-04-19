@@ -4,7 +4,7 @@ async function request(path, options = {}) {
   const response = await fetch(`${baseURL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(options.headers || {}),
+      ...options.headers,
     },
     ...options,
   })

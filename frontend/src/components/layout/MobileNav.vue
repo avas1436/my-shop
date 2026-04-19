@@ -7,7 +7,7 @@
         <div class="mobile-nav__header">
           <div>
             <h2>دسترسی سریع</h2>
-            <p>مسیرهای اصلی فروشگاه را یکجا ببینید.</p>
+            <p>مسیرهای اصلی فروشگاه و مدیریت را یکجا ببینید.</p>
           </div>
           <button type="button" @click="close">✕</button>
         </div>
@@ -19,8 +19,10 @@
           <router-link @click="close" to="/category/audio">صوتی و پوشیدنی</router-link>
           <router-link @click="close" to="/category/home">خانه و آشپزخانه</router-link>
           <router-link @click="close" to="/category/fashion">مد و استایل</router-link>
+          <router-link @click="close" to="/support">پشتیبانی</router-link>
           <router-link @click="close" to="/profile">پروفایل</router-link>
           <router-link @click="close" to="/cart">سبد خرید</router-link>
+          <router-link @click="close" to="/admin">پنل ادمین</router-link>
         </nav>
       </aside>
     </div>

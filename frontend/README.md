@@ -1,44 +1,26 @@
-# frontend
+# ShopVerse Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+دموی یک فروشگاه آنلاین با Vue 3 و Vite که علاوه بر صفحات فروشگاهی، یک پنل ادمین سبک
+برای مدیریت محصولات، سفارش‌ها، مشتریان و تنظیمات محتوا هم دارد.
 
-## Recommended IDE Setup
+## امکانات اصلی
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- ویترین فروشگاهی با صفحه خانه، دسته‌بندی، جست‌وجو، جزئیات محصول، سبد خرید و پروفایل
+- فرایند خرید سه‌مرحله‌ای با ثبت سفارش و صفحه موفقیت سفارش
+- پنل ادمین با داشبورد، مدیریت محصولات، سفارش‌ها، مشتریان و کمپین‌ها
+- داده‌های نمایشی با Pinia و ساختار آماده برای اتصال به API واقعی
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## راه‌اندازی
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+## اسکریپت‌ها
 
 ```sh
 npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
 npm run lint
+npm run preview
 ```

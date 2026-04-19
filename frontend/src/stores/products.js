@@ -301,11 +301,32 @@ const products = [
   },
 ]
 
+const productMeta = {
+  101: { sku: 'SV-DG-101', salesCount: 126, views: 1820, status: 'active' },
+  102: { sku: 'SV-DG-102', salesCount: 84, views: 1430, status: 'active' },
+  103: { sku: 'SV-AU-103', salesCount: 203, views: 2110, status: 'active' },
+  104: { sku: 'SV-AU-104', salesCount: 58, views: 980, status: 'active' },
+  105: { sku: 'SV-HM-105', salesCount: 92, views: 1105, status: 'active' },
+  106: { sku: 'SV-HM-106', salesCount: 39, views: 760, status: 'active' },
+  107: { sku: 'SV-FS-107', salesCount: 67, views: 870, status: 'active' },
+  108: { sku: 'SV-FS-108', salesCount: 44, views: 690, status: 'active' },
+}
+
+const categoryArtPalettes = {
+  digital: ['#5b3df5', '#8b5cf6'],
+  audio: ['#ff7a59', '#f43f5e'],
+  home: ['#0f9d81', '#14b8a6'],
+  fashion: ['#f59e0b', '#ec4899'],
+}
+
 export const useProductsStore = defineStore('products', {
   state: () => ({
     categories,
     brands,
-    products,
+    products: products.map((product) => ({
+      ...product,
+      ...productMeta[product.id],
+    })),
   }),
 
   getters: {
@@ -313,6 +334,8 @@ export const useProductsStore = defineStore('products', {
     bestsellerProducts: (state) => state.products.filter((product) => product.flags.bestseller),
     newestProducts: (state) => state.products.filter((product) => product.flags.newest),
     availableProducts: (state) => state.products.filter((product) => product.stock > 0),
+    lowStockProducts: (state) => state.products.filter((product) => product.stock > 0 && product.stock <= 5),
+    totalInventory: (state) => state.products.reduce((sum, product) => sum + product.stock, 0),
   },
 
   actions: {
@@ -341,6 +364,7 @@ export const useProductsStore = defineStore('products', {
           product.badge,
           product.shortDescription,
           product.description,
+          product.sku,
           this.getCategoryById(product.categoryId)?.title,
         ]
           .filter(Boolean)
@@ -360,6 +384,111 @@ export const useProductsStore = defineStore('products', {
       return this.products
         .filter((product) => product.categoryId === currentProduct.categoryId && product.id !== currentProduct.id)
         .slice(0, 4)
+    },
+    createProduct(payload) {
+      const nextId = Math.max(...this.products.map((product) => product.id), 100) + 1
+      const price = Number(payload.price) || 0
+      const oldPrice = Number(payload.oldPrice) || 0
+      const stock = Number(payload.stock) || 0
+      const artworkLabel = String(payload.title || 'NEW').slice(0, 12).toUpperCase()
+      const palette = categoryArtPalettes[payload.categoryId] || ['#2563eb', '#7c3aed']
+
+      const record = {
+        id: nextId,
+        title: payload.title?.trim() || 'محصول جدید فروشگاه',
+        categoryId: payload.categoryId || this.categories[0]?.id || 'digital',
+        brand: payload.brand?.trim() || 'ShopVerse',
+        badge: payload.badge?.trim() || 'جدید',
+        price,
+        oldPrice: oldPrice > price ? oldPrice : 0,
+        rating: 4.6,
+        reviewCount: 12,
+        image: createArtwork(artworkLabel, palette),
+        gallery: [
+          createArtwork(artworkLabel, palette),
+          createArtwork('DETAIL', [palette[1], palette[0]]),
+          createArtwork('STYLE', ['#0f172a', palette[0]]),
+        ],
+        stock,
+        shortDescription: payload.shortDescription?.trim() || 'محصولی تازه با آماده‌سازی سریع برای فروش.',
+        description:
+          payload.description?.trim() ||
+          'این محصول برای نسخه دمو ایجاد شده و آماده اتصال به پنل مدیریت و بک‌اند واقعی است.',
+        specs: [
+          { label: 'وضعیت', value: stock > 0 ? 'موجود در انبار' : 'نیازمند تامین' },
+          { label: 'دسته‌بندی', value: this.getCategoryById(payload.categoryId)?.title || 'متفرقه' },
+          { label: 'برند', value: payload.brand?.trim() || 'ShopVerse' },
+        ],
+        reviewHighlights: ['آماده انتشار در ویترین', 'قابل مدیریت از پنل ادمین', 'سازگار با قالب فعلی'],
+        flags: { featured: Boolean(payload.featured), bestseller: false, newest: true },
+        sku: payload.sku?.trim() || `SV-${nextId}`,
+        salesCount: 0,
+        views: 0,
+        status: stock > 0 ? 'active' : 'draft',
+      }
+
+      this.products.unshift(record)
+      return record
+    },
+    updateProduct(id, patch) {
+      const product = this.getById(id)
+
+      if (!product) {
+        return null
+      }
+
+      const nextPrice = patch.price !== undefined ? Number(patch.price) || 0 : product.price
+      const nextOldPrice = patch.oldPrice !== undefined ? Number(patch.oldPrice) || 0 : product.oldPrice
+      const nextStock = patch.stock !== undefined ? Number(patch.stock) || 0 : product.stock
+
+      Object.assign(product, {
+        ...patch,
+        price: nextPrice,
+        oldPrice: nextOldPrice > nextPrice ? nextOldPrice : 0,
+        stock: nextStock,
+        status: nextStock > 0 ? patch.status || 'active' : 'draft',
+        flags: {
+          ...product.flags,
+          ...patch.flags,
+        },
+      })
+
+      return product
+    },
+    toggleFeatured(id) {
+      const product = this.getById(id)
+
+      if (product) {
+        product.flags.featured = !product.flags.featured
+      }
+    },
+    updateStock(id, stock) {
+      const product = this.getById(id)
+
+      if (product) {
+        product.stock = Math.max(Number(stock) || 0, 0)
+        product.status = product.stock > 0 ? 'active' : 'draft'
+      }
+    },
+    incrementViews(id) {
+      const product = this.getById(id)
+
+      if (product) {
+        product.views += 1
+      }
+    },
+    reduceInventory(items = []) {
+      items.forEach((item) => {
+        const product = this.getById(item.id)
+
+        if (!product) {
+          return
+        }
+
+        product.stock = Math.max(product.stock - item.qty, 0)
+        product.salesCount += item.qty
+        product.status = product.stock > 0 ? 'active' : 'draft'
+      })
     },
   },
 })

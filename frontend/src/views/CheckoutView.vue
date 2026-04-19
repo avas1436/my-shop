@@ -17,7 +17,7 @@
             type="button"
             class="checkout-step"
             :class="{ 'checkout-step--active': step === item.id, 'checkout-step--done': step > item.id }"
-            @click="step = item.id"
+            @click="goToStep(item.id)"
           >
             <span>{{ item.id }}</span>
             {{ item.label }}
@@ -25,10 +25,15 @@
         </div>
 
         <div v-if="step === 1" class="checkout-panel">
-          <BaseInput v-model="form.name" label="نام گیرنده" placeholder="مثلاً آوا رضایی" />
-          <BaseInput v-model="form.phone" label="شماره تماس" placeholder="۰۹۱۲..." />
-          <BaseInput v-model="form.address" label="آدرس کامل" placeholder="شهر، خیابان، پلاک..." />
-          <BaseButton block @click="step = 2">ادامه به روش ارسال</BaseButton>
+          <BaseInput v-model="form.name" label="نام گیرنده" placeholder="مثلاً آوا رضایی" :error="errors.name" />
+          <BaseInput v-model="form.phone" label="شماره تماس" placeholder="۰۹۱۲..." :error="errors.phone" />
+          <BaseInput
+            v-model="form.address"
+            label="آدرس کامل"
+            placeholder="شهر، خیابان، پلاک..."
+            :error="errors.address"
+          />
+          <BaseButton block @click="continueToShipping">ادامه به روش ارسال</BaseButton>
         </div>
 
         <div v-else-if="step === 2" class="checkout-panel">
@@ -38,7 +43,7 @@
               <strong>{{ option.title }}</strong>
               <p>{{ option.description }}</p>
             </div>
-            <span>{{ option.price }}</span>
+            <span>{{ option.label }}</span>
           </label>
           <BaseButton block @click="step = 3">ادامه به پرداخت</BaseButton>
         </div>
@@ -63,11 +68,11 @@
         </div>
         <div class="checkout-summary__row">
           <span>ارسال</span>
-          <strong>{{ cart.shipping ? formatPrice(cart.shipping) : 'رایگان' }}</strong>
+          <strong>{{ selectedShippingOption.label }}</strong>
         </div>
         <div class="checkout-summary__row checkout-summary__row--total">
           <span>قابل پرداخت</span>
-          <strong>{{ formatPrice(cart.total) }}</strong>
+          <strong>{{ formatPrice(payableTotal) }}</strong>
         </div>
 
         <ul class="checkout-summary__items">
@@ -79,21 +84,27 @@
       </aside>
     </section>
 
-    <section v-else class="empty-state">
-      برای تکمیل خرید، ابتدا محصولی به سبد خرید اضافه کنید.
-    </section>
+    <section v-else class="empty-state">برای تکمیل خرید، ابتدا محصولی به سبد خرید اضافه کنید.</section>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
+import { useAdminStore } from '@/stores/adminStore'
 import { useCartStore } from '@/stores/cartStore'
+import { useProductsStore } from '@/stores/products'
+import { useUserStore } from '@/stores/userStore'
 import { formatPrice } from '@/utils/format'
 
 const step = ref(1)
+const router = useRouter()
 const cart = useCartStore()
+const user = useUserStore()
+const admin = useAdminStore()
+const products = useProductsStore()
 
 const steps = [
   { id: 1, label: 'اطلاعات گیرنده' },
@@ -102,8 +113,8 @@ const steps = [
 ]
 
 const shippingOptions = [
-  { id: 'express', title: 'ارسال اکسپرس', description: 'تحویل ۲۴ تا ۴۸ ساعته در شهرهای اصلی', price: 'رایگان' },
-  { id: 'post', title: 'پست پیشتاز', description: 'مناسب شهرهای دیگر با هزینه اقتصادی', price: '۸۹٬۰۰۰ تومان' },
+  { id: 'express', title: 'ارسال اکسپرس', description: 'تحویل ۲۴ تا ۴۸ ساعته در شهرهای اصلی', price: 0, label: 'رایگان' },
+  { id: 'post', title: 'پست پیشتاز', description: 'مناسب شهرهای دیگر با هزینه اقتصادی', price: 89000, label: '۸۹٬۰۰۰ تومان' },
 ]
 
 const paymentOptions = [
@@ -111,7 +122,13 @@ const paymentOptions = [
   { id: 'wallet', title: 'کیف پول و کارت هدیه', description: 'استفاده از اعتبار و کدهای تخفیف' },
 ]
 
-const form = ref({
+const form = reactive({
+  name: user.profile.name,
+  phone: user.profile.phone,
+  address: user.primaryAddress?.details || '',
+})
+
+const errors = reactive({
   name: '',
   phone: '',
   address: '',
@@ -120,9 +137,62 @@ const form = ref({
 const shippingMethod = ref('express')
 const paymentMethod = ref('online')
 
+const selectedShippingOption = computed(
+  () => shippingOptions.find((option) => option.id === shippingMethod.value) || shippingOptions[0],
+)
+const payableTotal = computed(() => cart.subtotal + selectedShippingOption.value.price)
+
+function validateRecipient() {
+  errors.name = form.name.trim() ? '' : 'نام گیرنده الزامی است.'
+  errors.phone = form.phone.trim() ? '' : 'شماره تماس را وارد کنید.'
+  errors.address = form.address.trim() ? '' : 'آدرس کامل را وارد کنید.'
+
+  return !errors.name && !errors.phone && !errors.address
+}
+
+function goToStep(nextStep) {
+  if (nextStep === 1) {
+    step.value = 1
+    return
+  }
+
+  if (!validateRecipient()) {
+    step.value = 1
+    return
+  }
+
+  step.value = nextStep
+}
+
+function continueToShipping() {
+  if (validateRecipient()) {
+    step.value = 2
+  }
+}
+
 function completeOrder() {
+  if (!validateRecipient()) {
+    step.value = 1
+    return
+  }
+
+  const order = admin.createOrder({
+    customerId: user.profile.customerId,
+    customerName: user.profile.name,
+    email: user.profile.email,
+    city: user.primaryAddress?.city || 'تهران',
+    items: cart.items,
+    subtotal: cart.subtotal,
+    shippingCost: selectedShippingOption.value.price,
+    total: payableTotal.value,
+    shippingMethod: shippingMethod.value,
+    paymentMethod: paymentMethod.value,
+    recipient: { ...form },
+  })
+
+  products.reduceInventory(cart.items)
   cart.clear()
-  step.value = 1
+  router.push({ name: 'order-success', params: { id: order.id } })
 }
 </script>
 
@@ -245,10 +315,7 @@ function completeOrder() {
 }
 
 @media (max-width: 640px) {
-  .checkout-steps {
-    grid-template-columns: 1fr;
-  }
-
+  .checkout-steps,
   .checkout-option {
     grid-template-columns: 1fr;
   }

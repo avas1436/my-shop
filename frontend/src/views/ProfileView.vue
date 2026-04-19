@@ -34,8 +34,8 @@
               <strong>{{ formatPrice(user.profile.wallet) }}</strong>
             </article>
             <article>
-              <span class="muted">آدرس پیش‌فرض</span>
-              <strong>{{ user.addresses[0]?.title }}</strong>
+              <span class="muted">امتیاز باشگاه مشتریان</span>
+              <strong>{{ formatNumber(user.profile.loyaltyPoints) }}</strong>
             </article>
           </div>
         </section>
@@ -43,7 +43,7 @@
         <section class="page-panel profile-card">
           <h2 class="section-title">سفارش‌های اخیر</h2>
           <div class="profile-orders">
-            <article v-for="order in user.orders" :key="order.id" class="profile-order">
+            <article v-for="order in userOrders" :key="order.id" class="profile-order">
               <div>
                 <strong>{{ order.id }}</strong>
                 <p class="muted">{{ order.date }}</p>
@@ -69,10 +69,14 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useAdminStore } from '@/stores/adminStore'
 import { useUserStore } from '@/stores/userStore'
-import { formatPrice } from '@/utils/format'
+import { formatNumber, formatPrice } from '@/utils/format'
 
 const user = useUserStore()
+const admin = useAdminStore()
+const userOrders = computed(() => admin.ordersByCustomer(user.profile.customerId))
 </script>
 
 <style scoped>
@@ -160,6 +164,11 @@ const user = useUserStore()
   .profile-layout,
   .profile-summary {
     grid-template-columns: 1fr;
+  }
+
+  .profile-order {
+    flex-direction: column;
+    align-items: start;
   }
 }
 </style>

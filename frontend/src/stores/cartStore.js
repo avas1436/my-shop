@@ -24,15 +24,19 @@ export const useCartStore = defineStore('cart', {
 
   actions: {
     add(product) {
-      if (!product) {
-        return
+      if (!product || product.stock <= 0) {
+        return false
       }
 
       const item = this.items.find((entry) => entry.id === product.id)
 
       if (item) {
+        if (item.qty >= item.stock) {
+          return false
+        }
+
         item.qty += 1
-        return
+        return true
       }
 
       this.items.push({
@@ -42,13 +46,16 @@ export const useCartStore = defineStore('cart', {
         oldPrice: product.oldPrice || product.price,
         image: product.image,
         badge: product.badge,
+        stock: product.stock,
         qty: 1,
       })
+
+      return true
     },
     increase(id) {
       const item = this.items.find((entry) => entry.id === id)
 
-      if (item) {
+      if (item && item.qty < item.stock) {
         item.qty += 1
       }
     },

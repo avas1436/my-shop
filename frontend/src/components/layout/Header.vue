@@ -2,11 +2,9 @@
   <header class="site-header">
     <div class="header-top">
       <div class="container header-top__inner">
-        <span>
-ارسال رایگان برای سفارش بالای 2 ملیون تومان
-        </span>
+        <span>ارسال رایگان برای سفارش بالای ۳۰ میلیون تومان</span>
         <div class="header-top__meta">
-          <span>پشتیبانی ۲۴ ساعته</span>
+          <span>پشتیبانی {{ admin.settings.supportPhone }}</span>
           <span>ضمانت اصالت کالا</span>
         </div>
       </div>
@@ -17,15 +15,14 @@
         <router-link to="/" class="brand">
           <img src="@/assets/images/logo.jpg" alt="لوگوی فروشگاه" class="brand__logo" />
           <div>
-            <strong class="brand__title">ShopVerse</strong>
-            <span class="brand__subtitle">فروشگاه مدرن برای خریدی متفاوت</span>
+            <strong class="brand__title">{{ admin.settings.storeName }}</strong>
+            <span class="brand__subtitle">{{ admin.settings.heroMessage }}</span>
           </div>
         </router-link>
 
         <form class="header-search" @submit.prevent="submitSearch">
           <span class="header-search__icon">⌕</span>
-          <BaseInput v-model="searchQuery"
-          placeholder=" جستجوی کالای مورد نظر ... " />
+          <BaseInput v-model="searchQuery" placeholder="جستجوی کالای مورد نظر ..." />
         </form>
 
         <div class="header-actions">
@@ -45,6 +42,8 @@
         <router-link to="/category/audio">صوتی و پوشیدنی</router-link>
         <router-link to="/category/home">خانه و آشپزخانه</router-link>
         <router-link to="/category/fashion">مد و استایل</router-link>
+        <router-link to="/support">پشتیبانی</router-link>
+        <router-link to="/admin">پنل ادمین</router-link>
       </nav>
     </div>
 
@@ -54,14 +53,20 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useUIStore } from '@/stores/uiStore'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAdminStore } from '@/stores/adminStore'
 import { useCartStore } from '@/stores/cartStore'
+import { useUIStore } from '@/stores/uiStore'
 import BaseInput from '../base/BaseInput.vue'
 import MiniCart from './MiniCart.vue'
 import MobileNav from './MobileNav.vue'
 
+defineOptions({
+  name: 'SiteHeader',
+})
+
+const admin = useAdminStore()
 const ui = useUIStore()
 const cart = useCartStore()
 const router = useRouter()
@@ -118,7 +123,7 @@ watch(
 
 .header-main {
   display: grid;
-  grid-template-columns: 240px 1fr auto;
+  grid-template-columns: 280px 1fr auto;
   gap: 1rem;
   align-items: center;
   padding: 1rem 0;
@@ -147,6 +152,10 @@ watch(
   display: block;
   font-size: 0.82rem;
   color: var(--text-muted);
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .header-search {

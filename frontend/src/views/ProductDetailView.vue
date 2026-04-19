@@ -6,7 +6,7 @@
       <div class="detail-content">
         <div class="detail-meta">
           <span class="pill">{{ product.badge }}</span>
-          <span class="muted">{{ product.brand }}</span>
+          <span class="muted">{{ product.brand }} • {{ product.sku }}</span>
         </div>
 
         <h1 class="page-title detail-title">{{ product.title }}</h1>
@@ -26,7 +26,9 @@
         </div>
 
         <div class="detail-actions">
-          <BaseButton size="lg" block @click="addToCart">افزودن به سبد خرید</BaseButton>
+          <BaseButton size="lg" block :disabled="product.stock === 0" @click="addToCart">
+            {{ product.stock === 0 ? 'در حال حاضر ناموجود' : 'افزودن به سبد خرید' }}
+          </BaseButton>
           <router-link to="/cart" class="detail-link">مشاهده سبد خرید</router-link>
         </div>
 
@@ -60,14 +62,13 @@
   </div>
 
   <div v-else class="page-shell">
-    <section class="empty-state">
-      محصول موردنظر پیدا نشد.
-    </section>
+    <section class="empty-state">محصول موردنظر پیدا نشد.</section>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ProductGallery from '@/components/product/ProductGallery.vue'
 import ProductGrid from '@/components/product/ProductGrid.vue'
@@ -75,7 +76,6 @@ import ProductReview from '@/components/product/ProductReview.vue'
 import { useCartStore } from '@/stores/cartStore'
 import { useProductsStore } from '@/stores/products'
 import { formatPrice } from '@/utils/format'
-import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const productStore = useProductsStore()
@@ -83,6 +83,16 @@ const cart = useCartStore()
 
 const product = computed(() => productStore.getById(route.params.id))
 const relatedProducts = computed(() => productStore.getRelatedProducts(route.params.id))
+
+watch(
+  () => route.params.id,
+  (value) => {
+    if (value) {
+      productStore.incrementViews(value)
+    }
+  },
+  { immediate: true },
+)
 
 function addToCart() {
   cart.add(product.value)
@@ -166,6 +176,14 @@ function addToCart() {
   .detail-layout {
     grid-template-columns: 1fr;
     padding: 1rem;
+  }
+
+  .detail-meta,
+  .detail-rating,
+  .detail-pricing,
+  .detail-specs li {
+    flex-direction: column;
+    align-items: start;
   }
 }
 </style>

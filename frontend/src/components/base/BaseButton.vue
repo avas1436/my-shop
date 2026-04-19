@@ -37,6 +37,13 @@ defineProps({
   transform: translateY(-1px);
 }
 
+.base-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
 .base-button--block {
   width: 100%;
 }
