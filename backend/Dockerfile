@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV UV_SYSTEM_PYTHON=1
 
 # install uv
-RUN pip install uv
+RUN pip install -i https://mirror-pypi.runflare.com/ uv
 
 
 # ===== Dependencies (builder) =====
