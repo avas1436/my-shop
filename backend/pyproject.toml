@@ -23,5 +23,10 @@ dependencies = [
 [[tool.uv.index]]
 url = "https://mirror-pypi.runflare.com/simple"
 
+[dependency-groups]
+dev = [
+    "ruff>=0.15.11",
+]
+
 [[tool.uv.index]]
 url = "https://mirror-pypi.runflare.com/"
