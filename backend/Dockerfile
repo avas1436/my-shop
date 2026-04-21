@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV UV_SYSTEM_PYTHON=1
 
 # install uv
-RUN pip install -i https://mirror-pypi.runflare.com/ uv
+RUN pip install -i https://mirror-pypi.runflare.com/simple uv
 
 
 # ===== Dependencies (builder) =====
@@ -39,4 +39,4 @@ COPY . .
 
 
 # Run service
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run","gunicorn", "main:app","--worker-class", "uvicorn.workers.UvicornWorker","--workers", "2","--bind", "0.0.0.0:8000","--timeout", "60","--keep-alive", "5","--graceful-timeout", "30","--worker-tmp-dir", "/dev/shm","--log-level", "info","--access-logfile", "-","--error-logfile", "-"]
