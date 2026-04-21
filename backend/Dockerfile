@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV UV_SYSTEM_PYTHON=1
 
 # install uv
-RUN pip install -i https://mirror-pypi.runflare.com/simple uv
+RUN pip install -i https://pypi.iranserver.com/repository/pypi/simple uv
 
 
 # ===== Dependencies (builder) =====
@@ -25,7 +25,7 @@ WORKDIR /backend
 # Install dependencies
 # این دو فایل از محیط کنار داکرفایل کپی میشه به پوشه بک اند داخل ایمیج
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --verbose --no-dev
+RUN uv sync --frozen --verbose --no-dev --system-certs
 
 # ===== Final lightweight image =====
 FROM base AS final
@@ -33,10 +33,14 @@ FROM base AS final
 WORKDIR /backend
 
 # Copy virtualenv (from builder)
-COPY --from=builder /backend/.venv /backend/.venv
+# COPY --from=builder /backend/.venv /backend/.venv
 # Copy actual application source (from repo)
 COPY . .
 
 
 # Run service
-CMD ["uv", "run","gunicorn", "main:app","--worker-class", "uvicorn.workers.UvicornWorker","--workers", "2","--bind", "0.0.0.0:8000","--timeout", "60","--keep-alive", "5","--graceful-timeout", "30","--worker-tmp-dir", "/dev/shm","--log-level", "info","--access-logfile", "-","--error-logfile", "-"]
+CMD ["uv", "run", "--no-dev", "gunicorn", "main:app","--worker-class", "uvicorn.workers.UvicornWorker","--workers", "2","--bind", "0.0.0.0:8000","--timeout", "60","--keep-alive", "5","--graceful-timeout", "30","--worker-tmp-dir", "/dev/shm","--log-level", "info","--access-logfile", "-","--error-logfile", "-"]
+
+
+# Expose port
+EXPOSE 8000

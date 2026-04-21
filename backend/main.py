@@ -9,7 +9,6 @@ from app.core.exceptions import register_exception_handlers
 from app.core.middlewares import register_middlewares
 from app.core.redis import RedisController
 from app.core.database import engine
-from app.migrations.migration import run_migrations
 
 
 # -------------------------------------------------------------
@@ -36,17 +35,6 @@ async def lifespan(app: FastAPI):
     # Database
     # -----------------------------
     app.state.db_engine = engine
-
-    # -----------------------------
-    # Run migrations
-    # -----------------------------
-    try:
-        logger.info("Running Alembic migrations...")
-        await run_migrations()
-        logger.info("Migrations applied successfully.")
-    except Exception as e:
-        logger.error(f"Migration error: {e}")
-        raise
 
     # -------------------------------------------------------------
     # Redis
@@ -113,7 +101,7 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------
     # MiddleWares
     # -------------------------------------------------------------
-    register_middlewares(app=app, trusted_host=settings.trusted_hosts)
+    # register_middlewares(app=app, trusted_host=settings.trusted_hosts)
 
     # -------------------------------------------------------------
     # Exception Handlers

@@ -137,3 +137,9 @@ pnpm-debug.log*
 # Editor configs
 *.tsbuildinfo
 *.eslintcache
+
+
+# ========================
+# Project
+# ========================
+secrets/

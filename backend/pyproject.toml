@@ -25,9 +25,3 @@ dependencies = [
 dev = [
     "ruff>=0.15.11",
 ]
-
-[[tool.uv.index]]
-url = "https://mirror-pypi.runflare.com/simple"
-
-[[tool.uv.index]]
-url = "https://mirror-pypi.runflare.com/"
