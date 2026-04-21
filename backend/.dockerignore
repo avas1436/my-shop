@@ -2,7 +2,6 @@
 # Backend
 # ========================
 
-
 # Python
 __pycache__/
 *.py[cod]
@@ -78,6 +77,8 @@ dmypy.json
 Thumbs.db
 
 
+# Docker
+.dockerignore
 
 
 # Alembic (migrations)
@@ -107,33 +108,21 @@ uploads/
 .cache/
 backend/app/__pycache__/main.cpython-312.pyc
 
+# Git
+.git
+.gitignore
+.gitattributes
 
-# ========================
-# Frontend
-# ========================
+# Python tooling
+.ruff_cache/
+.pyre/
+.hypothesis/
 
-# node_modules
-node_modules/
+# uv
+.uv/
 
-# Vite cache
-.vite/
-vite.config.ts.timestamp-*?
-
-# npm / yarn lock leftovers
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-
-# Config caches
-.eslintcache
-.tsbuildinfo
-
-# Local environment files
-.env.local
-.env.*.local
-
-# Editor configs
-*.tsbuildinfo
-*.eslintcache
+# big files
+*.tar
+*.gz
+*.zip
+*.rar
