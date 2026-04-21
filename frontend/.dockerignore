@@ -33,11 +33,6 @@ Thumbs.db
 .git/
 .gitignore
 
-# Docker files
-docker-compose*.yml
-Dockerfile*
-.dockerignore
-
 
 # Optional caches
 .cache/

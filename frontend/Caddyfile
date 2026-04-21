@@ -1,0 +1,18 @@
+:80 {
+    root * /usr/share/caddy
+
+    # امنیت پایه
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # بهتر از جی زیپ خالی
+    encode zstd gzip
+
+    try_files {path} /index.html
+
+    file_server
+}
