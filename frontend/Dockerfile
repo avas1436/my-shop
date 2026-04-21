@@ -5,9 +5,6 @@ FROM node:20-slim AS base
 
 WORKDIR /frontend
 
-ENV NODE_ENV=production
-ENV VITE_ENV=production
-
 COPY package.json package-lock.json ./
 
 RUN npm ci --no-audit --no-fund
@@ -18,6 +15,7 @@ FROM base AS build
 
 WORKDIR /frontend
 
+COPY --from=base /frontend/node_modules ./node_modules
 COPY . .
 
 
