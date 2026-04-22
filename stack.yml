@@ -108,11 +108,11 @@ services:
       retries: 5
       start_period: 60s
 
-    environment:
-      # PostgreSQL
-      DATABASE_URL: postgresql+asyncpg://avas:13771998@postgres:5432/shop
-      # Redis
-      REDIS_URL: redis://:13771998@redis:6379/0
+    # environment:
+    # PostgreSQL
+    # DATABASE_URL: postgresql+asyncpg://avas:13771998@postgres:5432/shop
+    # Redis
+    # REDIS_URL: redis://:13771998@redis:6379/0
 
     networks:
       - traefik-public
@@ -123,10 +123,10 @@ services:
   postgres:
     image: postgres:16-alpine
 
-    environment:
-      POSTGRES_USER: avas
-      POSTGRES_PASSWORD: 13771998
-      POSTGRES_DB: shop
+    # environment:
+    # POSTGRES_USER: avas
+    # POSTGRES_PASSWORD: 13771998
+    # POSTGRES_DB: shop
 
     volumes:
       - pgdata:/var/lib/postgresql/data
