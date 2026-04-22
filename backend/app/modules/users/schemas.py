@@ -3,15 +3,26 @@ from pydantic import BaseModel, EmailStr
 from app.common.enums import UserRole
 
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    full_name: str
-    password: str
+# ==============================================================================
+# Register User and Login
+# ==============================================================================
+class RegisterUser(BaseModel):
+    name: str
+    phone_number: int
+
+# ==============================================================================
+# Input OTP Code
+# ==============================================================================
+class OTPCode(BaseModel):
+    code: int
 
 
-class UserRead(BaseModel):
+# ==============================================================================
+# Get User
+# ==============================================================================
+class UserGet(BaseModel):
     id: int
-    email: EmailStr
+    phone_number: str
     full_name: str
     role: UserRole
 
@@ -19,11 +30,18 @@ class UserRead(BaseModel):
         from_attributes = True
 
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+
+# ==============================================================================
+# Login with OTP
+# ==============================================================================
+class OTPLogin(BaseModel):
+    phone_number: str
 
 
+
+# ==============================================================================
+# Pait Token
+# ==============================================================================
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
