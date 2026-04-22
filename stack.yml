@@ -19,10 +19,6 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
 
-      # Local TLS
-      - "--tls.stores.default.defaultCertificate.certFile=/certs/cert.pem"
-      - "--tls.stores.default.defaultCertificate.keyFile=/certs/key.pem"
-
     ports:
       - "80:80"
       - "443:443"
@@ -30,8 +26,12 @@ services:
 
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./certs/cert.pem:/certs/cert.pem:ro"
-      - "./certs/key.pem:/certs/key.pem:ro"
+      - "./cert.pem:/cert.pem:ro"
+      - "./key.pem:/key.pem:ro"
+
+    labels:
+      - traefik.enable=true
+    restart: unless-stopped
 
     deploy:
       placement:
@@ -41,7 +41,7 @@ services:
     networks:
       - traefik-public
 
-  # ===== Vue =====
+  # ===== Frontend =====
   frontend:
     build:
       context: ./frontend
@@ -49,14 +49,23 @@ services:
     image: vue:latest
 
     deploy:
-      replicas: 1
+      replicas: 3
       update_config:
         order: start-first
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.frontend.rule=Host(`example.com`)"
+        # - "traefik.http.routers.frontend.tls=true"
         - "traefik.http.routers.frontend.entrypoints=websecure"
         - "traefik.docker.network=traefik-public"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
 
     networks:
       - traefik-public
@@ -70,17 +79,28 @@ services:
     image: fast-api:latest
 
     deploy:
-      replicas: 1
+      replicas: 2
       update_config:
         order: start-first
+      restart_policy:
+        condition: on-failure
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.backend.rule=Host(`api.example.com`)"
         - "traefik.http.routers.backend.entrypoints=websecure"
-        - "traefik.http.routers.backend.tls=true"
+        # - "traefik.http.routers.backend.tls=true"
         - "traefik.http.services.backend.loadbalancer.server.port=8000"
         - "traefik.docker.network=traefik-public"
         - "traefik.http.services.backend.loadbalancer.passhostheader=true"
+
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 40s
+      timeout: 3s
+      retries: 5
 
     environment:
       # PostgreSQL
@@ -88,10 +108,10 @@ services:
       # Redis
       REDIS_URL: redis://:13771998@redis:6379/0
 
-      networks:
-        - traefik-public
-        # - web
-        - internal
+    networks:
+      - traefik-public
+      - web
+      - internal
 
   # ===== PostgreSQL =====
   postgres:
@@ -105,6 +125,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
     deploy:
       replicas: 1
 
@@ -116,6 +143,13 @@ services:
     image: redis:7-alpine
 
     command: redis-server --requirepass 13771998
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
 
     volumes:
       - redisdata:/data
@@ -129,16 +163,15 @@ services:
 networks:
   # شبکه اصلی ترافیک
   traefik-public:
-    driver: overlay
+    external: true
 
   # شبکه فرانت
   web:
-    driver: overlay
+    external: true
 
   # شبکه داخلی دیتابیس
   internal:
-    driver: overlay
-    internal: true
+    external: true
 
 # ===== Volume =====
 volumes:
