@@ -1,7 +1,7 @@
 # Dockerfile
 
 # ===== Base =====
-FROM python:3.12-slim AS base
+FROM python:3.12-alpine AS base
 
 # نمایش لاگ های پایتون
 ENV PYTHONUNBUFFERED=1

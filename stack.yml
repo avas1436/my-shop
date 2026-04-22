@@ -26,8 +26,6 @@ services:
 
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./cert.pem:/cert.pem:ro"
-      - "./key.pem:/key.pem:ro"
 
     labels:
       - traefik.enable=true
@@ -43,8 +41,8 @@ services:
 
   # ===== Frontend =====
   frontend:
-    build:
-      context: ./frontend
+    # build:
+    #   context: ./frontend
 
     image: vue:latest
 
@@ -55,7 +53,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.frontend.rule=Host(`example.com`)"
-        # - "traefik.http.routers.frontend.tls=true"
+        - "traefik.http.routers.frontend.tls=true"
         - "traefik.http.routers.frontend.entrypoints=websecure"
         - "traefik.docker.network=traefik-public"
         - "traefik.http.services.frontend.loadbalancer.server.port=80"
@@ -73,8 +71,8 @@ services:
 
   # ===== Backend =====
   backend:
-    build:
-      context: ./backend
+    # build:
+    #   context: ./backend
 
     image: fast-api:latest
 
@@ -87,8 +85,8 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.backend.rule=Host(`api.example.com`)"
-        - "traefik.http.routers.backend.entrypoints=websecure"
-        # - "traefik.http.routers.backend.tls=true"
+        - "traefik.http.routers.backend.entrypoints=web,websecure"
+        - "traefik.http.routers.backend.tls=true"
         - "traefik.http.services.backend.loadbalancer.server.port=8000"
         - "traefik.docker.network=traefik-public"
         - "traefik.http.services.backend.loadbalancer.passhostheader=true"
@@ -97,10 +95,18 @@ services:
       - postgres
       - redis
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
-      interval: 40s
-      timeout: 3s
+      # test: ["CMD-SHELL", "wget -q http://localhost:8000/health || exit 1"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 5s
       retries: 5
+      start_period: 60s
 
     environment:
       # PostgreSQL
@@ -130,6 +136,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
 
     deploy:

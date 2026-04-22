@@ -1,6 +1,7 @@
 from enum import Enum
 from functools import lru_cache
 import os
+from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,8 +36,8 @@ class Settings(BaseSettings):
     # development urls
     docs_enable: bool = True
     openapi_url: str = "/openapi.json"
-    docs_url: str = "/docs"
-    redoc_url: str = "redoc"
+    docs_url: Optional[str] = None
+    redoc_url: Optional[str] = None
     api_v1_prefix: str = "/api/v1"
 
     # cors middleware
