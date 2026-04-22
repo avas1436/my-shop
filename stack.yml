@@ -19,6 +19,10 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
 
+      # Local TLS
+      - "--tls.stores.default.defaultCertificate.certFile=/certs/cert.pem"
+      - "--tls.stores.default.defaultCertificate.keyFile=/certs/key.pem"
+
     ports:
       - "80:80"
       - "443:443"
@@ -26,6 +30,8 @@ services:
 
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./certs/cert.pem:/certs/cert.pem:ro"
+      - "./certs/key.pem:/certs/key.pem:ro"
 
     deploy:
       placement:
@@ -49,8 +55,8 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.frontend.rule=Host(`example.com`)"
-        - "traefik.http.routers.frontend.entrypoints=web"
-        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.docker.network=traefik-public"
 
     networks:
       - traefik-public
@@ -70,10 +76,17 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.backend.rule=Host(`api.example.com`)"
-        - "traefik.http.routers.backend.entrypoints=web"
+        - "traefik.http.routers.backend.entrypoints=websecure"
+        - "traefik.http.routers.backend.tls=true"
         - "traefik.http.services.backend.loadbalancer.server.port=8000"
         - "traefik.docker.network=traefik-public"
         - "traefik.http.services.backend.loadbalancer.passhostheader=true"
+
+  environment:
+    # PostgreSQL
+    DATABASE_URL: postgresql+asyncpg://avas:13771998@postgres:5432/shop
+    # Redis
+    REDIS_URL: redis://:13771998@redis:6379/0
 
     networks:
       - traefik-public
@@ -85,14 +98,9 @@ services:
     image: postgres:16-alpine
 
     environment:
-      POSTGRES_USER_FILE: /run/secrets/postgres_user
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_DB_FILE: /run/secrets/postgres_db
-
-    secrets:
-      - postgres_user
-      - postgres_password
-      - postgres_db
+      POSTGRES_USER: avas
+      POSTGRES_PASSWORD: 13771998
+      POSTGRES_DB: shop
 
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -107,14 +115,7 @@ services:
   redis:
     image: redis:7-alpine
 
-    command:
-      - sh
-      - -c
-      - |
-        redis-server --requirepass "$$(cat /run/secrets/redis_password)"
-
-    secrets:
-      - redis_password
+    command: redis-server --requirepass 13771998
 
     volumes:
       - redisdata:/data
@@ -126,12 +127,15 @@ services:
 
 # ===== Network =====
 networks:
+  # شبکه اصلی ترافیک
   traefik-public:
     driver: overlay
 
+  # شبکه فرانت
   web:
     driver: overlay
 
+  # شبکه داخلی دیتابیس
   internal:
     driver: overlay
     internal: true
@@ -140,17 +144,3 @@ networks:
 volumes:
   pgdata:
   redisdata:
-
-# ===== secrets =====
-secrets:
-  redis_password:
-    external: true
-
-  postgres_user:
-    external: true
-
-  postgres_password:
-    external: true
-
-  postgres_db:
-    external: true
