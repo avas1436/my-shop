@@ -6,6 +6,12 @@ class UserRole(str, Enum):
     CUSTOMER = "customer"
 
 
+class PurposeOTP(str, Enum):
+    LOGIN = "login"
+    REGISTER = "register"
+    CHANGEPHONENUMBER = "changephonenumber"
+
+
 class InventoryStatus(str, Enum):
     IN_STOCK = "in_stock"
     LOW_STOCK = "low_stock"
