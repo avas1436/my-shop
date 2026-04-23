@@ -1,5 +1,9 @@
+from datetime import date
+import datetime
+from typing import Annotated, Optional
+
 from backend.app.modules.users.utils import validate_phone
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, StringConstraints
 
 from app.common.enums import PurposeOTP, UserRole
 
@@ -18,10 +22,47 @@ class RequestOTP(BaseModel):
 
 
 # ==============================================================================
-# Input OTP Code
+# verify OTP Code
 # ==============================================================================
 class OTPCode(BaseModel):
-    code: int
+    phone_number: str
+    code: Annotated[str, StringConstraints(min_length=4, max_length=6)]
+    purpose: PurposeOTP = Field(default=PurposeOTP.LOGIN)
+
+
+
+# ==============================================================================
+# Rgister
+# ==============================================================================
+class Rgister(BaseModel):
+    first_name: str
+    last_name: str
+    birth_date: Optional[date] = None
+    password: Optional[str] = None
+
+
+# ==============================================================================
+# Password Login
+# ==============================================================================
+class LoginWithPassword(BaseModel):
+    phone_number: str
+    password: str
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, v: str):
+        return validate_phone(phone_number=v)
+
+
+
+# ==============================================================================
+# Update Profile
+# ==============================================================================
+class ProfileUpdate(BaseModel):
+    first_name: Optional[str]
+    last_name: Optional[str]
+    birth_date: Optional[date]
+
 
 
 # ==============================================================================
@@ -29,20 +70,17 @@ class OTPCode(BaseModel):
 # ==============================================================================
 class UserGet(BaseModel):
     id: int
+    first_name: Optional[str]
+    last_name: Optional[str]
     phone_number: str
-    full_name: str
-    role: UserRole
+    birth_date: Optional[date]
+    is_phone_verified: bool
+    role: str
+    is_active: bool
+    created_at: datetime
 
     class Config:
         from_attributes = True
-
-
-
-# ==============================================================================
-# Login with OTP
-# ==============================================================================
-class OTPLogin(BaseModel):
-    phone_number: str
 
 
 
