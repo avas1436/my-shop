@@ -1,14 +1,21 @@
-from pydantic import BaseModel, EmailStr
+from backend.app.modules.users.utils import validate_phone
+from pydantic import BaseModel, Field, field_validator
 
-from app.common.enums import UserRole
+from app.common.enums import PurposeOTP, UserRole
 
 
 # ==============================================================================
 # Register User and Login
 # ==============================================================================
-class RegisterUser(BaseModel):
-    name: str
-    phone_number: int
+class RequestOTP(BaseModel):
+    phone_number: str
+    purpose: PurposeOTP = Field(default=PurposeOTP.LOGIN) # LOGIN | REGISTER | RESET
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, v: str):
+        return validate_phone(phone_number=v)
+
 
 # ==============================================================================
 # Input OTP Code

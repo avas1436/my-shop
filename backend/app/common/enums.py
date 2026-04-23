@@ -9,7 +9,7 @@ class UserRole(str, Enum):
 class PurposeOTP(str, Enum):
     LOGIN = "login"
     REGISTER = "register"
-    CHANGEPHONENUMBER = "changephonenumber"
+    RESET = "reset"
 
 
 class InventoryStatus(str, Enum):
