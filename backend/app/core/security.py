@@ -1,52 +1,61 @@
 from datetime import datetime, timedelta, timezone
-
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-
 from app.config.settings import get_settings
 
 
+# ساخت هش
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
 
 
+# ساخت پسورد هش شده برای ذخیره در دیتا بیس
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
+# مقایسه پسورد اصلی که کاربر میزند با چیزی که داخل دیتا بیس ذخیره شده بوده
 def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
+# با موارد دریافتی یک توکن میسازد
+#  سابجکت اطلاعات کاربر مثلا شماره تلفن
+#  تایپ تعیین کننده رفرش یا اکسس بودن
+#  تاریخ انقضا هم داخل اطلاعات توکن است
 def create_token(subject: str, token_type: str, expires_delta: timedelta) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
     payload = {"sub": subject, "type": token_type, "exp": expire}
-    return jwt.encode(payload, settings.secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(claims=payload, key=settings.secret_key, algorithm=settings.jwt_algorithm)
 
 
+# استفاده از تابع ساخت توکن برای ساخت اکسس توکن
 def create_access_token(subject: str) -> str:
     return create_token(
         subject=subject,
         token_type="access",
-        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
+        expires_delta=timedelta(minutes=15),
     )
 
 
+# برای ساخت رفرش توکن
 def create_refresh_token(subject: str) -> str:
     return create_token(
         subject=subject,
         token_type="refresh",
-        expires_delta=timedelta(days=settings.refresh_token_expire_days),
+        expires_delta=timedelta(days=15),
     )
 
 
+# صحت و اعتبار یک توکن داده شده را بررسی میکند
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
 
 
+# کاربردی تابع دیکد
 def get_token_subject(token: str, expected_type: str = "access") -> str:
     try:
-        payload = decode_token(token)
+        payload = decode_token(token=token)
     except JWTError as exc:
         raise ValueError("Invalid token") from exc
 
