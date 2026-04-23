@@ -5,7 +5,6 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config.settings import get_settings
 
-
 settings = get_settings()
 
 # انجین خود دیتا بیس نیست بلکه راه ورود و قوانین ورود به دیتابیس توسط برنامه است

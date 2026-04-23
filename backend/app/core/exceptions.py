@@ -1,7 +1,8 @@
+from datetime import UTC, datetime
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from datetime import datetime, timezone
 
 
 def error_payload(status_code: int, detail, error_type: str, request: Request):
@@ -11,7 +12,7 @@ def error_payload(status_code: int, detail, error_type: str, request: Request):
         "error_type": error_type,
         "detail": detail,
         "path": request.url.path,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

@@ -1,8 +1,8 @@
 import datetime
 from datetime import date
-from typing import Annotated, Optional
+from typing import Annotated
 
-from app.common.enums import PurposeOTP
+from backend.app.modules.users.utils import validate_phone
 from pydantic import (
     BaseModel,
     Field,
@@ -11,7 +11,7 @@ from pydantic import (
     field_validator,
 )
 
-from backend.app.modules.users.utils import validate_phone
+from app.common.enums import PurposeOTP
 
 
 # ==============================================================================
@@ -42,8 +42,8 @@ class OTPCode(BaseModel):
 class Rgister(BaseModel):
     first_name: str
     last_name: str
-    birth_date: Optional[date] = None
-    password: Optional[str] = None
+    birth_date: date | None = None
+    password: str | None = None
 
 
 # ==============================================================================
@@ -63,9 +63,9 @@ class LoginWithPassword(BaseModel):
 # Update Profile
 # ==============================================================================
 class ProfileUpdate(BaseModel):
-    first_name: Optional[str]
-    last_name: Optional[str]
-    birth_date: Optional[date]
+    first_name: str | None
+    last_name: str | None
+    birth_date: date | None
 
 
 # ==============================================================================
@@ -73,10 +73,10 @@ class ProfileUpdate(BaseModel):
 # ==============================================================================
 class UserGet(BaseModel):
     id: int
-    first_name: Optional[str]
-    last_name: Optional[str]
+    first_name: str | None
+    last_name: str | None
     phone_number: str
-    birth_date: Optional[date]
+    birth_date: date | None
     is_phone_verified: bool
     role: str
     is_active: bool
@@ -84,7 +84,7 @@ class UserGet(BaseModel):
 
     @computed_field
     @property
-    def age(self) -> Optional[int]:
+    def age(self) -> int | None:
         if self.birth_date is None:
             return self.birth_date
 

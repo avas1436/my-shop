@@ -1,3 +1,6 @@
+from fastapi import HTTPException
+from starlette import status
+
 from app.common.enums import UserRole
 from app.core.security import (
     create_access_token,
@@ -8,8 +11,6 @@ from app.core.security import (
 from app.modules.users.models import User
 from app.modules.users.repository import UserRepository
 from app.modules.users.schemas import LoginRequest, TokenPair, UserCreate
-from fastapi import HTTPException
-from starlette import status
 
 
 class UserService:
