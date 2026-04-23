@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from app.config.settings import get_settings
 
+from app.config.settings import get_settings
 
 # ساخت هش
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -24,9 +25,11 @@ def verify_password(password: str, hashed_password: str) -> bool:
 #  تایپ تعیین کننده رفرش یا اکسس بودن
 #  تاریخ انقضا هم داخل اطلاعات توکن است
 def create_token(subject: str, token_type: str, expires_delta: timedelta) -> str:
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(UTC) + expires_delta
     payload = {"sub": subject, "type": token_type, "exp": expire}
-    return jwt.encode(claims=payload, key=settings.secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        claims=payload, key=settings.secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 # استفاده از تابع ساخت توکن برای ساخت اکسس توکن

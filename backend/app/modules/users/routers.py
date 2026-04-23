@@ -1,9 +1,10 @@
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.v1.dependencies import get_current_user_id, get_db_session
 from app.modules.users.repository import UserRepository
 from app.modules.users.schemas import LoginRequest, TokenPair, UserCreate, UserRead
 from app.modules.users.service import UserService
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -26,5 +27,7 @@ async def login_user(
 
 
 @router.get("/me")
-async def read_current_user(user_id: int = Depends(get_current_user_id)) -> dict[str, int]:
+async def read_current_user(
+    user_id: int = Depends(get_current_user_id),
+) -> dict[str, int]:
     return {"user_id": user_id}
