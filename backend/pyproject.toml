@@ -25,3 +25,6 @@ dependencies = [
 dev = [
     "ruff>=0.15.11",
 ]
+
+[[tool.uv.index]]
+url = "https://pypi.devneeds.ir/simple/"
