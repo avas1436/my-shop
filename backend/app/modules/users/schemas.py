@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -14,7 +14,7 @@ from app.modules.users.utils import validate_phone
 
 
 # ==============================================================================
-# Register User and Login
+# Register User or Login
 # ==============================================================================
 class RequestOTP(BaseModel):
     phone_number: str
@@ -29,7 +29,7 @@ class RequestOTP(BaseModel):
 # ==============================================================================
 # verify OTP Code
 # ==============================================================================
-class OTPCode(BaseModel):
+class OTPVerify(BaseModel):
     phone_number: str
     code: Annotated[str, StringConstraints(min_length=4, max_length=6)]
     purpose: PurposeOTP = Field(default=PurposeOTP.LOGIN)
@@ -107,3 +107,11 @@ class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+# ==============================================================================
+# Token Response
+# ==============================================================================
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
