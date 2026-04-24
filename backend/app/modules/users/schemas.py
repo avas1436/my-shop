@@ -1,8 +1,6 @@
-import datetime
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated
 
-from backend.app.modules.users.utils import validate_phone
 from pydantic import (
     BaseModel,
     Field,
@@ -12,6 +10,7 @@ from pydantic import (
 )
 
 from app.common.enums import PurposeOTP
+from app.modules.users.utils import validate_phone
 
 
 # ==============================================================================

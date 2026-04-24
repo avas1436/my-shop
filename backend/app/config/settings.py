@@ -1,7 +1,5 @@
 from enum import Enum
 from functools import lru_cache
-import os
-from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -36,8 +34,8 @@ class Settings(BaseSettings):
     # development urls
     docs_enable: bool = True
     openapi_url: str = "/openapi.json"
-    docs_url: Optional[str] = None
-    redoc_url: Optional[str] = None
+    docs_url: str | None = None
+    redoc_url: str | None = None
     api_v1_prefix: str = "/api/v1"
 
     # cors middleware
@@ -72,6 +70,11 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
+
+    # kavenegar
+    kavenegarapi: str
+    otp_ttl: int
+    otp_cooldown: int
 
     model_config = SettingsConfigDict(
         env_file=".env.dev",

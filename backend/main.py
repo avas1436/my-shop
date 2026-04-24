@@ -1,14 +1,15 @@
 from contextlib import asynccontextmanager
-from fastapi_offline import FastAPIOffline
+
 from fastapi import FastAPI
+from fastapi_offline import FastAPIOffline
+
 from app.api.v1.router import api_router
 from app.config.cors import setup_cors
 from app.config.logging_config import setup_logger
 from app.config.settings import get_settings
-from app.core.exceptions import register_exception_handlers
-from app.core.middlewares import register_middlewares
-from app.core.redis import RedisController
 from app.core.database import engine
+from app.core.exceptions import register_exception_handlers
+from app.core.redis import RedisController
 
 
 # -------------------------------------------------------------

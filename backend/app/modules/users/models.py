@@ -1,7 +1,8 @@
 from datetime import date, datetime
-from typing import Optional
+
 from sqlalchemy import Boolean, Date, DateTime, Enum, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.common.enums import PurposeOTP, UserRole
 from app.core.database import Base
 
@@ -14,10 +15,10 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    first_name: Mapped[Optional[str]] = mapped_column(
+    first_name: Mapped[str | None] = mapped_column(
         String(50), default=None, nullable=False
     )
-    last_name: Mapped[Optional[str]] = mapped_column(
+    last_name: Mapped[str | None] = mapped_column(
         String(50), default=None, nullable=False
     )
 
@@ -29,9 +30,9 @@ class User(Base):
     )
     is_phone_verified = mapped_column(Boolean, default=False)
 
-    birth_date: Mapped[Optional[date]] = mapped_column(Date)
+    birth_date: Mapped[date | None] = mapped_column(Date)
 
-    hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="UserRole"), default=UserRole.CUSTOMER, nullable=False
@@ -39,9 +40,9 @@ class User(Base):
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    deleted_at: Mapped[Optional[datetime]] = mapped_column(
+    deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -49,7 +50,7 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    updated_at: Mapped[Optional[datetime]] = mapped_column(
+    updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         onupdate=func.now(),
     )
