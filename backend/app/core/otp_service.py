@@ -37,61 +37,59 @@ async def create_otp(
     now = datetime.now(UTC)
     expires_at = now + timedelta(seconds=settings.otp_ttl)
 
-    async with db.begin():
-        # جلوگیری از race برای یک شماره/هدف مشخص
-        lock_key = f"otp:{phone_number}:{purpose}"
-        await db.execute(
-            text("SELECT pg_advisory_xact_lock(hashtext(:k))"),
-            {"k": lock_key},
+    lock_key = f"otp:{phone_number}:{purpose}"
+    await db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:k))"),
+        {"k": lock_key},
+    )
+
+    stmt = (
+        select(OTPCode)
+        .where(
+            OTPCode.phone_number == phone_number,
+            OTPCode.purpose == purpose,
+            OTPCode.used.is_(False),
         )
+        .with_for_update()
+    )
 
-        stmt = (
-            select(OTPCode)
-            .where(
-                OTPCode.phone_number == phone_number,
-                OTPCode.purpose == purpose,
-                OTPCode.used.is_(False),
+    res = await db.execute(stmt)
+    otp = res.scalar_one_or_none()
+
+    if otp:
+        # rate limit
+        if otp.created_at and (now - otp.created_at) < timedelta(
+            seconds=settings.otp_cooldown
+        ):
+            wait = timedelta(seconds=settings.otp_cooldown) - (now - otp.created_at)
+
+            return None, int(wait.total_seconds())
+
+        # تمدید/بازنویسی OTP
+        otp.code_hash = hash_password(code)
+        otp.expires_at = expires_at
+        otp.used = False
+        otp.used_at = None
+        otp.attempt_count = 0
+        otp.ip_address = ip_address
+        otp.user_agent = user_agent
+        otp.device_id = device_id
+        otp.created_at = now
+    else:
+        db.add(
+            OTPCode(
+                phone_number=phone_number,
+                purpose=purpose,
+                code_hash=hash_password(code),
+                expires_at=expires_at,
+                used=False,
+                attempt_count=0,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                device_id=device_id,
+                created_at=now,
             )
-            .with_for_update()
         )
-
-        res = await db.execute(stmt)
-        otp = res.scalar_one_or_none()
-
-        if otp:
-            # rate limit
-            if otp.created_at and (now - otp.created_at) < timedelta(
-                seconds=settings.otp_cooldown
-            ):
-                wait = timedelta(seconds=settings.otp_cooldown) - (now - otp.created_at)
-
-                return None, int(wait.total_seconds())
-
-            # تمدید/بازنویسی OTP
-            otp.code_hash = hash_password(code)
-            otp.expires_at = expires_at
-            otp.used = False
-            otp.used_at = None
-            otp.attempt_count = 0
-            otp.ip_address = ip_address
-            otp.user_agent = user_agent
-            otp.device_id = device_id
-            otp.created_at = now
-        else:
-            db.add(
-                OTPCode(
-                    phone_number=phone_number,
-                    purpose=purpose,
-                    code_hash=hash_password(code),
-                    expires_at=expires_at,
-                    used=False,
-                    attempt_count=0,
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                    device_id=device_id,
-                    created_at=now,
-                )
-            )
 
     return code, None
 
@@ -109,14 +107,22 @@ async def verify_otp(
     code: str,
 ):
     # جستجوی دیتای کد
-    otp = select(OTPCode).where(
-        OTPCode.phone_number == phone,
-        OTPCode.purpose == purpose,
-        not OTPCode.used,
+    stmt = (
+        select(OTPCode)
+        .where(
+            OTPCode.phone_number == phone,
+            OTPCode.purpose == purpose,
+            OTPCode.used.is_(False),
+        )
+        .order_by(OTPCode.created_at.desc())
+        .limit(1)
     )
 
+    res = await db.execute(stmt)
+    otp = res.scalar_one_or_none()
+
     # بررسی وجود داشتن کد
-    if not otp or otp.expires_at < datetime.now(UTC):
+    if otp is None or otp.expires_at < datetime.now(UTC):
         logger.warning(f"OTP not found for phone={phone}, purpose={purpose}")
 
         return False

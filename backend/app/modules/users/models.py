@@ -16,10 +16,10 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     first_name: Mapped[str | None] = mapped_column(
-        String(50), default=None, nullable=False
+        String(50), default=None, nullable=True
     )
     last_name: Mapped[str | None] = mapped_column(
-        String(50), default=None, nullable=False
+        String(50), default=None, nullable=True
     )
 
     phone_number: Mapped[str] = mapped_column(
