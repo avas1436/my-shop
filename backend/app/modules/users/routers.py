@@ -2,15 +2,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from kavenegar import APIException, HTTPException as KHTTPException
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.jwt import get_current_user
-from app.core.security import hash_password
+from app.core.security import create_access_token, hash_password, verify_password
 from app.core.sms_service import send_sms
 from app.modules.users.models import User
 from app.modules.users.schemas import (
+    LoginWithPassword,
     OTPVerify,
     Register,
     RequestOTP,
@@ -143,3 +145,42 @@ async def register(
         raise
 
     return currnet
+
+
+# ==============================================================================
+# Login with Password
+# ==============================================================================
+@router.post(
+    "/login/password",
+    response_model=TokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Login with password",
+)
+async def login_with_password(
+    data: LoginWithPassword,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+
+    # Find user
+    stmt = select(User).where(User.phone_number == data.phone_number).limit(1)
+    res = await db.execute(stmt)
+    user = res.scalar_one_or_none()
+
+    if not user or not user.hashed_password:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid credentials",
+        )
+
+    if not verify_password(
+        password=data.password,
+        hashed_password=user.hashed_password,
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid credentials",
+        )
+
+    token = create_access_token(subject=user.phone_number, is_new=False)
+
+    return TokenResponse(access_token=token)
