@@ -23,13 +23,15 @@ async def request_otp_service(
     user_agent: str,
     device_id: str,
 ):
-    # اگر هدف ثبت‌نام است و کاربر وجود دارد -> خطا
-    if purpose == PurposeOTP.REGISTER:
-        stmt_user = select(User).where(User.phone_number == phone_number)
-        res_user = await db.execute(stmt_user)
-        user = res_user.scalar_one_or_none()
-        if user:
-            raise HTTPException(400, detail="این شماره قبلاً ثبت‌نام شده است")
+    stmt_user = select(User).where(User.phone_number == phone_number)
+    res_user = await db.execute(stmt_user)
+    user = res_user.scalar_one_or_none()
+
+    if user and purpose == PurposeOTP.REGISTER:
+        raise HTTPException(400, detail="این شماره قبلاً ثبت‌نام شده است")
+
+    if not user and (purpose == PurposeOTP.LOGIN or purpose == PurposeOTP.RESET):
+        raise HTTPException(400, detail="کاربر یافت نشد")
 
     code, wait = await create_otp(
         db=db,
