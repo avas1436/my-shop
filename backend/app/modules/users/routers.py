@@ -184,3 +184,27 @@ async def login_with_password(
     token = create_access_token(subject=user.phone_number, is_new=False)
 
     return TokenResponse(access_token=token)
+
+
+# ==============================================================================
+# Get User
+# ==============================================================================
+@router.get(
+    "/me",
+    response_model=UserGet,
+    status_code=status.HTTP_200_OK,
+    summary="Get User Status",
+)
+def me(
+    current_user: Annotated[User, Depends(get_current_user)],  # JWT guard
+) -> User:
+
+    currnet, is_new = current_user
+
+    if is_new:
+        raise HTTPException(
+            status_code=403,
+            detail="complete your profile first",
+        )
+
+    return currnet
