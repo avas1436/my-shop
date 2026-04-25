@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
+from jose import JWTError, jwt  # type: ignore
 from passlib.context import CryptContext
 
 from app.config.settings import get_settings
