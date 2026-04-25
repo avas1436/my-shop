@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+from fastapi import HTTPException
 from jose import JWTError, jwt  # type: ignore
 from passlib.context import CryptContext
 
@@ -24,18 +25,31 @@ def verify_password(password: str, hashed_password: str) -> bool:
 #  سابجکت اطلاعات کاربر مثلا شماره تلفن
 #  تایپ تعیین کننده رفرش یا اکسس بودن
 #  تاریخ انقضا هم داخل اطلاعات توکن است
-def create_token(subject: str, token_type: str, expires_delta: timedelta) -> str:
+def create_token(
+    subject: str,
+    token_type: str,
+    expires_delta: timedelta,
+    is_new: bool,
+) -> str:
     expire = datetime.now(UTC) + expires_delta
-    payload = {"sub": subject, "type": token_type, "exp": expire}
+
+    payload = {
+        "sub": subject,
+        "type": token_type,
+        "exp": expire,
+        "is_new": is_new,
+    }
+
     return jwt.encode(
         claims=payload, key=settings.secret_key, algorithm=settings.jwt_algorithm
     )
 
 
 # استفاده از تابع ساخت توکن برای ساخت اکسس توکن
-def create_access_token(subject: str) -> str:
+def create_access_token(subject: str, is_new: bool) -> str:
     return create_token(
         subject=subject,
+        is_new=is_new,
         token_type="access",
         expires_delta=timedelta(minutes=15),
     )
@@ -62,9 +76,19 @@ def get_token_subject(token: str, expected_type: str = "access") -> str:
     except JWTError as exc:
         raise ValueError("Invalid token") from exc
 
+    exp = payload.get("exp")
+
+    if exp and datetime.fromtimestamp(exp, tz=UTC) < datetime.now(UTC):
+        raise HTTPException(
+            status_code=401,
+            detail="Token expired",
+        )
+
     token_type = payload.get("type")
     subject = payload.get("sub")
     if token_type != expected_type or not subject:
         raise ValueError("Invalid token payload")
 
-    return subject
+    is_new = payload.get("is_new")
+
+    return subject, is_new

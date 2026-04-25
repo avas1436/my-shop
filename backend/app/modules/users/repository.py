@@ -5,19 +5,26 @@ from app.modules.users.models import User
 
 
 class UserRepository:
-    def __init__(self, db: AsyncSession):
-        self.db = db
+    # @staticmethod
+    # async def create(db: AsyncSession, user: User) -> User:
+    #     db.add(user)
+    #     await db.commit()
+    #     await db.refresh(user)
+    #     return user
 
-    async def create(self, user: User) -> User:
-        self.db.add(user)
-        await self.db.commit()
-        await self.db.refresh(user)
-        return user
+    # @staticmethod
+    # async def get_by_email(email: str) -> User | None:
+    #     result = await db.execute(select(User).where(User.email == email))
+    #     return result.scalar_one_or_none()
 
-    async def get_by_email(self, email: str) -> User | None:
-        result = await self.db.execute(select(User).where(User.email == email))
-        return result.scalar_one_or_none()
+    # @staticmethod
+    # async def get_by_id(user_id: int) -> User | None:
+    #     result = await db.execute(select(User).where(User.id == user_id))
+    #     return result.scalar_one_or_none()
 
-    async def get_by_id(self, user_id: int) -> User | None:
-        result = await self.db.execute(select(User).where(User.id == user_id))
+    @staticmethod
+    async def get_by_phone(db: AsyncSession, phone_number: str) -> User | None:
+        stmt = select(User).where(User.phone_number == phone_number)
+        result = await db.execute(stmt)
+
         return result.scalar_one_or_none()

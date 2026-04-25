@@ -2,11 +2,22 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from kavenegar import APIException, HTTPException as KHTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.sms_service import send_sms
-from app.modules.users.schemas import OTPVerify, RequestOTP, TokenResponse
+from app.core.jwt import get_current_user
+from app.core.security import hash_password
+
+# from app.core.sms_service import send_sms
+from app.modules.users.models import User
+from app.modules.users.schemas import (
+    OTPVerify,
+    Register,
+    RequestOTP,
+    TokenResponse,
+    UserGet,
+)
 from app.modules.users.service import request_otp_service, verify_otp_service
 
 router = APIRouter()
@@ -45,13 +56,13 @@ async def request_otp(
                 detail=f"please wait for {wait} seconds",
             )
 
-        background.add_task(
-            send_sms,
-            receptor=data.phone_number,
-            code=code,
-        )
+        # background.add_task(
+        #     send_sms,
+        #     receptor=data.phone_number,
+        #     code=code,
+        # )
 
-        # print(code)
+        print(code)
 
         return {"message": "OTP sent successfully"}
 
@@ -92,3 +103,44 @@ async def verify_otp_route(
     )
 
     return TokenResponse(access_token=token)
+
+
+# ==============================================================================
+# Complete Rgister
+# ==============================================================================
+@router.post(
+    "/register/complete",
+    response_model=UserGet,
+    status_code=status.HTTP_200_OK,
+    summary="Complete register after first login",
+)
+async def register(
+    data: Register,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],  # JWT guard
+) -> User:
+
+    currnet, is_new = current_user
+
+    if not is_new:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profile already completed",
+        )
+
+    hashed_password = hash_password(password=data.password.get_secret_value())
+
+    currnet.first_name = data.first_name
+    currnet.last_name = data.last_name
+    currnet.birth_date = data.birth_date
+    currnet.hashed_password = hashed_password
+
+    try:
+        await db.commit()
+        await db.refresh(currnet)
+
+    except SQLAlchemyError:
+        db.rollback()
+        raise
+
+    return currnet

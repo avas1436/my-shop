@@ -124,5 +124,8 @@ async def verify_otp_service(
         if changed:
             await db.commit()
 
-    token = create_access_token(subject=data.phone_number)
+    is_new = user.first_name is None
+
+    token = create_access_token(subject=data.phone_number, is_new=is_new)
+
     return token
