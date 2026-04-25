@@ -29,7 +29,9 @@
         </form>
 
         <div class="header-actions">
-          <router-link to="/profile" class="header-action header-action--link">حساب کاربری</router-link>
+          <router-link to="/profile" class="header-action header-action--link">
+            {{ profileLabel }}
+          </router-link>
           <button class="header-action" type="button" @click="toggleMiniCart">
             <span>سبد خرید</span>
             <strong>{{ cart.count }}</strong>
@@ -58,15 +60,24 @@ import { computed, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUIStore } from '@/stores/uiStore'
 import { useCartStore } from '@/stores/cartStore'
+import { useUserStore } from '@/stores/userStore'
 import BaseInput from '../base/BaseInput.vue'
 import MiniCart from './MiniCart.vue'
 import MobileNav from './MobileNav.vue'
 
 const ui = useUIStore()
 const cart = useCartStore()
+const user = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const searchQuery = ref(route.query.q || ui.searchQuery)
+const profileLabel = computed(() => {
+  if (!user.isAuthenticated) {
+    return 'حساب کاربری'
+  }
+
+  return user.profile?.first_name ? `سلام ${user.profile.first_name}` : 'حساب من'
+})
 
 const toggleMiniCart = () => ui.toggleMiniCart()
 const toggleMobile = () => ui.toggleMobileMenu()

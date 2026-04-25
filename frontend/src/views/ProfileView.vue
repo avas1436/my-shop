@@ -2,20 +2,21 @@
   <div class="page-shell">
     <section v-if="!user.isAuthenticated" class="auth-layout">
       <aside class="page-panel auth-panel auth-panel--accent">
-        <span class="auth-badge">ورود / ثبت نام</span>
-        <h1 class="section-title">حساب کاربری خود را با OTP فعال کنید</h1>
+        <span class="auth-badge">حساب کاربری</span>
+        <h1 class="section-title">ورود با رمز عبور و ثبت نام مرحله ای</h1>
         <p class="section-subtitle">
-          شماره موبایل خود را وارد کنید، کد تایید دریافت کنید و با همان کد وارد فروشگاه شوید.
+          برای کاربران جدید ابتدا شماره موبایل تایید می شود، سپس اطلاعات حساب شامل نام،
+          تاریخ تولد و رمز عبور ثبت خواهد شد.
         </p>
 
         <div class="auth-highlights">
           <article>
-            <strong>سریع و بدون رمز</strong>
-            <p>ورود و ثبت نام در یک مسیر ساده و یکپارچه انجام می‌شود.</p>
+            <strong>ورود سریع با رمز</strong>
+            <p>کاربران قبلی می توانند مستقیم با شماره موبایل و رمز عبور وارد شوند.</p>
           </article>
           <article>
-            <strong>هماهنگ با بک اند</strong>
-            <p>ارسال کد و تایید آن مستقیم به API بک اند شما متصل شده است.</p>
+            <strong>هماهنگ با API جدید</strong>
+            <p>دریافت پروفایل، تکمیل ثبت نام و ذخیره JWT همگی با روت های جدید متصل شده اند.</p>
           </article>
         </div>
       </aside>
@@ -25,50 +26,87 @@
           <button
             type="button"
             class="auth-tab"
-            :class="{ 'auth-tab--active': user.otpForm.purpose === 'login' }"
-            @click="selectPurpose('login')"
+            :class="{ 'auth-tab--active': user.authMode === 'password' }"
+            @click="user.setAuthMode('password')"
           >
-            ورود
+            ورود با رمز
           </button>
           <button
             type="button"
             class="auth-tab"
-            :class="{ 'auth-tab--active': user.otpForm.purpose === 'register' }"
-            @click="selectPurpose('register')"
+            :class="{ 'auth-tab--active': user.authMode === 'register' }"
+            @click="user.setAuthMode('register')"
           >
             ثبت نام
           </button>
         </div>
 
-        <form class="auth-form" @submit.prevent="submitAuth">
+        <form v-if="user.authMode === 'password'" class="auth-form" @submit.prevent="submitPasswordLogin">
           <BaseInput
-            v-model="phoneNumber"
+            v-model="loginPhone"
             label="شماره موبایل"
+            type="tel"
             placeholder="مثلا 09121234567"
             inputmode="numeric"
             maxlength="11"
-            :error="phoneError"
+            required
+          />
+
+          <BaseInput
+            v-model="loginPassword"
+            label="رمز عبور"
+            type="password"
+            placeholder="رمز عبور خود را وارد کنید"
+            required
+          />
+
+          <p v-if="user.authMessage" class="auth-feedback auth-feedback--success">
+            {{ user.authMessage }}
+          </p>
+          <p v-if="user.authError" class="auth-feedback auth-feedback--error">
+            {{ user.authError }}
+          </p>
+
+          <BaseButton type="submit" size="lg" block :disabled="user.loginLoading">
+            {{ passwordSubmitLabel }}
+          </BaseButton>
+        </form>
+
+        <form v-else class="auth-form" @submit.prevent="submitRegisterOtp">
+          <BaseInput
+            v-model="registerPhone"
+            label="شماره موبایل"
+            type="tel"
+            placeholder="مثلا 09121234567"
+            inputmode="numeric"
+            maxlength="11"
+            required
           />
 
           <BaseInput
             v-if="user.otpStep === 'code'"
             v-model="otpCode"
             label="کد تایید"
+            type="tel"
             placeholder="کد پیامک شده را وارد کنید"
             inputmode="numeric"
             maxlength="6"
-            :error="codeError"
+            required
           />
 
-          <p v-if="user.otpMessage" class="auth-feedback auth-feedback--success">
-            {{ user.otpMessage }}
-          </p>
-          <p v-if="user.otpError" class="auth-feedback auth-feedback--error">
-            {{ user.otpError }}
+          <p class="auth-hint">
+            این مرحله فقط برای ساخت حساب جدید است و پس از تایید شماره، فرم تکمیل اطلاعات نمایش داده می شود.
           </p>
 
-          <BaseButton type="submit" size="lg" block :disabled="isSubmitting">
-            {{ submitLabel }}
+          <p v-if="user.authMessage" class="auth-feedback auth-feedback--success">
+            {{ user.authMessage }}
+          </p>
+          <p v-if="user.authError" class="auth-feedback auth-feedback--error">
+            {{ user.authError }}
+          </p>
+
+          <BaseButton type="submit" size="lg" block :disabled="registerOtpDisabled">
+            {{ registerOtpSubmitLabel }}
           </BaseButton>
 
           <BaseButton
@@ -85,18 +123,82 @@
       </section>
     </section>
 
-    <section v-else class="profile-layout">
-      <aside class="page-panel profile-sidebar">
+    <section v-else-if="user.isNewUser" class="profile-layout">
+      <aside class="page-panel profile-sidebar profile-sidebar--pending">
         <div class="profile-sidebar__head">
-          <strong>{{ displayName }}</strong>
-          <span class="pill">کاربر وارد شده</span>
+          <strong>{{ formatPhone(user.userPhone) }}</strong>
+          <span class="pill pill--warning">ثبت نام نیمه تمام</span>
         </div>
 
         <ul class="profile-menu">
-          <li>اطلاعات حساب</li>
-          <li>سفارش ها</li>
-          <li>آدرس ها</li>
-          <li>وضعیت ورود</li>
+          <li>شماره موبایل تایید شده است</li>
+          <li>نام و نام خانوادگی را وارد کنید</li>
+          <li>تاریخ تولد و رمز عبور را ثبت کنید</li>
+        </ul>
+
+        <BaseButton variant="secondary" block @click="user.logout()">انصراف و خروج</BaseButton>
+      </aside>
+
+      <section class="page-panel profile-card">
+        <div class="section-head">
+          <div>
+            <h1 class="section-title">تکمیل اطلاعات حساب</h1>
+            <p class="section-subtitle">
+              برای نهایی شدن ثبت نام، اطلاعات کاربری و رمز عبور را ثبت کنید.
+            </p>
+          </div>
+        </div>
+
+        <form class="complete-form" @submit.prevent="submitCompleteRegister">
+          <div class="form-grid">
+            <BaseInput v-model="firstName" label="نام" placeholder="نام" required />
+            <BaseInput v-model="lastName" label="نام خانوادگی" placeholder="نام خانوادگی" required />
+            <BaseInput v-model="birthDate" label="تاریخ تولد" type="date" required />
+            <BaseInput
+              v-model="registerPassword"
+              label="رمز عبور"
+              type="password"
+              placeholder="رمز عبور جدید"
+              required
+            />
+            <BaseInput
+              v-model="registerPasswordConfirm"
+              label="تکرار رمز عبور"
+              type="password"
+              placeholder="تکرار رمز عبور"
+              required
+            />
+          </div>
+
+          <p class="auth-hint">
+            رمز عبور باید حداقل 8 کاراکتر بوده و شامل حروف کوچک و بزرگ، عدد و کاراکتر ویژه باشد.
+          </p>
+
+          <p v-if="user.authMessage" class="auth-feedback auth-feedback--success">
+            {{ user.authMessage }}
+          </p>
+          <p v-if="user.authError" class="auth-feedback auth-feedback--error">
+            {{ user.authError }}
+          </p>
+
+          <BaseButton type="submit" size="lg" block :disabled="user.registerCompleting">
+            {{ completeRegisterLabel }}
+          </BaseButton>
+        </form>
+      </section>
+    </section>
+
+    <section v-else class="profile-layout">
+      <aside class="page-panel profile-sidebar">
+        <div class="profile-sidebar__head">
+          <strong>{{ user.displayName }}</strong>
+          <span class="pill">ورود موفق</span>
+        </div>
+
+        <ul class="profile-menu">
+          <li>{{ formatPhone(user.userPhone) }}</li>
+          <li>JWT ذخیره شده و آماده استفاده است</li>
+          <li>اطلاعات حساب از بک اند دریافت می شود</li>
         </ul>
 
         <BaseButton variant="secondary" block @click="user.logout()">خروج از حساب</BaseButton>
@@ -104,25 +206,65 @@
 
       <div class="profile-content">
         <section class="page-panel profile-card">
-          <div class="section-head">
+          <div class="section-head section-head--spread">
             <div>
-              <h1 class="section-title">حساب کاربری</h1>
-              <p class="section-subtitle">ورود شما با کد یکبار مصرف با موفقیت انجام شده است.</p>
+              <h1 class="section-title">اطلاعات حساب</h1>
+              <p class="section-subtitle">نمایش اطلاعات کاربر از مسیر `GET /v1/users/me`.</p>
             </div>
+            <BaseButton
+              type="button"
+              variant="ghost"
+              size="md"
+              :disabled="user.profileLoading"
+              @click="refreshProfile"
+            >
+              بروزرسانی
+            </BaseButton>
           </div>
 
-          <div class="profile-summary">
+          <p v-if="user.profileError" class="auth-feedback auth-feedback--error">
+            {{ user.profileError }}
+          </p>
+          <p v-if="user.profileLoading && !user.profile" class="auth-feedback">
+            در حال دریافت اطلاعات حساب...
+          </p>
+
+          <div v-else-if="user.profile" class="profile-summary profile-summary--details">
+            <article>
+              <span class="muted">نام</span>
+              <strong>{{ user.profile.first_name || '-' }}</strong>
+            </article>
+            <article>
+              <span class="muted">نام خانوادگی</span>
+              <strong>{{ user.profile.last_name || '-' }}</strong>
+            </article>
             <article>
               <span class="muted">شماره تماس</span>
-              <strong>{{ userPhone }}</strong>
+              <strong>{{ formatPhone(user.profile.phone_number) }}</strong>
             </article>
             <article>
-              <span class="muted">وضعیت احراز</span>
-              <strong>تایید شده</strong>
+              <span class="muted">تاریخ تولد</span>
+              <strong>{{ formatDate(user.profile.birth_date) }}</strong>
             </article>
             <article>
-              <span class="muted">نوع ورود</span>
-              <strong>OTP</strong>
+              <span class="muted">سن</span>
+              <strong>{{ user.profile.age ?? '-' }}</strong>
+            </article>
+            <article>
+              <span class="muted">نقش</span>
+              <strong>{{ formatRole(user.profile.role) }}</strong>
+            </article>
+            <article>
+              <span class="muted">وضعیت حساب</span>
+              <strong>{{ user.profile.is_active ? 'فعال' : 'غیرفعال' }}</strong>
+            </article>
+            <article>
+              <span class="muted">تایید شماره موبایل</span>
+              <strong>{{ user.profile.is_phone_verified ? 'تایید شده' : 'در انتظار' }}</strong>
+            </article>
+            <article>
+              <span class="muted">تاریخ عضویت</span>
+              <strong>{{ formatDateTime(user.profile.created_at) }}</strong>
             </article>
           </div>
         </section>
@@ -132,14 +274,28 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import { useUserStore } from '@/stores/userStore'
 
 const user = useUserStore()
 
-const phoneNumber = computed({
+onMounted(() => {
+  user.restoreSession()
+})
+
+const loginPhone = computed({
+  get: () => user.loginForm.phone_number,
+  set: (value) => user.setLoginField('phone_number', normalizeDigits(value).slice(0, 11)),
+})
+
+const loginPassword = computed({
+  get: () => user.loginForm.password,
+  set: (value) => user.setLoginField('password', value),
+})
+
+const registerPhone = computed({
   get: () => user.otpForm.phone_number,
   set: (value) => user.setOtpField('phone_number', normalizeDigits(value).slice(0, 11)),
 })
@@ -149,36 +305,56 @@ const otpCode = computed({
   set: (value) => user.setOtpField('code', normalizeDigits(value).slice(0, 6)),
 })
 
-const isSubmitting = computed(() => user.otpSending || user.otpVerifying)
-const submitLabel = computed(() => {
+const firstName = computed({
+  get: () => user.registerForm.first_name,
+  set: (value) => user.setRegisterField('first_name', value),
+})
+
+const lastName = computed({
+  get: () => user.registerForm.last_name,
+  set: (value) => user.setRegisterField('last_name', value),
+})
+
+const birthDate = computed({
+  get: () => user.registerForm.birth_date,
+  set: (value) => user.setRegisterField('birth_date', value),
+})
+
+const registerPassword = computed({
+  get: () => user.registerForm.password,
+  set: (value) => user.setRegisterField('password', value),
+})
+
+const registerPasswordConfirm = computed({
+  get: () => user.registerForm.password_confirm,
+  set: (value) => user.setRegisterField('password_confirm', value),
+})
+
+const passwordSubmitLabel = computed(() => (user.loginLoading ? 'در حال ورود...' : 'ورود به حساب'))
+
+const registerOtpSubmitLabel = computed(() => {
   if (user.otpSending) {
     return 'در حال ارسال کد...'
   }
   if (user.otpVerifying) {
     return 'در حال تایید کد...'
   }
-  return user.otpStep === 'code' ? 'تایید کد و ورود' : 'ارسال کد تایید'
+
+  return user.otpStep === 'code' ? 'تایید کد و ادامه' : 'ارسال کد تایید'
 })
 
-const phoneError = computed(() => {
-  if (user.otpError && user.otpStep === 'phone') {
-    return user.otpError
-  }
-  return ''
-})
+const completeRegisterLabel = computed(() =>
+  user.registerCompleting ? 'در حال تکمیل حساب...' : 'ذخیره اطلاعات و ورود',
+)
 
-const codeError = computed(() => {
-  if (user.otpError && user.otpStep === 'code') {
-    return user.otpError
-  }
-  return ''
-})
+const registerOtpDisabled = computed(() => user.otpSending || user.otpVerifying)
 
-const userPhone = computed(() => formatPhone(user.otpForm.phone_number || getPhoneFromToken(user.token)))
-const displayName = computed(() => userPhone.value || 'کاربر فروشگاه')
+function toEnglishDigits(value) {
+  return String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+}
 
 function normalizeDigits(value) {
-  return String(value).replace(/\D/g, '')
+  return toEnglishDigits(value).replace(/\D/g, '')
 }
 
 function formatPhone(value) {
@@ -186,41 +362,76 @@ function formatPhone(value) {
     return '-'
   }
 
-  return value.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3')
+  const digits = normalizeDigits(value)
+  return digits.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3')
 }
 
-function getPhoneFromToken(token) {
-  if (!token) {
-    return ''
+function formatDate(value) {
+  if (!value) {
+    return '-'
   }
 
-  try {
-    const [, payload] = token.split('.')
-    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
-    return decoded.sub || ''
-  } catch {
-    return ''
+  return new Intl.DateTimeFormat('fa-IR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(value))
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return '-'
   }
+
+  return new Intl.DateTimeFormat('fa-IR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value))
 }
 
-function selectPurpose(purpose) {
-  user.setOtpPurpose(purpose)
-  user.clearOtpFeedback()
+function formatRole(value) {
+  if (!value) {
+    return '-'
+  }
+
+  const roles = {
+    customer: 'مشتری',
+    admin: 'مدیر',
+    CUSTOMER: 'مشتری',
+    ADMIN: 'مدیر',
+  }
+
+  return roles[value] || value
 }
 
-function goBackToPhone() {
-  user.setOtpField('code', '')
-  user.otpStep = 'phone'
-  user.clearOtpFeedback()
+async function submitPasswordLogin() {
+  await user.loginWithPassword()
 }
 
-async function submitAuth() {
+async function submitRegisterOtp() {
   if (user.otpStep === 'phone') {
     await user.requestOtp()
     return
   }
 
   await user.verifyOtp()
+}
+
+async function submitCompleteRegister() {
+  await user.completeRegister()
+}
+
+function goBackToPhone() {
+  user.setOtpField('code', '')
+  user.otpStep = 'phone'
+  user.clearFeedback()
+}
+
+async function refreshProfile() {
+  await user.fetchProfile()
 }
 </script>
 
@@ -261,7 +472,7 @@ async function submitAuth() {
 .auth-highlights {
   display: grid;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .auth-highlights article {
@@ -270,91 +481,143 @@ async function submitAuth() {
   background: rgba(255, 255, 255, 0.14);
 }
 
-.auth-highlights p {
+.auth-highlights p,
+.auth-hint {
   margin: 0.4rem 0 0;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--text-muted);
+  line-height: 1.8;
 }
 
-.auth-panel--form {
-  display: grid;
-  align-content: start;
-  gap: 1.25rem;
+.auth-panel--accent .auth-highlights p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.auth-panel--form,
+.profile-card,
+.profile-sidebar {
+  background: var(--surface);
 }
 
 .auth-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  gap: 0.5rem;
   padding: 0.35rem;
-  border-radius: 999px;
   background: var(--bg-muted);
+  border-radius: 18px;
 }
 
 .auth-tab {
   min-height: 48px;
   border: 0;
-  border-radius: 999px;
+  border-radius: 14px;
   background: transparent;
   color: var(--text-muted);
   font-weight: 700;
 }
 
 .auth-tab--active {
-  background: var(--surface-strong);
+  background: #fff;
   color: var(--primary);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
-.auth-form {
+.auth-form,
+.complete-form {
   display: grid;
   gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-grid :deep(.base-input:first-child),
+.form-grid :deep(.base-input:nth-child(4)),
+.form-grid :deep(.base-input:nth-child(5)) {
+  grid-column: span 1;
 }
 
 .auth-feedback {
   margin: 0;
-  padding: 0.85rem 1rem;
+  padding: 0.9rem 1rem;
   border-radius: 16px;
-  font-size: 0.92rem;
+  background: rgba(15, 23, 42, 0.05);
 }
 
 .auth-feedback--success {
-  background: rgba(15, 157, 129, 0.12);
-  color: var(--success);
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.1);
 }
 
 .auth-feedback--error {
-  background: rgba(239, 68, 68, 0.1);
   color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .profile-sidebar {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
   align-content: start;
+}
+
+.profile-sidebar--pending {
+  background: linear-gradient(180deg, rgba(255, 122, 89, 0.12), rgba(255, 255, 255, 0.96));
 }
 
 .profile-sidebar__head {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.5rem;
+}
+
+.pill {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(91, 61, 245, 0.12);
+  color: var(--primary);
+  font-size: 0.86rem;
+}
+
+.pill--warning {
+  background: rgba(255, 122, 89, 0.14);
+  color: #c2410c;
 }
 
 .profile-menu {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 
 .profile-menu li {
   padding: 0.9rem 1rem;
-  border-radius: 18px;
-  background: var(--bg-muted);
-  font-weight: 700;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text-muted);
 }
 
 .profile-content {
   display: grid;
-  gap: 1.25rem;
+  gap: 1rem;
+}
+
+.section-head {
+  margin-bottom: 1.25rem;
+}
+
+.section-head--spread {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .profile-summary {
@@ -365,17 +628,28 @@ async function submitAuth() {
 
 .profile-summary article {
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
   padding: 1rem;
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--bg-muted);
 }
 
-@media (max-width: 920px) {
+.muted {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 980px) {
   .auth-layout,
   .profile-layout,
-  .profile-summary {
+  .profile-summary,
+  .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-head--spread {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 </style>

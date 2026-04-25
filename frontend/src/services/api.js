@@ -45,7 +45,10 @@ async function request(path, options = {}) {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(payload))
+    const error = new Error(getErrorMessage(payload))
+    error.status = response.status
+    error.payload = payload
+    throw error
   }
 
   return payload
