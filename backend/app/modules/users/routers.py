@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from kavenegar import APIException, HTTPException as KHTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,7 @@ async def request_otp(
     request: Request,
     data: RequestOTP,
     db: Annotated[AsyncSession, Depends(get_db)],
+    background: BackgroundTasks,
 ):
     ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "unknown")
@@ -44,10 +45,12 @@ async def request_otp(
                 detail=f"please wait for {wait} seconds",
             )
 
-        await send_sms(
+        background.add_task(
+            send_sms,
             receptor=data.phone_number,
             code=code,
         )
+
         # print(code)
 
         return {"message": "OTP sent successfully"}

@@ -1,5 +1,3 @@
-import asyncio
-
 from kavenegar import APIException, HTTPException, KavenegarAPI
 
 from app.config.settings import get_settings
@@ -7,7 +5,7 @@ from app.config.settings import get_settings
 settings = get_settings()
 
 
-async def send_sms(
+def send_sms(
     receptor: str,
     code: str,
     api_key: str = settings.kavenegarapi,
@@ -23,7 +21,7 @@ async def send_sms(
 
     try:
         # اجرای تابع همگام در ترد جداگانه
-        response = await asyncio.to_thread(api.sms_send, params)
+        response = api.sms_send(params)
         return response
 
     except APIException as e:
