@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 
-class ProductRepository:
+class AdminProductRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 

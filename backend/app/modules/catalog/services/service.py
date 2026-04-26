@@ -1,25 +1,34 @@
 from app.modules.products.models import Product
 from app.modules.products.repository import ProductRepository
-from app.modules.products.schemas import ProductCreate
 
 from app.cache.product_cache import ProductCache
-from app.core.utils import slugify
+from app.modules.catalog.schemas.product import DraftProductCreate
 
 
 class AdminProductService:
     def __init__(
-        self, repository: ProductRepository, cache: ProductCache | None = None
+        self,
+        repository: ProductRepository,
+        cache: ProductCache | None = None,
     ):
         self.repository = repository
         self.cache = cache
 
-    async def create(self, payload: ProductCreate) -> Product:
+    async def draft_create(self, payload: DraftProductCreate) -> Product:
         product = Product(
             name=payload.name,
-            slug=slugify(payload.name),
+            slug=payload.slug,
             description=payload.description,
             price=payload.price,
-            category_id=payload.category_id,
+            cost_price=payload.cost_price,
+            tax_rate=payload.tax_rate,
+            status=payload.status,
+            is_featured=payload.is_featured,
+            is_digital=payload.is_digital,
+            weight=payload.weight,
+            meta_title=payload.meta_title,
+            meta_description=payload.meta_description,
+            gtin=payload.gtin,
         )
         created = await self.repository.create(product)
         if self.cache:
