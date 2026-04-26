@@ -1,10 +1,10 @@
+from app.modules.products.repository import ProductRepository
+from app.modules.products.schemas import ProductCreate, ProductRead
+from app.modules.products.service import ProductService
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.dependencies import get_db_session
-from app.modules.products.repository import ProductRepository
-from app.modules.products.schemas import ProductCreate, ProductRead
-from app.modules.products.service import ProductService
 
 router = APIRouter()
 

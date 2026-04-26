@@ -1,11 +1,12 @@
-from app.cache.product_cache import ProductCache
-from app.core.utils import slugify
 from app.modules.products.models import Product
 from app.modules.products.repository import ProductRepository
 from app.modules.products.schemas import ProductCreate
 
+from app.cache.product_cache import ProductCache
+from app.core.utils import slugify
 
-class ProductService:
+
+class AdminProductService:
     def __init__(
         self, repository: ProductRepository, cache: ProductCache | None = None
     ):
