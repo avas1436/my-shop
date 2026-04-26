@@ -121,30 +121,28 @@ async def register(
     current_user: Annotated[User, Depends(get_current_user)],  # JWT guard
 ) -> User:
 
-    currnet, is_new = current_user
-
-    if not is_new:
+    if current_user.first_name is not None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Profile already completed",
         )
 
     hashed_password = hash_password(password=data.password.get_secret_value())
 
-    currnet.first_name = data.first_name
-    currnet.last_name = data.last_name
-    currnet.birth_date = data.birth_date
-    currnet.hashed_password = hashed_password
+    current_user.first_name = data.first_name
+    current_user.last_name = data.last_name
+    current_user.birth_date = data.birth_date
+    current_user.hashed_password = hashed_password
 
     try:
         await db.commit()
-        await db.refresh(currnet)
+        await db.refresh(current_user)
 
     except SQLAlchemyError:
         db.rollback()
         raise
 
-    return currnet
+    return current_user
 
 
 # ==============================================================================
@@ -199,12 +197,10 @@ def me(
     current_user: Annotated[User, Depends(get_current_user)],  # JWT guard
 ) -> User:
 
-    currnet, is_new = current_user
-
-    if is_new:
+    if current_user.first_name is not None:
         raise HTTPException(
             status_code=403,
             detail="complete your profile first",
         )
 
-    return currnet
+    return current_user

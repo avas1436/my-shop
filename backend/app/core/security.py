@@ -29,7 +29,6 @@ def create_token(
     subject: str,
     token_type: str,
     expires_delta: timedelta,
-    is_new: bool,
 ) -> str:
     expire = datetime.now(UTC) + expires_delta
 
@@ -37,19 +36,20 @@ def create_token(
         "sub": subject,
         "type": token_type,
         "exp": expire,
-        "is_new": is_new,
     }
 
     return jwt.encode(
-        claims=payload, key=settings.secret_key, algorithm=settings.jwt_algorithm
+        claims=payload,
+        key=settings.secret_key,
+        algorithm=settings.jwt_algorithm,
     )
 
 
 # استفاده از تابع ساخت توکن برای ساخت اکسس توکن
-def create_access_token(subject: str, is_new: bool) -> str:
+def create_access_token(subject: str) -> str:
+
     return create_token(
         subject=subject,
-        is_new=is_new,
         token_type="access",
         expires_delta=timedelta(minutes=15),
     )
@@ -57,6 +57,7 @@ def create_access_token(subject: str, is_new: bool) -> str:
 
 # برای ساخت رفرش توکن
 def create_refresh_token(subject: str) -> str:
+
     return create_token(
         subject=subject,
         token_type="refresh",
@@ -71,8 +72,10 @@ def decode_token(token: str) -> dict:
 
 # کاربردی تابع دیکد
 def get_token_subject(token: str, expected_type: str = "access") -> str:
+
     try:
         payload = decode_token(token=token)
+
     except JWTError as exc:
         raise ValueError("Invalid token") from exc
 
@@ -89,6 +92,4 @@ def get_token_subject(token: str, expected_type: str = "access") -> str:
     if token_type != expected_type or not subject:
         raise ValueError("Invalid token payload")
 
-    is_new = payload.get("is_new")
-
-    return subject, is_new
+    return subject

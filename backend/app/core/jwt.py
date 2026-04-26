@@ -19,8 +19,7 @@ async def get_current_user(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
 
-    phone, is_new = get_token_subject(token.credentials)
-    # phone = payload.get("sub")  # phone number
+    phone = get_token_subject(token.credentials)
 
     if not phone:
         raise HTTPException(
@@ -30,10 +29,10 @@ async def get_current_user(
 
     user = await UserRepository.get_by_phone(db=db, phone_number=phone)
 
-    if not user or not user.is_active:
+    if not user or not user.is_active or user.deleted_at is not None:
         raise HTTPException(
             status_code=401,
             detail="User not found or inactive",
         )
 
-    return user, is_new
+    return user
