@@ -141,6 +141,12 @@ class Product(Base):
         back_populates="product", cascade="all, delete-orphan"
     )
 
+    comments = relationship(
+        "Comment",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+
     __table_args__ = (
         # قیود قیمتی
         CheckConstraint("price >= 0", name="ck_product_price_non_negative"),

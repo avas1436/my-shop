@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi_offline import FastAPIOffline
 
+import app.models
 from app.api.v1.router import api_router
 from app.config.cors import setup_cors
 from app.config.logging_config import setup_logger

@@ -1,7 +1,8 @@
-from app.modules.products.models import Product
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.modules.catalog.models.product import Product
 
 
 class AdminProductRepository:

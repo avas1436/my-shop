@@ -1,14 +1,13 @@
-from app.modules.products.models import Product
-from app.modules.products.repository import ProductRepository
-
 from app.cache.product_cache import ProductCache
+from app.modules.catalog.models.product import Product
+from app.modules.catalog.repository.product import AdminProductRepository
 from app.modules.catalog.schemas.product import DraftProductCreate
 
 
 class AdminProductService:
     def __init__(
         self,
-        repository: ProductRepository,
+        repository: AdminProductRepository,
         cache: ProductCache | None = None,
     ):
         self.repository = repository
