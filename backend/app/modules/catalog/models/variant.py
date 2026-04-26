@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
@@ -10,8 +12,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
-# from app.modules.catalog.models.attribute import ProductVariantAttribute
-# from app.modules.catalog.models.product import Product
+if TYPE_CHECKING:
+    from app.modules.catalog.models.attribute import ProductVariantAttribute
+    from app.modules.catalog.models.product import Product
 
 
 class ProductVariant(Base):
