@@ -131,12 +131,11 @@ class UserGet(BaseModel):
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str = "bearer"
-
-
-# ==============================================================================
-# Token Response
-# ==============================================================================
-class TokenResponse(BaseModel):
-    access_token: str
     token_type: Literal["bearer"] = "bearer"
+
+
+# ==============================================================================
+# Refresh Token Request
+# ==============================================================================
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str

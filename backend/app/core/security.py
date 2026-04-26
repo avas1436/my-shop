@@ -1,4 +1,6 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
+from uuid import uuid4
 
 from fastapi import HTTPException
 from jose import JWTError, jwt  # type: ignore
@@ -29,6 +31,8 @@ def create_token(
     subject: str,
     token_type: str,
     expires_delta: timedelta,
+    extra_claims: dict[str, Any] | None = None,
+    token_id: str | None = None,
 ) -> str:
     expire = datetime.now(UTC) + expires_delta
 
@@ -36,7 +40,10 @@ def create_token(
         "sub": subject,
         "type": token_type,
         "exp": expire,
+        "jti": token_id or str(uuid4()),
     }
+    if extra_claims:
+        payload.update(extra_claims)
 
     return jwt.encode(
         claims=payload,
@@ -46,22 +53,22 @@ def create_token(
 
 
 # استفاده از تابع ساخت توکن برای ساخت اکسس توکن
-def create_access_token(subject: str) -> str:
-
+def create_access_token(subject: str, is_new: bool = False) -> str:
     return create_token(
         subject=subject,
         token_type="access",
-        expires_delta=timedelta(minutes=15),
+        expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
+        extra_claims={"is_new": is_new},
     )
 
 
 # برای ساخت رفرش توکن
-def create_refresh_token(subject: str) -> str:
-
+def create_refresh_token(subject: str, is_new: bool = False) -> str:
     return create_token(
         subject=subject,
         token_type="refresh",
-        expires_delta=timedelta(days=15),
+        expires_delta=timedelta(days=settings.refresh_token_expire_days),
+        extra_claims={"is_new": is_new},
     )
 
 
@@ -71,8 +78,7 @@ def decode_token(token: str) -> dict:
 
 
 # کاربردی تابع دیکد
-def get_token_subject(token: str, expected_type: str = "access") -> str:
-
+def get_token_payload(token: str, expected_type: str = "access") -> dict[str, Any]:
     try:
         payload = decode_token(token=token)
 
@@ -92,4 +98,9 @@ def get_token_subject(token: str, expected_type: str = "access") -> str:
     if token_type != expected_type or not subject:
         raise ValueError("Invalid token payload")
 
-    return subject
+    return payload
+
+
+def get_token_subject(token: str, expected_type: str = "access") -> str:
+    payload = get_token_payload(token=token, expected_type=expected_type)
+    return str(payload["sub"])

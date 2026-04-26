@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia'
-import { api } from '@/services/api'
+import {
+  api,
+  AUTH_CHANGE_EVENT,
+  clearStoredTokens,
+  getStoredTokens,
+  persistTokens,
+  refreshAuthSession,
+} from '@/services/api'
 
-const TOKEN_KEY = 'shop_access_token'
 const AUTH_MODE_PASSWORD = 'password'
 const OTP_STEP_PHONE = 'phone'
 const OTP_STEP_CODE = 'code'
 
-function getStoredToken() {
-  if (typeof window === 'undefined') {
-    return ''
-  }
-
-  return window.localStorage.getItem(TOKEN_KEY) || ''
-}
+let authListenersAttached = false
 
 function getDefaultLoginForm() {
   return {
@@ -62,10 +62,14 @@ function decodeTokenPayload(token) {
   }
 }
 
+function getCurrentPayload(state) {
+  return decodeTokenPayload(state.accessToken) || decodeTokenPayload(state.refreshToken)
+}
+
 function getPhoneNumber(state) {
   return (
     state.profile?.phone_number ||
-    decodeTokenPayload(state.token)?.sub ||
+    getCurrentPayload(state)?.sub ||
     state.otpForm.phone_number ||
     state.loginForm.phone_number ||
     ''
@@ -73,26 +77,31 @@ function getPhoneNumber(state) {
 }
 
 export const useUserStore = defineStore('user', {
-  state: () => ({
-    token: getStoredToken(),
-    authMode: AUTH_MODE_PASSWORD,
-    loginForm: getDefaultLoginForm(),
-    otpForm: getDefaultOtpForm(),
-    registerForm: getDefaultRegisterForm(),
-    otpStep: OTP_STEP_PHONE,
-    otpSending: false,
-    otpVerifying: false,
-    loginLoading: false,
-    registerCompleting: false,
-    profileLoading: false,
-    authMessage: '',
-    authError: '',
-    profileError: '',
-    profile: null,
-  }),
+  state: () => {
+    const { accessToken, refreshToken } = getStoredTokens()
+
+    return {
+      accessToken,
+      refreshToken,
+      authMode: AUTH_MODE_PASSWORD,
+      loginForm: getDefaultLoginForm(),
+      otpForm: getDefaultOtpForm(),
+      registerForm: getDefaultRegisterForm(),
+      otpStep: OTP_STEP_PHONE,
+      otpSending: false,
+      otpVerifying: false,
+      loginLoading: false,
+      registerCompleting: false,
+      profileLoading: false,
+      authMessage: '',
+      authError: '',
+      profileError: '',
+      profile: null,
+    }
+  },
   getters: {
-    isAuthenticated: (state) => Boolean(state.token),
-    tokenPayload: (state) => decodeTokenPayload(state.token),
+    isAuthenticated: (state) => Boolean(state.accessToken || state.refreshToken),
+    tokenPayload: (state) => getCurrentPayload(state),
     isNewUser() {
       return Boolean(this.tokenPayload?.is_new)
     },
@@ -108,15 +117,33 @@ export const useUserStore = defineStore('user', {
     },
   },
   actions: {
-    setToken(token) {
-      this.token = token
-      if (typeof window !== 'undefined') {
-        if (token) {
-          window.localStorage.setItem(TOKEN_KEY, token)
-        } else {
-          window.localStorage.removeItem(TOKEN_KEY)
-        }
+    syncTokensFromStorage() {
+      const { accessToken, refreshToken } = getStoredTokens()
+      this.accessToken = accessToken
+      this.refreshToken = refreshToken
+    },
+    setTokens(tokens) {
+      persistTokens(tokens)
+      this.syncTokensFromStorage()
+    },
+    attachAuthListeners() {
+      if (typeof window === 'undefined' || authListenersAttached) {
+        return
       }
+
+      window.addEventListener(AUTH_CHANGE_EVENT, (event) => {
+        this.accessToken = event.detail?.accessToken || ''
+        this.refreshToken = event.detail?.refreshToken || ''
+      })
+      window.addEventListener('storage', () => {
+        this.syncTokensFromStorage()
+      })
+      authListenersAttached = true
+    },
+    async initializeAuth() {
+      this.attachAuthListeners()
+      this.syncTokensFromStorage()
+      await this.restoreSession()
     },
     setAuthMode(mode) {
       this.authMode = mode
@@ -149,7 +176,21 @@ export const useUserStore = defineStore('user', {
       this.registerCompleting = false
     },
     async restoreSession() {
-      if (!this.token || this.isNewUser || this.profile || this.profileLoading) {
+      this.syncTokensFromStorage()
+
+      if (!this.accessToken && !this.refreshToken) {
+        return
+      }
+
+      if (!this.accessToken && this.refreshToken) {
+        try {
+          await this.refreshSession({ silent: true })
+        } catch {
+          return
+        }
+      }
+
+      if (this.isNewUser || this.profile || this.profileLoading) {
         return
       }
 
@@ -159,15 +200,36 @@ export const useUserStore = defineStore('user', {
         // Errors are already handled in fetchProfile.
       }
     },
+    async refreshSession({ silent = false } = {}) {
+      if (!silent) {
+        this.clearFeedback()
+      }
+
+      try {
+        const tokens = await refreshAuthSession()
+        this.syncTokensFromStorage()
+        return tokens
+      } catch (error) {
+        this.syncTokensFromStorage()
+        if (!silent) {
+          this.authError = error.message
+        }
+        throw error
+      }
+    },
     async requestOtp() {
       this.otpSending = true
       this.clearFeedback()
 
       try {
-        await api.post('/v1/users/otp/request', {
-          phone_number: this.otpForm.phone_number,
-          purpose: this.otpForm.purpose,
-        })
+        await api.post(
+          '/v1/users/otp/request',
+          {
+            phone_number: this.otpForm.phone_number,
+            purpose: this.otpForm.purpose,
+          },
+          { skipAuthRefresh: true },
+        )
 
         this.otpStep = OTP_STEP_CODE
         this.authMessage = 'کد تایید با موفقیت ارسال شد.'
@@ -183,13 +245,17 @@ export const useUserStore = defineStore('user', {
       this.clearFeedback()
 
       try {
-        const response = await api.post('/v1/users/otp/verify', {
-          phone_number: this.otpForm.phone_number,
-          code: this.otpForm.code,
-          purpose: this.otpForm.purpose,
-        })
+        const response = await api.post(
+          '/v1/users/otp/verify',
+          {
+            phone_number: this.otpForm.phone_number,
+            code: this.otpForm.code,
+            purpose: this.otpForm.purpose,
+          },
+          { skipAuthRefresh: true },
+        )
 
-        this.setToken(response.access_token)
+        this.setTokens(response)
         this.otpStep = OTP_STEP_PHONE
         this.otpForm = {
           ...getDefaultOtpForm(),
@@ -214,12 +280,16 @@ export const useUserStore = defineStore('user', {
       this.clearFeedback()
 
       try {
-        const response = await api.post('/v1/users/login/password', {
-          phone_number: this.loginForm.phone_number,
-          password: this.loginForm.password,
-        })
+        const response = await api.post(
+          '/v1/users/login/password',
+          {
+            phone_number: this.loginForm.phone_number,
+            password: this.loginForm.password,
+          },
+          { skipAuthRefresh: true },
+        )
 
-        this.setToken(response.access_token)
+        this.setTokens(response)
         await this.fetchProfile({ silent: true })
         this.authMessage = 'ورود شما با رمز عبور با موفقیت انجام شد.'
         this.resetLoginForm()
@@ -251,19 +321,24 @@ export const useUserStore = defineStore('user', {
       }
 
       try {
-        const response = await api.post('/v1/users/login/password', {
-          phone_number: phoneNumber,
-          password,
-        })
+        const response = await api.post(
+          '/v1/users/login/password',
+          {
+            phone_number: phoneNumber,
+            password,
+          },
+          { skipAuthRefresh: true },
+        )
 
-        this.setToken(response.access_token)
+        this.setTokens(response)
         await this.fetchProfile({ silent: true })
         this.resetRegisterForm()
         this.resetOtpFlow()
         this.authMode = AUTH_MODE_PASSWORD
         this.authMessage = 'حساب کاربری شما تکمیل شد و وارد شدید.'
       } catch (error) {
-        this.setToken('')
+        clearStoredTokens()
+        this.syncTokensFromStorage()
         this.profile = null
         this.resetRegisterForm()
         this.resetOtpFlow()
@@ -276,7 +351,9 @@ export const useUserStore = defineStore('user', {
       }
     },
     async fetchProfile({ silent = false } = {}) {
-      if (!this.token || this.isNewUser) {
+      this.syncTokensFromStorage()
+
+      if ((!this.accessToken && !this.refreshToken) || this.isNewUser) {
         return null
       }
 
@@ -287,14 +364,16 @@ export const useUserStore = defineStore('user', {
 
       try {
         const profile = await api.get('/v1/users/me')
+        this.syncTokensFromStorage()
         this.profile = profile
         return profile
       } catch (error) {
+        this.syncTokensFromStorage()
         this.profile = null
         this.profileError = error.message
 
         if (error.status === 401) {
-          this.logout()
+          await this.logout({ revoke: false })
         }
 
         throw error
@@ -302,10 +381,27 @@ export const useUserStore = defineStore('user', {
         this.profileLoading = false
       }
     },
-    logout() {
+    async logout({ revoke = true } = {}) {
       const phoneNumber = this.userPhone
+      const refreshToken = this.refreshToken
 
-      this.setToken('')
+      if (revoke && refreshToken) {
+        try {
+          await api.post(
+            '/v1/users/logout',
+            { refresh_token: refreshToken },
+            {
+              skipAuth: true,
+              skipAuthRefresh: true,
+            },
+          )
+        } catch {
+          // Local logout should continue even if revoke fails.
+        }
+      }
+
+      clearStoredTokens()
+      this.syncTokensFromStorage()
       this.profile = null
       this.profileError = ''
       this.profileLoading = false

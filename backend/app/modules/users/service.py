@@ -1,15 +1,55 @@
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
+from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums import PurposeOTP
 from app.core.otp_service import create_otp, verify_otp
-from app.core.security import create_access_token
+from app.core.refresh_tokens import (
+    is_refresh_token_active,
+    revoke_refresh_token,
+    store_refresh_token,
+)
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    get_token_payload,
+)
 from app.modules.users.models import User
-from app.modules.users.schemas import OTPVerify
+from app.modules.users.schemas import OTPVerify, TokenPair
+
+
+def is_new_user(user: User) -> bool:
+    return (
+        user.first_name is None
+        or user.last_name is None
+        or user.hashed_password is None
+    )
+
+
+async def issue_token_pair(user: User, redis_client: Redis | None) -> TokenPair:
+    access_token = create_access_token(
+        subject=user.phone_number,
+        is_new=is_new_user(user),
+    )
+    refresh_token = create_refresh_token(
+        subject=user.phone_number,
+        is_new=is_new_user(user),
+    )
+    refresh_payload = get_token_payload(refresh_token, expected_type="refresh")
+    await store_refresh_token(
+        redis_client=redis_client,
+        token_id=str(refresh_payload["jti"]),
+        subject=user.phone_number,
+    )
+
+    return TokenPair(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 # ==============================================================================
@@ -44,7 +84,7 @@ async def request_otp_service(
 
     if wait:
         await db.rollback()
-        return {"wait": wait}
+        return None, wait
 
     await db.commit()
 
@@ -60,6 +100,7 @@ async def verify_otp_service(
     ip_address: str,
     user_agent: str,
     device_id: str,
+    redis_client: Redis | None = None,
 ):
     # 1) Verify OTP
     is_valid = await verify_otp(
@@ -124,6 +165,49 @@ async def verify_otp_service(
         if changed:
             await db.commit()
 
-    token = create_access_token(subject=data.phone_number)
+    return await issue_token_pair(user=user, redis_client=redis_client)
 
-    return token
+
+async def refresh_token_service(
+    db: AsyncSession,
+    refresh_token: str,
+    redis_client: Redis | None = None,
+) -> TokenPair:
+    payload = get_token_payload(refresh_token, expected_type="refresh")
+    subject = str(payload["sub"])
+    token_id = str(payload["jti"])
+
+    if not await is_refresh_token_active(redis_client, token_id=token_id, subject=subject):
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh token is invalid or revoked",
+        )
+
+    stmt = select(User).where(User.phone_number == subject).limit(1)
+    res = await db.execute(stmt)
+    user = res.scalar_one_or_none()
+
+    if not user or not user.is_active or user.deleted_at is not None:
+        await revoke_refresh_token(redis_client, token_id=token_id)
+        raise HTTPException(
+            status_code=401,
+            detail="User not found or inactive",
+        )
+
+    await revoke_refresh_token(redis_client, token_id=token_id)
+    return await issue_token_pair(user=user, redis_client=redis_client)
+
+
+async def revoke_refresh_token_service(
+    refresh_token: str,
+    redis_client: Redis | None = None,
+) -> None:
+    try:
+        payload = get_token_payload(refresh_token, expected_type="refresh")
+    except ValueError:
+        return
+
+    await revoke_refresh_token(
+        redis_client=redis_client,
+        token_id=str(payload["jti"]),
+    )

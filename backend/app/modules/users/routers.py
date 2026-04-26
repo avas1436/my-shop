@@ -8,18 +8,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.jwt import get_current_user
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.redis import get_redis_client
+from app.core.security import hash_password, verify_password
 from app.core.sms_service import send_sms
 from app.modules.users.models import User
 from app.modules.users.schemas import (
     LoginWithPassword,
     OTPVerify,
+    RefreshTokenRequest,
     Register,
     RequestOTP,
-    TokenResponse,
+    TokenPair,
     UserGet,
 )
-from app.modules.users.service import request_otp_service, verify_otp_service
+from app.modules.users.service import (
+    issue_token_pair,
+    refresh_token_service,
+    request_otp_service,
+    revoke_refresh_token_service,
+    verify_otp_service,
+)
 
 router = APIRouter()
 
@@ -63,8 +71,6 @@ async def request_otp(
             code=code,
         )
 
-        # print(code)
-
         return {"message": "OTP sent successfully"}
 
     except APIException as e:
@@ -82,9 +88,9 @@ async def request_otp(
 # ==============================================================================
 @router.post(
     "/otp/verify",
-    response_model=TokenResponse,
+    response_model=TokenPair,
     status_code=status.HTTP_200_OK,
-    summary="Verify OTP and issue access token",
+    summary="Verify OTP and issue token pair",
 )
 async def verify_otp_route(
     request: Request,
@@ -95,19 +101,18 @@ async def verify_otp_route(
     user_agent = request.headers.get("user-agent", "unknown")
     device_id = request.headers.get("device-id", "unknown")
 
-    token = await verify_otp_service(
+    return await verify_otp_service(
         db=db,
         data=data,
         ip_address=ip,
         user_agent=user_agent,
         device_id=device_id,
+        redis_client=get_redis_client(request),
     )
-
-    return TokenResponse(access_token=token)
 
 
 # ==============================================================================
-# Complete Rgister
+# Complete Register
 # ==============================================================================
 @router.post(
     "/register/complete",
@@ -118,9 +123,8 @@ async def verify_otp_route(
 async def register(
     data: Register,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)],  # JWT guard
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-
     if current_user.first_name is not None:
         raise HTTPException(
             status_code=400,
@@ -139,7 +143,7 @@ async def register(
         await db.refresh(current_user)
 
     except SQLAlchemyError:
-        db.rollback()
+        await db.rollback()
         raise
 
     return current_user
@@ -150,16 +154,15 @@ async def register(
 # ==============================================================================
 @router.post(
     "/login/password",
-    response_model=TokenResponse,
+    response_model=TokenPair,
     status_code=status.HTTP_200_OK,
     summary="Login with password",
 )
 async def login_with_password(
+    request: Request,
     data: LoginWithPassword,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-
-    # Find user
     stmt = select(User).where(User.phone_number == data.phone_number).limit(1)
     res = await db.execute(stmt)
     user = res.scalar_one_or_none()
@@ -179,9 +182,44 @@ async def login_with_password(
             detail="Invalid credentials",
         )
 
-    token = create_access_token(subject=user.phone_number, is_new=False)
+    return await issue_token_pair(
+        user=user,
+        redis_client=get_redis_client(request),
+    )
 
-    return TokenResponse(access_token=token)
+
+@router.post(
+    "/token/refresh",
+    response_model=TokenPair,
+    status_code=status.HTTP_200_OK,
+    summary="Refresh access and refresh tokens",
+)
+async def refresh_token(
+    request: Request,
+    data: RefreshTokenRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    return await refresh_token_service(
+        db=db,
+        refresh_token=data.refresh_token,
+        redis_client=get_redis_client(request),
+    )
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Revoke current refresh token",
+)
+async def logout(
+    request: Request,
+    data: RefreshTokenRequest,
+):
+    await revoke_refresh_token_service(
+        refresh_token=data.refresh_token,
+        redis_client=get_redis_client(request),
+    )
+    return {"message": "Logged out successfully"}
 
 
 # ==============================================================================
@@ -194,10 +232,9 @@ async def login_with_password(
     summary="Get User Status",
 )
 def me(
-    current_user: Annotated[User, Depends(get_current_user)],  # JWT guard
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-
-    if current_user.first_name is not None:
+    if current_user.first_name is None:
         raise HTTPException(
             status_code=403,
             detail="complete your profile first",

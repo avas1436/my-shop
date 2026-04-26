@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
-from typing import Optional
 
-from redis.asyncio import Redis, ConnectionPool
+from fastapi import Request
+from redis.asyncio import ConnectionPool, Redis
 
 
 class RedisController:
@@ -17,8 +17,8 @@ class RedisController:
         self.redis_max_connections = redis_max_connections
         self.redis_socket_timeout = redis_socket_timeout
         self.session_prefix = session_prefix
-        self.redis_pool: Optional[ConnectionPool] = None
-        self.redis_client: Optional[Redis] = None
+        self.redis_pool: ConnectionPool | None = None
+        self.redis_client: Redis | None = None
 
     # -------------------------------------------------------------
     # Initialize Redis
@@ -52,3 +52,11 @@ class RedisController:
     async def get_redis(self) -> AsyncIterator[Redis]:
         if self.redis_client:
             yield self.redis_client
+
+
+def get_redis_client(request: Request) -> Redis | None:
+    controller = getattr(request.app.state, "redis", None)
+    if controller is None:
+        return None
+
+    return getattr(controller, "redis_client", None)

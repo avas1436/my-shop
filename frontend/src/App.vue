@@ -19,7 +19,7 @@ import { useUserStore } from './stores/userStore'
 const user = useUserStore()
 
 onMounted(() => {
-  user.restoreSession()
+  user.initializeAuth()
 })
 </script>
 
