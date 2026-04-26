@@ -6,7 +6,9 @@ from app.modules.products.schemas import ProductCreate
 
 
 class ProductService:
-    def __init__(self, repository: ProductRepository, cache: ProductCache | None = None):
+    def __init__(
+        self, repository: ProductRepository, cache: ProductCache | None = None
+    ):
         self.repository = repository
         self.cache = cache
 
@@ -20,11 +22,14 @@ class ProductService:
         )
         created = await self.repository.create(product)
         if self.cache:
-            await self.cache.set_product(created.id, {
-                "id": created.id,
-                "name": created.name,
-                "price": created.price,
-            })
+            await self.cache.set_product(
+                created.id,
+                {
+                    "id": created.id,
+                    "name": created.name,
+                    "price": created.price,
+                },
+            )
         return created
 
     async def list_all(self) -> list[Product]:
