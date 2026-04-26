@@ -14,8 +14,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.modules.catalog.models.product import Product
-from app.modules.catalog.models.variant import ProductVariant
+
+# from app.modules.catalog.models.product import Product
+# from app.modules.catalog.models.variant import ProductVariant
 
 
 class Attribute(Base):

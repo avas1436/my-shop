@@ -1,16 +1,53 @@
-from sqlalchemy import ForeignKey, Integer
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.common.enums import InventoryStatus
 from app.core.database import Base
+
+# from app.modules.catalog.models.product import Product
 
 
 class Inventory(Base):
-    __tablename__ = "inventory"
+    __tablename__ = "inventories"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), unique=True)
-    quantity: Mapped[int] = mapped_column(Integer, default=0)
-    status: Mapped[InventoryStatus] = mapped_column(default=InventoryStatus.IN_STOCK)
 
-    product = relationship("Product", back_populates="inventory")
+    quantity: Mapped[int] = mapped_column(default=0)
+    reserved_quantity: Mapped[int] = mapped_column(default=0)
+    low_stock_alert: Mapped[int] = mapped_column(default=5)
+    allow_backorder: Mapped[bool] = mapped_column(
+        default=False,
+        comment="آیا فروش بدون موجودی مجاز است یا خیر",
+    )
+
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now()
+    )
+
+    product: Mapped[Product] = relationship(back_populates="inventory")
+
+    __table_args__ = (
+        CheckConstraint("quantity >= 0", name="ck_inventory_quantity_non_negative"),
+        CheckConstraint(
+            "reserved_quantity >= 0",
+            name="ck_inventory_reserved_non_negative",
+        ),
+    )
+
+    @property
+    def available_quantity(self) -> int:
+        return max(0, self.quantity - self.reserved_quantity)
+
+    @property
+    def is_in_stock(self) -> bool:
+        return self.available_quantity > 0 or self.allow_backorder

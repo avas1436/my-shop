@@ -20,15 +20,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import ProductStatus
 from app.core.database import Base
-from app.modules.catalog.models.attribute import (
-    ProductAttribute,
-)
-from app.modules.catalog.models.brand import Brand
-from app.modules.catalog.models.category import Category
-from app.modules.catalog.models.image import ProductImage
-from app.modules.catalog.models.tag import Tag
-from app.modules.catalog.models.variant import ProductVariant
-from app.modules.inventory.models import Inventory
+
+# from app.modules.catalog.models.attribute import (
+#     ProductAttribute,
+# )
+# from app.modules.catalog.models.brand import Brand
+# from app.modules.catalog.models.category import Category
+# from app.modules.catalog.models.image import ProductImage
+# from app.modules.catalog.models.tag import Tag
+# from app.modules.catalog.models.variant import ProductVariant
+# from app.modules.inventory.models import Inventory
 
 
 class Product(Base):
