@@ -1,26 +1,36 @@
-import sys
-from pathlib import Path
-
-# Dynamically add project root directory to Python path
-ROOT_DIR = Path(__file__).resolve().parents[2]
-sys.path.append(str(ROOT_DIR))
-
 import asyncio
+import sys
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app.modules.categories.models import Category
-from app.modules.comments.models import Comment
-from app.modules.inventory.models import Inventory
-from app.modules.products.models import Product
-from app.modules.users.models import User
-
 # import metadata from Base model
-from app.core.database import Base, engine
 from app.config.settings import get_settings
+from app.core.database import Base, engine
+
+# from app.modules.catalog.models.category import Category
+# from app.modules.catalog.models.category import ProductCategory
+# from app.modules.catalog.models.attribute import Attribute
+# from app.modules.catalog.models.attribute import ProductAttribute
+# from app.modules.catalog.models.attribute import ProductVariantAttribute
+# from app.modules.catalog.models.brand import Brand
+# from app.modules.catalog.models.image import ProductImage
+# from app.modules.catalog.models.product import Product
+# from app.modules.catalog.models.variant import ProductVariant
+# from app.modules.catalog.models.tag import ProductTag
+# from app.modules.catalog.models.tag import Tag
+# from app.modules.comments.models import Comment
+# from app.modules.inventory.models import Inventory
+# from app.modules.users.models import User
+
+
+# Dynamically add project root directory to Python path
+ROOT_DIR = Path(__file__).resolve().parents[2]
+sys.path.append(str(ROOT_DIR))
+
 
 # Load Alembic configuration
 config = context.config
