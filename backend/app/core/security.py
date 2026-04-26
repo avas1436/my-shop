@@ -5,9 +5,13 @@ from uuid import uuid4
 from fastapi import HTTPException
 from jose import JWTError, jwt  # type: ignore
 from passlib.context import CryptContext
+from redis.asyncio import Redis
 
 from app.config.settings import get_settings
 
+# =========================
+# Password Hashing
+# =========================
 # ساخت هش
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
@@ -23,27 +27,76 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
+# =========================
+# Refresh Session (Redis)
+# =========================
+def get_refresh_token_ttl() -> timedelta:
+    return timedelta(days=settings.refresh_token_expire_days)
+
+
+def build_refresh_token_key(token_id: str) -> str:
+    return f"{settings.session_prefix}:refresh:{token_id}"
+
+
+# ذخیره رفرش توکن داخل ردیس
+async def store_refresh_token(
+    redis_client: Redis | None,
+    token_id: str,
+    subject: str,
+) -> None:
+    if redis_client is None:
+        return
+
+    ttl = max(int(get_refresh_token_ttl().total_seconds()), 1)
+
+    await redis_client.setex(build_refresh_token_key(token_id), ttl, subject)
+
+
+# بررسی وجود رفرش توکن در ردیس
+async def is_refresh_token_active(
+    redis_client: Redis | None,
+    token_id: str,
+    subject: str,
+) -> bool:
+
+    if redis_client is None:
+        return False
+
+    stored_subject = await redis_client.get(build_refresh_token_key(token_id))
+
+    return stored_subject == subject
+
+
+# حذف رفرش توکن از ردیس
+async def revoke_refresh_token(redis_client: Redis | None, token_id: str) -> None:
+    if redis_client is None:
+        return
+
+    await redis_client.delete(build_refresh_token_key(token_id))
+
+
 # با موارد دریافتی یک توکن میسازد
 #  سابجکت اطلاعات کاربر مثلا شماره تلفن
 #  تایپ تعیین کننده رفرش یا اکسس بودن
 #  تاریخ انقضا هم داخل اطلاعات توکن است
+# شناسه توکن هم برای حذف یا لیست سیاه کردن یک نشست بوسیله حذف رفرش توکن است
 def create_token(
     subject: str,
     token_type: str,
     expires_delta: timedelta,
-    extra_claims: dict[str, Any] | None = None,
     token_id: str | None = None,
 ) -> str:
-    expire = datetime.now(UTC) + expires_delta
+
+    now = datetime.now(UTC)
+    expire = now + expires_delta
 
     payload = {
-        "sub": subject,
-        "type": token_type,
-        "exp": expire,
-        "jti": token_id or str(uuid4()),
+        "sub": subject,  # Subject
+        "token_type": token_type,  # "access" | "refresh"
+        "iat": now,  # Issued At
+        "exp": expire,  # Expiration
+        "jti": token_id,  # JWT ID
     }
-    if extra_claims:
-        payload.update(extra_claims)
 
     return jwt.encode(
         claims=payload,
@@ -53,22 +106,24 @@ def create_token(
 
 
 # استفاده از تابع ساخت توکن برای ساخت اکسس توکن
-def create_access_token(subject: str, is_new: bool = False) -> str:
+def create_access_token(subject: str) -> str:
+
     return create_token(
         subject=subject,
         token_type="access",
         expires_delta=timedelta(minutes=settings.access_token_expire_minutes),
-        extra_claims={"is_new": is_new},
     )
 
 
 # برای ساخت رفرش توکن
-def create_refresh_token(subject: str, is_new: bool = False) -> str:
+def create_refresh_token(subject: str) -> str:
+    jti = str(uuid4())
+
     return create_token(
         subject=subject,
         token_type="refresh",
         expires_delta=timedelta(days=settings.refresh_token_expire_days),
-        extra_claims={"is_new": is_new},
+        token_id=jti,
     )
 
 

@@ -1,5 +1,9 @@
 from datetime import UTC, datetime
 
+from app.core.refresh_tokens import (
+    is_refresh_token_active,
+    revoke_refresh_token,
+)
 from fastapi import HTTPException
 from redis.asyncio import Redis
 from sqlalchemy import select
@@ -8,15 +12,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.enums import PurposeOTP
 from app.core.otp_service import create_otp, verify_otp
-from app.core.refresh_tokens import (
-    is_refresh_token_active,
-    revoke_refresh_token,
-    store_refresh_token,
-)
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_token_payload,
+    store_refresh_token,
 )
 from app.modules.users.models import User
 from app.modules.users.schemas import OTPVerify, TokenPair
@@ -30,16 +30,17 @@ def is_new_user(user: User) -> bool:
     )
 
 
+# =========================
+# Refresh Flow
+# =========================
 async def issue_token_pair(user: User, redis_client: Redis | None) -> TokenPair:
-    access_token = create_access_token(
-        subject=user.phone_number,
-        is_new=is_new_user(user),
-    )
-    refresh_token = create_refresh_token(
-        subject=user.phone_number,
-        is_new=is_new_user(user),
-    )
+
+    access_token = create_access_token(subject=user.phone_number)
+
+    refresh_token = create_refresh_token(subject=user.phone_number)
+
     refresh_payload = get_token_payload(refresh_token, expected_type="refresh")
+
     await store_refresh_token(
         redis_client=redis_client,
         token_id=str(refresh_payload["jti"]),
@@ -177,7 +178,9 @@ async def refresh_token_service(
     subject = str(payload["sub"])
     token_id = str(payload["jti"])
 
-    if not await is_refresh_token_active(redis_client, token_id=token_id, subject=subject):
+    if not await is_refresh_token_active(
+        redis_client, token_id=token_id, subject=subject
+    ):
         raise HTTPException(
             status_code=401,
             detail="Refresh token is invalid or revoked",
