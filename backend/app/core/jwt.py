@@ -27,7 +27,8 @@ async def get_current_user(
             detail="Invalid token payload",
         )
 
-    user = await UserRepository.get_by_phone(db=db, phone_number=phone)
+    repo = UserRepository(db)
+    user = await repo.get_by_phone(phone)
 
     if not user or not user.is_active or user.deleted_at is not None:
         raise HTTPException(

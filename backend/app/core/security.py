@@ -10,13 +10,15 @@ from redis.asyncio import Redis
 from app.config.settings import get_settings
 
 # =========================
-# Password Hashing
+# Config / Security setup
 # =========================
-# ساخت هش
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
 
 
+# =========================
+# Password: hash & verify
+# =========================
 # ساخت پسورد هش شده برای ذخیره در دیتا بیس
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -24,20 +26,27 @@ def hash_password(password: str) -> str:
 
 # مقایسه پسورد اصلی که کاربر میزند با چیزی که داخل دیتا بیس ذخیره شده بوده
 def verify_password(password: str, hashed_password: str) -> bool:
+    if not hashed_password:
+        return False
     return pwd_context.verify(password, hashed_password)
 
 
 # =========================
-# Refresh Session (Redis)
+# Redis key / TTL helpers
 # =========================
+# خروجی مدت اعتبار رفرش توکن در فرمت تایم دلتا
 def get_refresh_token_ttl() -> timedelta:
     return timedelta(days=settings.refresh_token_expire_days)
 
 
+# کلید مورد استفاده در ردیس
 def build_refresh_token_key(token_id: str) -> str:
     return f"{settings.session_prefix}:refresh:{token_id}"
 
 
+# =========================
+# Refresh session in Redis
+# =========================
 # ذخیره رفرش توکن داخل ردیس
 async def store_refresh_token(
     redis_client: Redis | None,
@@ -64,7 +73,7 @@ async def is_refresh_token_active(
 
     stored_subject = await redis_client.get(build_refresh_token_key(token_id))
 
-    return stored_subject == subject
+    return str(stored_subject) == str(subject)
 
 
 # حذف رفرش توکن از ردیس
@@ -75,6 +84,9 @@ async def revoke_refresh_token(redis_client: Redis | None, token_id: str) -> Non
     await redis_client.delete(build_refresh_token_key(token_id))
 
 
+# =========================
+# JWT create / decode
+# =========================
 # با موارد دریافتی یک توکن میسازد
 #  سابجکت اطلاعات کاربر مثلا شماره تلفن
 #  تایپ تعیین کننده رفرش یا اکسس بودن
@@ -93,10 +105,13 @@ def create_token(
     payload = {
         "sub": subject,  # Subject
         "token_type": token_type,  # "access" | "refresh"
-        "iat": now,  # Issued At
-        "exp": expire,  # Expiration
-        "jti": token_id,  # JWT ID
+        "iat": int(now.timestamp()),  # Issued At
+        "exp": int(expire.timestamp()),  # Expiration
     }
+
+    # jti فقط برای refresh لازم است
+    if token_id is not None:
+        payload["jti"] = token_id  # JWT ID
 
     return jwt.encode(
         claims=payload,
@@ -118,27 +133,38 @@ def create_access_token(subject: str) -> str:
 # برای ساخت رفرش توکن
 def create_refresh_token(subject: str) -> str:
     jti = str(uuid4())
-
-    return create_token(
+    token = create_token(
         subject=subject,
         token_type="refresh",
         expires_delta=timedelta(days=settings.refresh_token_expire_days),
         token_id=jti,
     )
 
+    return token
+
 
 # صحت و اعتبار یک توکن داده شده را بررسی میکند
-def decode_token(token: str) -> dict:
-    return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
-
-
-# کاربردی تابع دیکد
-def get_token_payload(token: str, expected_type: str = "access") -> dict[str, Any]:
+def decode_token(token: str) -> dict[str, Any]:
     try:
-        payload = decode_token(token=token)
-
+        payload = jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=[settings.jwt_algorithm],
+        )
+        return dict(payload)
     except JWTError as exc:
-        raise ValueError("Invalid token") from exc
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token",
+        ) from exc
+
+
+# =========================
+# JWT validation helpers
+# =========================
+# اعتبار سنجی نوع توکن و اعتبار
+def get_token_payload(token: str, expected_type: str = "access") -> dict[str, Any]:
+    payload = decode_token(token=token)
 
     exp = payload.get("exp")
 
@@ -148,10 +174,11 @@ def get_token_payload(token: str, expected_type: str = "access") -> dict[str, An
             detail="Token expired",
         )
 
-    token_type = payload.get("type")
+    token_type = payload.get("token_type")
     subject = payload.get("sub")
+
     if token_type != expected_type or not subject:
-        raise ValueError("Invalid token payload")
+        raise HTTPException(status_code=401, detail="Invalid token payload")
 
     return payload
 
@@ -159,3 +186,37 @@ def get_token_payload(token: str, expected_type: str = "access") -> dict[str, An
 def get_token_subject(token: str, expected_type: str = "access") -> str:
     payload = get_token_payload(token=token, expected_type=expected_type)
     return str(payload["sub"])
+
+
+# =========================
+# Refresh token guard
+# =========================
+async def validate_refresh_token(
+    token: str,
+    redis_client: Redis | None,
+) -> dict[str, Any]:
+    """
+    اعتبارسنجی کامل refresh:
+    1) JWT معتبر باشد
+    2) type == refresh
+    3) jti در Redis فعال باشد
+    """
+    payload = get_token_payload(token=token, expected_type="refresh")
+
+    jti = payload.get("jti")
+    subject = payload.get("sub")
+
+    if not isinstance(jti, str) or not jti:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid refresh token",
+        )
+
+    is_active = await is_refresh_token_active(redis_client, jti, subject)
+    if not is_active:
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh token revoked or inactive",
+        )
+
+    return payload

@@ -5,26 +5,61 @@ from app.modules.users.models import User
 
 
 class UserRepository:
-    # @staticmethod
-    # async def create(db: AsyncSession, user: User) -> User:
-    #     db.add(user)
-    #     await db.commit()
-    #     await db.refresh(user)
-    #     return user
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-    # @staticmethod
-    # async def get_by_email(email: str) -> User | None:
-    #     result = await db.execute(select(User).where(User.email == email))
-    #     return result.scalar_one_or_none()
+    # ---------------------------
+    # Read
+    # ---------------------------
+    async def get_by_phone(self, phone_number: str) -> User | None:
+        stmt = select(User).where(User.phone_number == phone_number).limit(1)
+        res = await self.db.execute(stmt)
+        return res.scalar_one_or_none()
 
-    # @staticmethod
-    # async def get_by_id(user_id: int) -> User | None:
-    #     result = await db.execute(select(User).where(User.id == user_id))
-    #     return result.scalar_one_or_none()
+    async def get_by_id(self, user_id: int) -> User | None:
+        stmt = select(User).where(User.id == user_id).limit(1)
+        res = await self.db.execute(stmt)
+        return res.scalar_one_or_none()
 
-    @staticmethod
-    async def get_by_phone(db: AsyncSession, phone_number: str) -> User | None:
-        stmt = select(User).where(User.phone_number == phone_number)
-        result = await db.execute(stmt)
+    # ---------------------------
+    # Create
+    # ---------------------------
+    async def create_user(self, phone_number: str) -> User:
+        user = User(phone_number=phone_number, is_verified=True)
+        self.db.add(user)
+        await self.db.flush()  # برای گرفتن id بدون commit
+        return user
 
-        return result.scalar_one_or_none()
+    def mark_verified_and_update_login(self, user: User) -> bool:
+        changed = False
+        if not user.is_verified:
+            user.is_verified = True
+            changed = True
+        return changed
+
+    async def complete_profile(
+        self,
+        user: User,
+        first_name: str,
+        last_name: str,
+        birth_date,
+        hashed_password: str,
+    ) -> User:
+        user.first_name = first_name
+        user.last_name = last_name
+        user.birth_date = birth_date
+        user.hashed_password = hashed_password
+        await self.db.flush()
+        return user
+
+    # ---------------------------
+    # Unit of Work helpers
+    # ---------------------------
+    async def commit(self):
+        await self.db.commit()
+
+    async def rollback(self):
+        await self.db.rollback()
+
+    async def refresh(self, user: User):
+        await self.db.refresh(user)

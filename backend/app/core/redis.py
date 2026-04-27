@@ -50,8 +50,9 @@ class RedisController:
     # Get Redis
     # -------------------------------------------------------------
     async def get_redis(self) -> AsyncIterator[Redis]:
-        if self.redis_client:
-            yield self.redis_client
+        if not self.redis_client:
+            raise RuntimeError("Redis is not initialized")
+        yield self.redis_client
 
 
 def get_redis_client(request: Request) -> Redis | None:

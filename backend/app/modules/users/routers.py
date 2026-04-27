@@ -2,14 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from kavenegar import APIException, HTTPException as KHTTPException
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.common.responses import success_response
 from app.core.database import get_db
 from app.core.jwt import get_current_user
 from app.core.redis import get_redis_client
-from app.core.security import hash_password, verify_password
 from app.core.sms_service import send_sms
 from app.modules.users.models import User
 from app.modules.users.schemas import (
@@ -22,14 +20,26 @@ from app.modules.users.schemas import (
     UserGet,
 )
 from app.modules.users.service import (
-    issue_token_pair,
+    complete_register_service,
+    login_with_password_service,
     refresh_token_service,
     request_otp_service,
+    revoke_all_refresh_tokens_for_subject_service,
     revoke_refresh_token_service,
     verify_otp_service,
 )
 
 router = APIRouter()
+
+
+# ==============================================================================
+# Get Meta Data from request
+# ==============================================================================
+def _client_meta(request: Request) -> tuple[str, str, str]:
+    ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+    device_id = request.headers.get("device-id", "unknown")
+    return ip, user_agent, device_id
 
 
 # ==============================================================================
@@ -45,9 +55,7 @@ async def request_otp(
     db: Annotated[AsyncSession, Depends(get_db)],
     background: BackgroundTasks,
 ):
-    ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    device_id = request.headers.get("device-id", "unknown")
+    ip, user_agent, device_id = _client_meta(request)
 
     try:
         code, wait = await request_otp_service(
@@ -71,7 +79,7 @@ async def request_otp(
             code=code,
         )
 
-        return {"message": "OTP sent successfully"}
+        return success_response(message="OTP sent successfully")
 
     except APIException as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
@@ -79,8 +87,8 @@ async def request_otp(
     except KHTTPException as e:
         raise HTTPException(status_code=502, detail=str(e)) from None
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from None
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e)) from None
 
 
 # ==============================================================================
@@ -97,9 +105,8 @@ async def verify_otp_route(
     data: OTPVerify,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    device_id = request.headers.get("device-id", "unknown")
+
+    ip, user_agent, device_id = _client_meta(request)
 
     return await verify_otp_service(
         db=db,
@@ -120,33 +127,16 @@ async def verify_otp_route(
     status_code=status.HTTP_200_OK,
     summary="Complete register after first login",
 )
-async def register(
+async def register_complete(
     data: Register,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-    if current_user.first_name is not None:
-        raise HTTPException(
-            status_code=400,
-            detail="Profile already completed",
-        )
-
-    hashed_password = hash_password(password=data.password.get_secret_value())
-
-    current_user.first_name = data.first_name
-    current_user.last_name = data.last_name
-    current_user.birth_date = data.birth_date
-    current_user.hashed_password = hashed_password
-
-    try:
-        await db.commit()
-        await db.refresh(current_user)
-
-    except SQLAlchemyError:
-        await db.rollback()
-        raise
-
-    return current_user
+    return await complete_register_service(
+        db=db,
+        current_user=current_user,
+        data=data,
+    )
 
 
 # ==============================================================================
@@ -163,31 +153,16 @@ async def login_with_password(
     data: LoginWithPassword,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    stmt = select(User).where(User.phone_number == data.phone_number).limit(1)
-    res = await db.execute(stmt)
-    user = res.scalar_one_or_none()
-
-    if not user or not user.hashed_password:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid credentials",
-        )
-
-    if not verify_password(
-        password=data.password,
-        hashed_password=user.hashed_password,
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid credentials",
-        )
-
-    return await issue_token_pair(
-        user=user,
+    return await login_with_password_service(
+        db=db,
+        data=data,
         redis_client=get_redis_client(request),
     )
 
 
+# ==============================================================================
+# Login with Password
+# ==============================================================================
 @router.post(
     "/token/refresh",
     response_model=TokenPair,
@@ -206,10 +181,11 @@ async def refresh_token(
     )
 
 
+# ==============================================================================
+# Logout and remove refresh token from redis
+# ==============================================================================
 @router.post(
-    "/logout",
-    status_code=status.HTTP_200_OK,
-    summary="Revoke current refresh token",
+    "/logout", status_code=status.HTTP_200_OK, summary="Revoke current refresh token"
 )
 async def logout(
     request: Request,
@@ -219,11 +195,30 @@ async def logout(
         refresh_token=data.refresh_token,
         redis_client=get_redis_client(request),
     )
-    return {"message": "Logged out successfully"}
+    return success_response(message="Logged out successfully")
 
 
 # ==============================================================================
-# Get User
+# New Feature: Logout all sessions
+# ==============================================================================
+@router.post(
+    "/logout/all",
+    status_code=status.HTTP_200_OK,
+    summary="Revoke all refresh tokens for current user",
+)
+async def logout_all(
+    request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    await revoke_all_refresh_tokens_for_subject_service(
+        redis_client=get_redis_client(request),
+        subject=str(current_user.phone_number),
+    )
+    return success_response(message="Logged out from all devices successfully")
+
+
+# ==============================================================================
+# Get current user
 # ==============================================================================
 @router.get(
     "/me",
@@ -231,13 +226,9 @@ async def logout(
     status_code=status.HTTP_200_OK,
     summary="Get User Status",
 )
-def me(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
+def me(current_user: Annotated[User, Depends(get_current_user)]) -> User:
+
     if current_user.first_name is None:
-        raise HTTPException(
-            status_code=403,
-            detail="complete your profile first",
-        )
+        raise HTTPException(status_code=403, detail="complete your profile first")
 
     return current_user
