@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.admin_only import require_admin
@@ -38,3 +38,16 @@ async def admin_create_draft_product(
     product = await service.draft_create(payload)
 
     return ProductAdminRead.model_validate(product)
+
+
+@router.delete("/admin/products/{product_id}", status_code=204)
+async def admin_soft_delete_product(
+    product_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_admin)],
+):
+    service = AdminProductService(AdminProductRepository(db))
+    deleted = await service.soft_delete_product(product_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="product not found")
+    return None

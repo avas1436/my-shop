@@ -4,6 +4,7 @@ from sqlalchemy import exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.common.enums import ProductStatus
 from app.modules.catalog.models.product import Product
 
 
@@ -41,7 +42,7 @@ class AdminProductRepository:
         result = await self.db.execute(
             update(Product)
             .where(Product.id == product_id, Product.deleted_at.is_(None))
-            .values(deleted_at=datetime.now(UTC))
+            .values(deleted_at=datetime.now(UTC), status=ProductStatus.INACTIVE)
             .execution_options(synchronize_session="fetch")
         )
         await self.db.commit()

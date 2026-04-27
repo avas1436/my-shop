@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, model_validator
@@ -19,8 +20,8 @@ class DraftProductCreate(BaseModel):
     cost_price: int | None = Field(None, ge=0)
     tax_rate: int = Field(default=0, ge=0)
 
-    status: ProductStatus = Field(default=ProductStatus.DRAFT)
-    is_featured: bool = Field(default=False)
+    # status: ProductStatus = Field(default=ProductStatus.DRAFT)
+    # is_featured: bool = Field(default=False)
     is_digital: bool = Field(default=False)
 
     weight: Decimal | None = Field(None, ge=0, max_digits=10, decimal_places=3)
@@ -42,10 +43,34 @@ class DraftProductCreate(BaseModel):
 class ProductAdminRead(BaseModel):
     id: int
     name: str
-    slug: str
-    description: str
-    price: float
-    category_id: int
+    slug: str | None
+    sku: str
+    description: str | None
+
+    price: int
+    discount_price: int | None
+    cost_price: int | None
+
+    tax_rate: int
+    final_price: int
+    discount_percent: float
+
+    currency_code: str
+    status: ProductStatus
+
+    is_featured: bool
+    is_digital: bool
+
+    weight: Decimal | None
+
+    meta_title: str | None
+    meta_description: str | None
+    gtin: str | None
+
+    created_at: datetime
+    updated_at: datetime | None
+    published_at: datetime | None
+    deleted_at: datetime | None
 
     class Config:
         from_attributes = True

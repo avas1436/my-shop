@@ -30,7 +30,7 @@ class AdminProductService:
     async def _generate_unique_sku(self) -> str:
         # نمونه: PRD-20260427-8HEX
         while True:
-            candidate = f"PRD-{uuid.uuid4().hex[:10].upper()}"
+            candidate = f"PRD-{uuid.uuid4().hex[:5].upper()}"
             if not await self.repository.exists_by_sku(candidate):
                 return candidate
 
@@ -47,8 +47,6 @@ class AdminProductService:
             discount_price=payload.discount_price,
             cost_price=payload.cost_price,
             tax_rate=payload.tax_rate,
-            status=payload.status,
-            is_featured=payload.is_featured,
             is_digital=payload.is_digital,
             weight=payload.weight,
             meta_title=payload.meta_title,
