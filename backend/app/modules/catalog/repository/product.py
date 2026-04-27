@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -34,3 +34,11 @@ class AdminProductRepository:
             .options(selectinload(Product.category), selectinload(Product.inventory))
         )
         return result.scalar_one_or_none()
+
+    async def exists_by_slug(self, slug: str) -> bool:
+        result = await self.db.execute(select(exists().where(Product.slug == slug)))
+        return bool(result.scalar())
+
+    async def exists_by_sku(self, sku: str) -> bool:
+        result = await self.db.execute(select(exists().where(Product.sku == sku)))
+        return bool(result.scalar())
