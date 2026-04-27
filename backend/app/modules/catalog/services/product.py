@@ -56,3 +56,6 @@ class AdminProductService:
             gtin=payload.gtin,
         )
         return await self.repository.create(product)
+
+    async def soft_delete_product(self, product_id: int) -> bool:
+        return await self.repository.soft_delete(product_id)
