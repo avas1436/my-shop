@@ -10,6 +10,9 @@ class AdminProductService:
     def __init__(self, repository: AdminProductRepository):
         self.repository = repository
 
+    # =========================================================
+    # Make slug from name
+    # =========================================================
     @staticmethod
     def _slugify(text: str) -> str:
         text = text.strip().lower()
@@ -18,6 +21,9 @@ class AdminProductService:
         text = re.sub(r"-{2,}", "-", text)
         return text.strip("-") or "product"
 
+    # =========================================================
+    # Add Number to duplicate names
+    # =========================================================
     async def _generate_unique_slug(self, name: str) -> str:
         base = self._slugify(name)
         slug = base
@@ -27,6 +33,9 @@ class AdminProductService:
             slug = f"{base}-{i}"
         return slug
 
+    # =========================================================
+    # Make a Random name for SKU
+    # =========================================================
     async def _generate_unique_sku(self) -> str:
         # نمونه: PRD-20260427-8HEX
         while True:
@@ -34,6 +43,9 @@ class AdminProductService:
             if not await self.repository.exists_by_sku(candidate):
                 return candidate
 
+    # =========================================================
+    # Create a Draft Product
+    # =========================================================
     async def draft_create(self, payload: DraftProductCreate) -> Product:
         slug = await self._generate_unique_slug(payload.name)
         sku = await self._generate_unique_sku()
@@ -55,5 +67,8 @@ class AdminProductService:
         )
         return await self.repository.create(product)
 
+    # =========================================================
+    # Soft Delete a product
+    # =========================================================
     async def soft_delete_product(self, product_id: int) -> bool:
         return await self.repository.soft_delete(product_id)

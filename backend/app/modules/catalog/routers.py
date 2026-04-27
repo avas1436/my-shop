@@ -13,15 +13,9 @@ from app.modules.users.models import User
 router = APIRouter()
 
 
-# @router.get("/", response_model=list[ProductAdminRead])
-# async def list_products(
-#     db: AsyncSession = Depends(get_db_session),
-# ) -> list[ProductAdminRead]:
-#     service = AdminProductService(AdminProductRepository(db))
-#     products = await service.list_all()
-#     return [ProductAdminRead.model_validate(product) for product in products]
-
-
+# =========================================================
+# Create a Draft Product
+# =========================================================
 @router.post(
     "/admin/createdraft",
     response_model=ProductAdminRead,
@@ -40,6 +34,9 @@ async def admin_create_draft_product(
     return ProductAdminRead.model_validate(product)
 
 
+# =========================================================
+# Soft Delete a Product
+# =========================================================
 @router.delete("/admin/products/{product_id}", status_code=204)
 async def admin_soft_delete_product(
     product_id: int,
@@ -51,3 +48,40 @@ async def admin_soft_delete_product(
     if not deleted:
         raise HTTPException(status_code=404, detail="product not found")
     return None
+
+
+# =========================================================
+# Get List of Products
+# =========================================================
+# @router.get(
+#     "/admin/products/{product_id}",
+#     response_model=list[ProductAdminRead],
+#     status_code=status.HTTP_200_OK,
+# )
+# async def list_products(
+#     db: Annotated[AsyncSession, Depends(get_db)],
+#     _: Annotated[User, Depends(require_admin)],
+# ) -> list[ProductAdminRead]:
+#     service = AdminProductService(AdminProductRepository(db))
+#     products = await service.list_all()
+#     return [ProductAdminRead.model_validate(product) for product in products]
+
+
+# =========================================================
+# Get a Product
+# =========================================================
+@router.get(
+    "/admin/products/{product_id}",
+    response_model=ProductAdminRead,
+    status_code=status.HTTP_200_OK,
+)
+async def show_product(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    _: Annotated[User, Depends(require_admin)],
+) -> ProductAdminRead:
+
+    service = AdminProductService(AdminProductRepository(db))
+
+    products = await service.list_all()
+
+    return [ProductAdminRead.model_validate(product) for product in products]

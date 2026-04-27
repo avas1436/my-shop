@@ -1,3 +1,4 @@
+# app/modules/catalog/schemas/product.py
 from datetime import datetime
 from decimal import Decimal
 
@@ -5,12 +6,10 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.common.enums import ProductStatus
 
+
 # =========================================================
 # Create a Draft Product
 # =========================================================
-# schemas/product.py
-
-
 class DraftProductCreate(BaseModel):
     name: str
     description: str = ""
