@@ -3,7 +3,7 @@
 # from app.modules.inventory.routers import router as inventory_router
 from fastapi import APIRouter
 
-from app.modules.catalog.routers import router as products_router
+from app.modules.catalog.routers.product import router as products_router
 from app.modules.users.routers import router as users_router
 
 api_router = APIRouter()

@@ -1,11 +1,16 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import exists, select, update
+from sqlalchemy import delete, exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.common.enums import ProductStatus
+from app.modules.catalog.models.attribute import (
+    ProductAttribute,
+    ProductVariantAttribute,
+)
 from app.modules.catalog.models.product import Product
+from app.modules.catalog.models.variant import ProductVariant
 
 
 class AdminProductRepository:
@@ -42,8 +47,27 @@ class AdminProductRepository:
     async def get_by_id(self, product_id: int) -> Product | None:
         result = await self.db.execute(
             select(Product)
-            .where(Product.id == product_id)
-            .options(selectinload(Product.category), selectinload(Product.inventory))
+            .where(
+                Product.id == product_id,
+                # با وجود این قسمت حذف شده ها نمایش داده نمی شوند
+                Product.deleted_at.is_(None),
+            )
+            .options(
+                selectinload(Product.brand),
+                selectinload(Product.categories),
+                selectinload(Product.tags),
+                selectinload(Product.images),
+                selectinload(Product.inventory),
+                # attributes روی خود محصول
+                selectinload(Product.attribute_values).selectinload(
+                    ProductAttribute.attribute
+                ),
+                # variants + attributes روی هر واریانت
+                selectinload(Product.variants)
+                .selectinload(ProductVariant.attribute_values)
+                .selectinload(ProductVariantAttribute.attribute),
+                selectinload(Product.comments),
+            )
         )
         return result.scalar_one_or_none()
 
@@ -73,3 +97,11 @@ class AdminProductRepository:
     async def exists_by_sku(self, sku: str) -> bool:
         result = await self.db.execute(select(exists().where(Product.sku == sku)))
         return bool(result.scalar())
+
+    # =========================================================
+    # Hard Delete a Product
+    # =========================================================
+    async def hard_delete(self, product_id: int) -> bool:
+        result = await self.db.execute(delete(Product).where(Product.id == product_id))
+        await self.db.commit()
+        return result.rowcount > 0

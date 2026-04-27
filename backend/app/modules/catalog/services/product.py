@@ -72,3 +72,15 @@ class AdminProductService:
     # =========================================================
     async def soft_delete_product(self, product_id: int) -> bool:
         return await self.repository.soft_delete(product_id)
+
+    # =========================================================
+    # Get a Product by ID for Admin show
+    # =========================================================
+    async def get_product_admin(self, product_id: int) -> Product | None:
+        return await self.repository.get_by_id(product_id)
+
+    # =========================================================
+    # Hard Delete a product
+    # =========================================================
+    async def hard_delete_product(self, product_id: int) -> bool:
+        return await self.repository.hard_delete(product_id)

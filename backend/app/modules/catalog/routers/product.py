@@ -76,12 +76,16 @@ async def admin_soft_delete_product(
     status_code=status.HTTP_200_OK,
 )
 async def show_product(
+    product_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
     _: Annotated[User, Depends(require_admin)],
 ) -> ProductAdminRead:
 
     service = AdminProductService(AdminProductRepository(db))
 
-    products = await service.list_all()
+    product = await service.get_product_admin(product_id)
 
-    return [ProductAdminRead.model_validate(product) for product in products]
+    if not product:
+        raise HTTPException(status_code=404, detail="product not found")
+
+    return ProductAdminRead.model_validate(product)
