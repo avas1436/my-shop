@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,12 +32,18 @@ class UserRepository:
         await self.db.flush()  # برای گرفتن id بدون commit
         return user
 
-    def mark_verified_and_update_login(self, user: User) -> bool:
+    def mark_verified(self, user: User) -> bool:
         changed = False
         if not user.is_verified:
             user.is_verified = True
             changed = True
         return changed
+
+    def update_login(self, user: User) -> bool:
+
+        user.last_login = datetime.now(UTC)
+
+        return True
 
     async def complete_profile(
         self,

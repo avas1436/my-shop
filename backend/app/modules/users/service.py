@@ -136,7 +136,7 @@ async def verify_otp_service(
         await repo.commit()
         await repo.refresh(user)
     else:
-        changed = repo.mark_verified_and_update_login(user=user)
+        changed = repo.mark_verified(user=user) and repo.update_login(user=user)
         if changed:
             await repo.commit()
 
@@ -162,6 +162,12 @@ async def login_with_password_service(
         hashed_password=user.hashed_password,
     ):
         raise HTTPException(status_code=400, detail="Invalid credentials")
+
+    update = repo.update_login(user=user)
+    if not update:
+        raise HTTPException(status_code=500, detail="Failed to update last login")
+
+    await repo.commit()
 
     return await issue_token_pair(user=user, redis_client=redis_client)
 
