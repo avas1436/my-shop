@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi_offline import FastAPIOffline
 
 import app.models
@@ -114,6 +115,11 @@ def create_app() -> FastAPI:
     # Routes
     # -------------------------------------------------------------
     app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+    # -------------------------------------------------------------
+    # Media route for local images
+    # -------------------------------------------------------------
+    app.mount("/media", StaticFiles(directory=settings.media_root), name="media")
 
     # -------------------------------------------------------------
     # Check health
