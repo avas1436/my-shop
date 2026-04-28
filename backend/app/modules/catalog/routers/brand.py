@@ -1,16 +1,16 @@
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.common.access_control import require_access
+from app.common.enums import UserRole
 from app.common.pagination import PageResponse
-
-# from redis.asyncio import Redis
 from app.core.database import get_db
-
-# from app.cache.controller import get_redis_client
 from app.modules.catalog.schemas.brand import BrandCreate, BrandRead, BrandUpdate
 from app.modules.catalog.services.brand import BrandService
+from app.modules.users.models import User
 
 router = APIRouter()
 
@@ -20,6 +20,19 @@ async def create_brand(
     data: BrandCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ):
     return await BrandService(db=db, request=request).create_brand(data)
 
@@ -55,6 +68,19 @@ async def update_brand(
     data: BrandUpdate,
     db: Annotated[AsyncSession, Depends(get_db)],
     request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ):
     return await BrandService(db=db, request=request).update_brand(brand_id, data)
 
@@ -64,6 +90,19 @@ async def delete_brand(
     brand_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
     request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ):
     await BrandService(db=db, request=request).delete_brand(brand_id)
     return {"detail": "Brand deleted successfully."}
