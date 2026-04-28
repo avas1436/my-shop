@@ -2,14 +2,13 @@
 import os
 
 import aiofiles
-from app.core.storage.base import Storage
 
 from app.config.settings import get_settings
 
 settings = get_settings()
 
 
-class LocalStorage(Storage):
+class LocalStorage:
     async def save(
         self, data: bytes, path: str, content_type: str | None = None
     ) -> str:
