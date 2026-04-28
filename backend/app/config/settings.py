@@ -76,6 +76,18 @@ class Settings(BaseSettings):
     otp_ttl: int
     otp_cooldown: int
 
+    # media for local images
+    media_base_url: str = "http://localhost:8000/media"
+    storage_backend: str = "local"  # local | s3
+    mediaroot: str = "media"  # لوکال
+
+    # S3/CDN
+    s3_endpoint: str | None = None
+    s3_access_key: str | None = None
+    s3_secret_key: str | None = None
+    s3_bucket: str | None = None
+    s3_region: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=".env.dev",
         # env_file=".env.dev",
