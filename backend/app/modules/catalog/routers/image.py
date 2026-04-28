@@ -63,7 +63,7 @@ async def upload_image(
 
 
 # =========================================================
-# Get a Products Images
+# Get Images of a Product
 # =========================================================
 @router.get(
     "/admin/products/{product_id}/images",
@@ -119,16 +119,38 @@ async def update_image(
     return await service.update_image(img, **payload.model_dump(exclude_unset=True))
 
 
-@router.delete("/admin/products/{product_id}/images/{image_id}")
+# =========================================================
+# Delete a Image
+# =========================================================
+@router.delete(
+    "/admin/products/{product_id}/images/{image_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_image(
     product_id: int,
     image_id: int,
-    db: AsyncSession = Depends(get_db),
-    service: ImageService = Depends(get_service),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[ImageService, Depends(get_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ):
+
     repo = ImageRepository(db)
+
     img = await repo.get(image_id)
+
     if not img or img.product_id != product_id:
         raise HTTPException(status_code=404, detail="Image not found")
+
     await service.delete_image(img)
-    return {"ok": True}

@@ -55,5 +55,5 @@ class ImageService:
     # =========================================================
     async def delete_image(self, img: ProductImage):
 
-        await self.storage.delete(img.file_key)
+        await self.storage.delete(img.url)
         await self.repo.delete(img)
