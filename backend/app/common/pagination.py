@@ -1,10 +1,17 @@
-from math import ceil
+from typing import Generic, TypeVar
+
+from pydantic import BaseModel
+
+T = TypeVar("T")
 
 
-def paginate(total: int, page: int, page_size: int) -> dict[str, int]:
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "pages": ceil(total / page_size) if page_size else 0,
-    }
+class PageMeta(BaseModel):
+    page: int
+    size: int
+    total: int
+    pages: int
+
+
+class PageResponse(BaseModel, Generic[T]):
+    items: list[T]
+    meta: PageMeta

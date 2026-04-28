@@ -1,0 +1,144 @@
+import math
+
+from fastapi import HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.cache.brand_cache import BrandCache
+from app.common.pagination import PageMeta, PageResponse
+from app.core.utils import slugify
+from app.modules.catalog.models.brand import Brand
+from app.modules.catalog.repository.brand import BrandRepository
+from app.modules.catalog.schemas.brand import BrandCreate, BrandUpdate
+
+
+class BrandService:
+    def __init__(self, db: AsyncSession, request: Request):
+        self.repo = BrandRepository(db)
+        self.cache = BrandCache(request)
+
+    def _list_cache_key(
+        self, search: str | None, brand_id: int | None, page: int, size: int
+    ):
+        return f"brand:list:s={search or ''}:id={brand_id or ''}:p={page}:sz={size}"
+
+    async def create_brand(self, data: BrandCreate) -> Brand:
+
+        if await self.repo.get_by_name(data.name):
+            raise HTTPException(status_code=409, detail="Brand name already exists.")
+
+        slug = data.slug or slugify(data.name)
+        if slug and await self.repo.get_by_slug(slug):
+            raise HTTPException(status_code=409, detail="Brand slug already exists.")
+
+        brand = Brand(name=data.name, slug=slug)
+        brand = await self.repo.create(brand)
+
+        if self.cache:
+            await self.cache.invalidate_lists()
+
+        return brand
+
+    async def get_brand(self, brand_id: int, base_url: str) -> dict:
+        if self.cache:
+            cached = await self.cache.get_brand(brand_id)
+            if cached:
+                return cached
+
+        brand = await self.repo.get_by_id(brand_id)
+        if not brand:
+            raise HTTPException(status_code=404, detail="Brand not found.")
+
+        payload = {
+            "id": brand.id,
+            "name": brand.name,
+            "slug": brand.slug,
+            "seo_url": f"{base_url.rstrip('/')}/brands/{brand.slug or slugify(brand.name)}-{brand.id}",
+            "created_at": brand.created_at,
+            "updated_at": brand.updated_at,
+        }
+
+        if self.cache:
+            await self.cache.set_brand(brand_id, payload)
+
+        return payload
+
+    async def list_brands(
+        self,
+        search: str | None,
+        brand_id: int | None,
+        page: int,
+        size: int,
+        base_url: str,
+    ) -> PageResponse[dict]:
+        if page < 1 or size < 1 or size > 100:
+            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+
+        cache_key = self._list_cache_key(search, brand_id, page, size)
+        if self.cache:
+            cached = await self.cache.get_list(cache_key)
+            if cached:
+                return PageResponse(**cached)
+
+        items, total = await self.repo.list_filtered(search, brand_id, page, size)
+
+        pages = math.ceil(total / size) if total else 1
+        response_items = []
+        for b in items:
+            response_items.append(
+                {
+                    "id": b.id,
+                    "name": b.name,
+                    "slug": b.slug,
+                    "seo_url": f"{base_url.rstrip('/')}/brands/{b.slug or slugify(b.name)}-{b.id}",
+                    "created_at": b.created_at,
+                    "updated_at": b.updated_at,
+                }
+            )
+
+        resp = PageResponse(
+            items=response_items,
+            meta=PageMeta(page=page, size=size, total=total, pages=pages),
+        )
+
+        if self.cache:
+            await self.cache.set_list(cache_key, resp.model_dump())
+
+        return resp
+
+    async def update_brand(self, brand_id: int, data: BrandUpdate) -> Brand:
+        brand = await self.repo.get_by_id(brand_id)
+        if not brand:
+            raise HTTPException(status_code=404, detail="Brand not found.")
+
+        if data.name and data.name != brand.name:
+            if await self.repo.get_by_name(data.name):
+                raise HTTPException(
+                    status_code=409, detail="Brand name already exists."
+                )
+            brand.name = data.name
+
+        if data.slug:
+            if data.slug != brand.slug and await self.repo.get_by_slug(data.slug):
+                raise HTTPException(
+                    status_code=409, detail="Brand slug already exists."
+                )
+            brand.slug = data.slug
+
+        brand = await self.repo.update(brand)
+
+        if self.cache:
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_brand(brand_id)
+
+        return brand
+
+    async def delete_brand(self, brand_id: int) -> None:
+        brand = await self.repo.get_by_id(brand_id)
+        if not brand:
+            raise HTTPException(status_code=404, detail="Brand not found.")
+
+        await self.repo.delete(brand)
+
+        if self.cache:
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_brand(brand_id)
