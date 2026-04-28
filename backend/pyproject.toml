@@ -22,6 +22,7 @@ dependencies = [
     "kavenegar>=1.1.2",
     "types-python-jose>=3.5.0.20260408",
     "aiofiles>=25.1.0",
+    "python-multipart>=0.0.27",
 ]
 
 [dependency-groups]

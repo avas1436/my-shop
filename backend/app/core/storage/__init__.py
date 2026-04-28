@@ -3,7 +3,7 @@
 # from app.core.storage.cdn import S3AsyncStorage
 
 from app.config.settings import get_settings
-from app.core.storage.local import LocalAsyncStorage
+from app.core.storage.local import LocalStorage
 
 settings = get_settings()
 
@@ -14,4 +14,4 @@ def get_storage():
     # if settings.STORAGE_BACKEND == "s3":
     #     return S3AsyncStorage()
 
-    return LocalAsyncStorage()
+    return LocalStorage()

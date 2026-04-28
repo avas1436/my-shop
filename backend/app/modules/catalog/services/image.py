@@ -1,10 +1,9 @@
 # app/modules/catalog/services/image.py
 import uuid
 
-from app.modules.catalog.repositories.image import ImageRepository
-
 from app.core.storage import get_storage
 from app.modules.catalog.models.image import ProductImage
+from app.modules.catalog.repository.image import ImageRepository
 
 
 class ImageService:
@@ -32,7 +31,7 @@ class ImageService:
 
         obj = ProductImage(
             product_id=product_id,
-            file_key=saved_key,
+            url=saved_key,
             alt_text=alt_text,
             is_primary=is_primary,
             sort_order=sort_order,

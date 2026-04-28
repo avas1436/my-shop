@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     # media for local images
     media_base_url: str = "http://localhost:8000/media"
     storage_backend: str = "local"  # local | s3
-    mediaroot: str = "media"  # لوکال
+    media_root: str = "media"  # لوکال
 
     # S3/CDN
     s3_endpoint: str | None = None
