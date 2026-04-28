@@ -4,10 +4,10 @@ from collections.abc import Callable, Iterable, Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from backend.app.core.jwt import get_current_user
 from fastapi import Depends, HTTPException, Request
 
 from app.common.enums import UserRole
+from app.core.authentication import get_current_user
 from app.modules.users.models import User
 
 # -----------------------------
@@ -28,7 +28,7 @@ def _forbidden(detail: str) -> None:
 
 
 def require_access(
-    allowed_roles: Iterable[UserRole],
+    allowed_roles: Iterable[UserRole] = [UserRole.ADMIN, UserRole.CUSTOMER],
     *,
     # پایه
     require_active: bool = True,
@@ -129,7 +129,7 @@ def require_access(
 # require_phone_verified = True
 
 # # عملیات حساس؛ اگر login قدیمی بود، re-login لازم شود.
-# equire_recent_login_within = timedelta(minutes=15)
+# require_recent_login_within = timedelta(minutes=15)
 
 # # کاربرانی که فقط با او تی پی وارد می‌شوند را برای عملیات خاص محدود کنید.
 # require_password = True

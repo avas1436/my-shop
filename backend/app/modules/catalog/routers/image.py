@@ -1,10 +1,12 @@
 # app/modules/catalog/routers/images.py
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.common.admin_only import require_admin
+from app.common.access_control import require_access
+from app.common.enums import UserRole
 from app.core.database import get_db
 from app.modules.catalog.repository.image import ImageRepository
 from app.modules.catalog.schemas.image import (
@@ -31,7 +33,19 @@ def get_service(db: Annotated[AsyncSession, Depends(get_db)]):
 )
 async def upload_image(
     service: Annotated[ImageService, Depends(get_service)],
-    _: Annotated[User, Depends(require_admin)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
     product_id: int,
     file: Annotated[UploadFile, File(...)],
     alt_text: str | None = Form(None),
@@ -80,7 +94,19 @@ async def update_image(
     payload: ImageUpdate,
     db: Annotated[AsyncSession, Depends(get_db)],
     service: Annotated[ImageService, Depends(get_service)],
-    _: Annotated[User, Depends(require_admin)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ):
 
     repo = ImageRepository(db)

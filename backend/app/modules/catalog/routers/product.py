@@ -1,9 +1,11 @@
+from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.common.admin_only import require_admin
+from app.common.access_control import require_access
+from app.common.enums import UserRole
 from app.core.database import get_db
 from app.modules.catalog.repository.product import AdminProductRepository
 from app.modules.catalog.schemas.product import DraftProductCreate, ProductAdminRead
@@ -24,7 +26,19 @@ router = APIRouter()
 async def admin_create_draft_product(
     payload: DraftProductCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_admin)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ) -> ProductAdminRead:
 
     service = AdminProductService(AdminProductRepository(db))
@@ -41,7 +55,19 @@ async def admin_create_draft_product(
 async def admin_soft_delete_product(
     product_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_admin)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ):
     service = AdminProductService(AdminProductRepository(db))
     deleted = await service.soft_delete_product(product_id)
@@ -78,7 +104,19 @@ async def admin_soft_delete_product(
 async def show_product(
     product_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    _: Annotated[User, Depends(require_admin)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
 ) -> ProductAdminRead:
 
     service = AdminProductService(AdminProductRepository(db))

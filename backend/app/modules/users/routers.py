@@ -4,9 +4,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request,
 from kavenegar import APIException, HTTPException as KHTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.common.access_control import require_access
 from app.common.responses import success_response
 from app.core.database import get_db
-from app.core.jwt import get_current_user
 from app.core.redis import get_redis_client
 from app.core.sms_service import send_sms
 from app.modules.users.models import User
@@ -130,7 +130,7 @@ async def verify_otp_route(
 async def register_complete(
     data: Register,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(require_access())],
 ) -> User:
     return await complete_register_service(
         db=db,
@@ -208,7 +208,7 @@ async def logout(
 )
 async def logout_all(
     request: Request,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(require_access())],
 ):
     await revoke_all_refresh_tokens_for_subject_service(
         redis_client=get_redis_client(request),
@@ -226,9 +226,8 @@ async def logout_all(
     status_code=status.HTTP_200_OK,
     summary="Get User Status",
 )
-def me(current_user: Annotated[User, Depends(get_current_user)]) -> User:
-
-    if current_user.first_name is None:
-        raise HTTPException(status_code=403, detail="complete your profile first")
+def me(
+    current_user: Annotated[User, Depends(require_access())],
+) -> User:
 
     return current_user
