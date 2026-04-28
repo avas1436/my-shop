@@ -48,9 +48,21 @@ async def upload_image(
     )
 
 
-@router.get("/admin/products/{product_id}/images", response_model=list[GetImage])
-async def list_images(product_id: int, db: AsyncSession = Depends(get_db)):
+# =========================================================
+# Get a Products Images
+# =========================================================
+@router.get(
+    "/admin/products/{product_id}/images",
+    status_code=status.HTTP_200_OK,
+    response_model=list[GetImage],
+)
+async def list_images(
+    product_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+
     repo = ImageRepository(db)
+
     return await repo.list_by_product(product_id)
 
 
