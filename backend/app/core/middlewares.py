@@ -1,13 +1,14 @@
+import asyncio
 import time
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.middleware import SlowAPIMiddleware
-import asyncio
 from prometheus_fastapi_instrumentator import Instrumentator  # prometheus
+from slowapi import Limiter
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 
 def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
@@ -26,7 +27,7 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
         try:
             return await asyncio.wait_for(call_next(request), timeout=10)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return JSONResponse({"detail": "Request Timeout"}, status_code=504)
 
     # ZIP Data - GZIP
