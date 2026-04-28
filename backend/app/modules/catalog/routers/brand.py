@@ -30,8 +30,8 @@ async def get_brand(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    base_url = str(request.base_url)
-    return await BrandService(db=db, request=request).get_brand(brand_id, base_url)
+
+    return await BrandService(db=db, request=request).get_brand(brand_id)
 
 
 @router.get("/", response_model=PageResponse[dict])
@@ -43,9 +43,9 @@ async def list_brands(
     page: int = 1,
     size: int = 10,
 ):
-    base_url = str(request.base_url)
+
     return await BrandService(db=db, request=request).list_brands(
-        search, brand_id, page, size, base_url
+        search, brand_id, page, size
     )
 
 

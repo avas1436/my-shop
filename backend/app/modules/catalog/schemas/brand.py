@@ -17,7 +17,6 @@ class BrandRead(BaseModel):
     id: int
     name: str
     slug: str | None
-    seo_url: str
     created_at: datetime
     updated_at: datetime | None
 

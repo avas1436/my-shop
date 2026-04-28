@@ -8,7 +8,7 @@ from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
 from app.modules.catalog.models.brand import Brand
 from app.modules.catalog.repository.brand import BrandRepository
-from app.modules.catalog.schemas.brand import BrandCreate, BrandUpdate
+from app.modules.catalog.schemas.brand import BrandCreate, BrandRead, BrandUpdate
 
 
 class BrandService:
@@ -38,7 +38,7 @@ class BrandService:
 
         return brand
 
-    async def get_brand(self, brand_id: int, base_url: str) -> dict:
+    async def get_brand(self, brand_id: int) -> dict:
         if self.cache:
             cached = await self.cache.get_brand(brand_id)
             if cached:
@@ -52,13 +52,16 @@ class BrandService:
             "id": brand.id,
             "name": brand.name,
             "slug": brand.slug,
-            "seo_url": f"{base_url.rstrip('/')}/brands/{brand.slug or slugify(brand.name)}-{brand.id}",
             "created_at": brand.created_at,
             "updated_at": brand.updated_at,
         }
 
+        brand_out = BrandRead.model_validate(brand)
+
+        dumped_payload = brand_out.model_dump(mode="json")
+
         if self.cache:
-            await self.cache.set_brand(brand_id, payload)
+            await self.cache.set_brand(brand_id, dumped_payload)
 
         return payload
 
@@ -68,7 +71,6 @@ class BrandService:
         brand_id: int | None,
         page: int,
         size: int,
-        base_url: str,
     ) -> PageResponse[dict]:
         if page < 1 or size < 1 or size > 100:
             raise HTTPException(status_code=400, detail="Invalid pagination values.")
@@ -89,7 +91,6 @@ class BrandService:
                     "id": b.id,
                     "name": b.name,
                     "slug": b.slug,
-                    "seo_url": f"{base_url.rstrip('/')}/brands/{b.slug or slugify(b.name)}-{b.id}",
                     "created_at": b.created_at,
                     "updated_at": b.updated_at,
                 }
@@ -101,7 +102,7 @@ class BrandService:
         )
 
         if self.cache:
-            await self.cache.set_list(cache_key, resp.model_dump())
+            await self.cache.set_list(cache_key, resp.model_dump(mode="json"))
 
         return resp
 
