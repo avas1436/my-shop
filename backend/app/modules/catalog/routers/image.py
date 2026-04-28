@@ -66,19 +66,31 @@ async def list_images(
     return await repo.list_by_product(product_id)
 
 
-@router.patch("/admin/products/{product_id}/images/{image_id}", response_model=GetImage)
+# =========================================================
+# Update a Product Image
+# =========================================================
+@router.patch(
+    "/admin/products/{product_id}/images/{image_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=GetImage,
+)
 async def update_image(
     product_id: int,
     image_id: int,
     payload: ImageUpdate,
-    db: AsyncSession = Depends(get_db),
-    service: ImageService = Depends(get_service),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[ImageService, Depends(get_service)],
+    _: Annotated[User, Depends(require_admin)],
 ):
+
     repo = ImageRepository(db)
+
     img = await repo.get(image_id)
+
     if not img or img.product_id != product_id:
         raise HTTPException(status_code=404, detail="Image not found")
-    return await service.update_image(img, **payload.dict())
+
+    return await service.update_image(img, **payload.model_dump(exclude_unset=True))
 
 
 @router.delete("/admin/products/{product_id}/images/{image_id}")
