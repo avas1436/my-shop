@@ -27,7 +27,7 @@ class AttributeRead(BaseModel):
 
 
 # --------------------------------------------------
-# Product Attribure Model
+# Product Attribure Schema
 # --------------------------------------------------
 class ProductAttributeCreate(BaseModel):
     product_id: int
@@ -50,7 +50,7 @@ class ProductAttributeRead(BaseModel):
 
 
 # --------------------------------------------------
-# Product Variant Attribure Model
+# Product Variant Attribure Schema
 # --------------------------------------------------
 class ProductVariantAttributeCreate(BaseModel):
     variant_id: int
