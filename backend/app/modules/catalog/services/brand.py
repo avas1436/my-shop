@@ -1,3 +1,4 @@
+# app/modules/catalog/services/brand.py
 import math
 
 from fastapi import HTTPException, Request

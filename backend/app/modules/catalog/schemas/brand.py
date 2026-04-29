@@ -1,3 +1,4 @@
+# app/modules/catalog/shcemas/brand.py
 from datetime import datetime
 
 from pydantic import BaseModel, Field
