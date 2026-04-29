@@ -1,8 +1,11 @@
-from app.modules.catalog.models.variant_attribute import ProductVariantAttribute
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.catalog.models.attribute import Attribute, ProductAttribute
+from app.modules.catalog.models.attribute import (
+    Attribute,
+    ProductAttribute,
+    ProductVariantAttribute,
+)
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.models.variant import ProductVariant
 
