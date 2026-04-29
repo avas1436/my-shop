@@ -23,6 +23,7 @@ dependencies = [
     "types-python-jose>=3.5.0.20260408",
     "aiofiles>=25.1.0",
     "python-multipart>=0.0.27",
+    "orjson>=3.11.8",
 ]
 
 [dependency-groups]
