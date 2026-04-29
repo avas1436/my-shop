@@ -31,3 +31,22 @@ class CategoryRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ProductCategoryAttach(BaseModel):
+    category_ids: list[int] = Field(..., min_length=1)
+
+
+class ProductCategoryDetach(BaseModel):
+    category_ids: list[int] = Field(..., min_length=1)
+
+
+class ProductCategorySync(BaseModel):
+    category_ids: list[int] = Field(default_factory=list)
+
+
+class ProductCategoryResult(BaseModel):
+    product_id: int
+    attached: list[int]
+    detached: list[int]
+    current: list[int]

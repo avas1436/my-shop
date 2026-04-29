@@ -1,7 +1,9 @@
-from sqlalchemy import func, select
+from app.modules.catalog.models.product_category import ProductCategory
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.catalog.models.category import Category
+from app.modules.catalog.models.product import Product
 
 
 class CategoryRepository:
@@ -73,4 +75,46 @@ class CategoryRepository:
 
     async def delete(self, category: Category) -> None:
         await self.db.delete(category)
+        await self.db.commit()
+
+
+class ProductCategoryRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def product_exists(self, product_id: int) -> bool:
+        q = select(Product.id).where(Product.id == product_id)
+        return (await self.db.execute(q)).scalar_one_or_none() is not None
+
+    async def existing_categories(self, category_ids: list[int]) -> set[int]:
+        if not category_ids:
+            return set()
+        q = select(Category.id).where(Category.id.in_(category_ids))
+        rows = (await self.db.execute(q)).scalars().all()
+        return set(rows)
+
+    async def current_categories(self, product_id: int) -> set[int]:
+        q = select(ProductCategory.category_id).where(
+            ProductCategory.product_id == product_id
+        )
+        rows = (await self.db.execute(q)).scalars().all()
+        return set(rows)
+
+    async def add_links(self, product_id: int, category_ids: list[int]) -> None:
+        if not category_ids:
+            return
+        values = [
+            {"product_id": product_id, "category_id": cid} for cid in category_ids
+        ]
+        await self.db.execute(insert(ProductCategory), values)
+        await self.db.commit()
+
+    async def remove_links(self, product_id: int, category_ids: list[int]) -> None:
+        if not category_ids:
+            return
+        q = delete(ProductCategory).where(
+            ProductCategory.product_id == product_id,
+            ProductCategory.category_id.in_(category_ids),
+        )
+        await self.db.execute(q)
         await self.db.commit()

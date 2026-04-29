@@ -1,5 +1,8 @@
 import math
 
+from app.modules.catalog.repository.product_category import ProductCategoryRepository
+from app.modules.catalog.schemas.product_category import ProductCategoryResult
+from app.modules.catalog.utils.relations import normalize_ids
 from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +18,9 @@ from app.modules.catalog.schemas.category import (
 )
 
 
+# --------------------------------------------------
+# Category Service
+# --------------------------------------------------
 class CategoryService:
     def __init__(self, db: AsyncSession, request: Request):
         self.repo = CategoryRepository(db)
@@ -221,3 +227,105 @@ class CategoryService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("category", category_id)
+
+
+# --------------------------------------------------
+# Product Category Service
+# --------------------------------------------------
+class ProductCategoryService:
+    def __init__(self, db: AsyncSession, request: Request):
+        self.repo = ProductCategoryRepository(db)
+        self.cache = RedisCache(request)
+
+    async def attach(
+        self, product_id: int, category_ids: list[int]
+    ) -> ProductCategoryResult:
+        category_ids = normalize_ids(category_ids)
+
+        if not await self.repo.product_exists(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        existing = await self.repo.existing_categories(category_ids)
+        missing = set(category_ids) - existing
+        if missing:
+            raise HTTPException(
+                status_code=404, detail=f"Categories not found: {sorted(missing)}"
+            )
+
+        current = await self.repo.current_categories(product_id)
+        to_add = list(set(category_ids) - current)
+
+        await self.repo.add_links(product_id, to_add)
+
+        current = current | set(to_add)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("product", product_id)
+
+        return ProductCategoryResult(
+            product_id=product_id,
+            attached=sorted(to_add),
+            detached=[],
+            current=sorted(current),
+        )
+
+    async def detach(
+        self, product_id: int, category_ids: list[int]
+    ) -> ProductCategoryResult:
+        category_ids = normalize_ids(category_ids)
+
+        if not await self.repo.product_exists(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        current = await self.repo.current_categories(product_id)
+        to_remove = list(set(category_ids) & current)
+
+        await self.repo.remove_links(product_id, to_remove)
+
+        current = current - set(to_remove)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("product", product_id)
+
+        return ProductCategoryResult(
+            product_id=product_id,
+            attached=[],
+            detached=sorted(to_remove),
+            current=sorted(current),
+        )
+
+    async def sync(
+        self, product_id: int, category_ids: list[int]
+    ) -> ProductCategoryResult:
+        category_ids = normalize_ids(category_ids)
+
+        if not await self.repo.product_exists(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        existing = await self.repo.existing_categories(category_ids)
+        missing = set(category_ids) - existing
+        if missing:
+            raise HTTPException(
+                status_code=404, detail=f"Categories not found: {sorted(missing)}"
+            )
+
+        current = await self.repo.current_categories(product_id)
+
+        to_add = list(set(category_ids) - current)
+        to_remove = list(current - set(category_ids))
+
+        await self.repo.add_links(product_id, to_add)
+        await self.repo.remove_links(product_id, to_remove)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("product", product_id)
+
+        return ProductCategoryResult(
+            product_id=product_id,
+            attached=sorted(to_add),
+            detached=sorted(to_remove),
+            current=sorted(set(category_ids)),
+        )
