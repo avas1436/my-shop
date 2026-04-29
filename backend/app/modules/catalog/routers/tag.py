@@ -15,7 +15,7 @@ from app.modules.users.models import User
 router = APIRouter()
 
 
-@router.post("/", response_model=TagRead)
+@router.post("/admin", response_model=TagRead)
 async def create_tag(
     data: TagCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -37,7 +37,7 @@ async def create_tag(
     return await TagService(db=db, request=request).create_tag(data)
 
 
-@router.get("/{tag_id}", response_model=TagRead)
+@router.get("/admin/{tag_id}", response_model=TagRead)
 async def get_tag(
     tag_id: int,
     request: Request,
@@ -46,7 +46,7 @@ async def get_tag(
     return await TagService(db=db, request=request).get_tag(tag_id)
 
 
-@router.get("/", response_model=PageResponse[dict])
+@router.get("/admin", response_model=PageResponse[dict])
 async def list_tags(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -60,7 +60,7 @@ async def list_tags(
     )
 
 
-@router.put("/{tag_id}", response_model=TagRead)
+@router.put("/admin/{tag_id}", response_model=TagRead)
 async def update_tag(
     tag_id: int,
     data: TagUpdate,
@@ -83,7 +83,7 @@ async def update_tag(
     return await TagService(db=db, request=request).update_tag(tag_id, data)
 
 
-@router.delete("/{tag_id}")
+@router.delete("/admin/{tag_id}")
 async def delete_tag(
     tag_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
