@@ -1,0 +1,221 @@
+import math
+
+from fastapi import HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.cache.redis_cache import RedisCache
+from app.common.pagination import PageMeta, PageResponse
+from app.core.utils import slugify
+from app.modules.catalog.models.category import Category
+from app.modules.catalog.repository.category import CategoryRepository
+from app.modules.catalog.schemas.category import (
+    CategoryCreate,
+    CategoryRead,
+    CategoryUpdate,
+)
+
+
+class CategoryService:
+    def __init__(self, db: AsyncSession, request: Request):
+        self.repo = CategoryRepository(db)
+        self.cache = RedisCache(request)
+
+    # -------------------------
+    # create a category
+    # -------------------------
+    async def create_category(self, data: CategoryCreate) -> Category:
+
+        if await self.repo.get_by_name(data.name):
+            raise HTTPException(status_code=409, detail="Category name already exists.")
+
+        slug = data.slug or slugify(data.name)
+        if slug and await self.repo.get_by_slug(slug):
+            raise HTTPException(status_code=409, detail="Category slug already exists.")
+
+        parent_id = None
+        if data.parent_id is not None:
+            parent = await self.repo.get_by_id(data.parent_id)
+            if not parent:
+                raise HTTPException(
+                    status_code=404, detail="Parent category not found."
+                )
+            parent_id = data.parent_id
+
+        category = Category(
+            name=data.name,
+            slug=slug,
+            description=data.description,
+            is_active=data.is_active,
+            parent_id=parent_id,
+        )
+        category = await self.repo.create(category)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+
+        return category
+
+    # -------------------------
+    # get a category
+    # -------------------------
+    async def get_category(self, category_id: int) -> dict:
+        if self.cache.is_available():
+            cached = await self.cache.get("category", category_id)
+            if cached is not None:
+                return cached
+
+        category = await self.repo.get_by_id(category_id)
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found.")
+
+        payload = CategoryRead.model_validate(category).model_dump(mode="json")
+
+        if self.cache.is_available():
+            await self.cache.set("category", category_id, payload=payload)
+
+        return payload
+
+    # -------------------------
+    # list categories
+    # -------------------------
+    async def list_categories(
+        self,
+        search: str | None,
+        parent_id: int | None,
+        is_active: bool | None,
+        page: int,
+        size: int,
+    ) -> PageResponse[dict]:
+
+        if page < 1 or size < 1 or size > 100:
+            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+
+        if self.cache.is_available():
+            cached = await self.cache.get_list(
+                "category",
+                search,
+                parent_id,
+                is_active,
+                page,
+                size,
+            )
+            if cached is not None:
+                return PageResponse(**cached)
+
+        items, total = await self.repo.list_filtered(
+            search, parent_id, is_active, page, size
+        )
+
+        pages = math.ceil(total / size) if total else 1
+        response_items = []
+        for c in items:
+            response_items.append(
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "slug": c.slug,
+                    "description": c.description,
+                    "is_active": c.is_active,
+                    "parent_id": c.parent_id,
+                    "created_at": c.created_at,
+                    "updated_at": c.updated_at,
+                }
+            )
+
+        resp = PageResponse(
+            items=response_items,
+            meta=PageMeta(page=page, size=size, total=total, pages=pages),
+        )
+
+        if self.cache.is_available():
+            await self.cache.set_list(
+                "category",
+                search,
+                parent_id,
+                is_active,
+                page,
+                size,
+                payload=resp.model_dump(mode="json"),
+            )
+
+        return resp
+
+    # -------------------------
+    # update a category
+    # -------------------------
+    async def update_category(self, category_id: int, data: CategoryUpdate) -> Category:
+        category = await self.repo.get_by_id(category_id)
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found.")
+
+        if data.name and data.name != category.name:
+            if await self.repo.get_by_name(data.name):
+                raise HTTPException(
+                    status_code=409, detail="Category name already exists."
+                )
+            category.name = data.name
+
+        if data.slug:
+            if data.slug != category.slug and await self.repo.get_by_slug(data.slug):
+                raise HTTPException(
+                    status_code=409, detail="Category slug already exists."
+                )
+            category.slug = data.slug
+
+        if data.description is not None:
+            category.description = data.description
+
+        if data.is_active is not None:
+            category.is_active = data.is_active
+
+        if data.parent_id is not None:
+            if data.parent_id == category.id:
+                raise HTTPException(
+                    status_code=409, detail="Category cannot be its own parent."
+                )
+            parent = await self.repo.get_by_id(data.parent_id)
+            if not parent:
+                raise HTTPException(
+                    status_code=404, detail="Parent category not found."
+                )
+
+            # prevent cycles (parent cannot be a descendant)
+            current = parent
+            while current:
+                if current.id == category.id:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Parent category cannot be a descendant.",
+                    )
+                if current.parent_id is None:
+                    break
+                current = await self.repo.get_by_id(current.parent_id)
+
+            category.parent_id = data.parent_id
+
+        category = await self.repo.update(category)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("category", category_id)
+
+        return category
+
+    # -------------------------
+    # delete a category
+    # -------------------------
+    async def delete_category(self, category_id: int) -> None:
+        category = await self.repo.get_by_id(category_id)
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found.")
+
+        if await self.repo.has_children(category_id):
+            raise HTTPException(
+                status_code=409, detail="Cannot delete category with children."
+            )
+
+        await self.repo.delete(category)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("category", category_id)
