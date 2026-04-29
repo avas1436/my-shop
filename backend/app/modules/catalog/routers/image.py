@@ -43,7 +43,7 @@ def get_service(
 # Add Image
 # =========================================================
 @router.post(
-    "/admin/products/{product_id}/images",
+    "/admin/products/{product_id}",
     status_code=status.HTTP_201_CREATED,
     response_model=GetImage,
 )
@@ -82,7 +82,7 @@ async def upload_image(
 # Get Images of a Product
 # =========================================================
 @router.get(
-    "/admin/products/{product_id}/images",
+    "/admin/product/{product_id}",
     status_code=status.HTTP_200_OK,
     response_model=list[GetImage],
 )
@@ -114,7 +114,7 @@ async def get_image(
 # Update a Product Image
 # =========================================================
 @router.patch(
-    "/admin/products/{product_id}/images/{image_id}",
+    "/admin/products/{product_id}",
     status_code=status.HTTP_200_OK,
     response_model=GetImage,
 )
@@ -144,7 +144,7 @@ async def update_image(
 # Delete a Image
 # =========================================================
 @router.delete(
-    "/admin/products/{product_id}/images/{image_id}",
+    "/admin/products/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_image(
