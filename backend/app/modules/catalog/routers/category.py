@@ -1,13 +1,6 @@
 from datetime import timedelta
 from typing import Annotated
 
-from app.modules.catalog.schemas.product_category import (
-    ProductCategoryAttach,
-    ProductCategoryDetach,
-    ProductCategoryResult,
-    ProductCategorySync,
-)
-from app.modules.catalog.services.product_category import ProductCategoryService
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,8 +12,15 @@ from app.modules.catalog.schemas.category import (
     CategoryCreate,
     CategoryRead,
     CategoryUpdate,
+    ProductCategoryAttach,
+    ProductCategoryDetach,
+    ProductCategoryResult,
+    ProductCategorySync,
 )
-from app.modules.catalog.services.category import CategoryService
+from app.modules.catalog.services.category import (
+    CategoryService,
+    ProductCategoryService,
+)
 from app.modules.users.models import User
 
 router = APIRouter()

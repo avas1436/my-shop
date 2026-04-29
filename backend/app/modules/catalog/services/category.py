@@ -1,8 +1,5 @@
 import math
 
-from app.modules.catalog.repository.product_category import ProductCategoryRepository
-from app.modules.catalog.schemas.product_category import ProductCategoryResult
-from app.modules.catalog.utils.relations import normalize_ids
 from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,11 +7,15 @@ from app.cache.redis_cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
 from app.modules.catalog.models.category import Category
-from app.modules.catalog.repository.category import CategoryRepository
+from app.modules.catalog.repository.category import (
+    CategoryRepository,
+    ProductCategoryRepository,
+)
 from app.modules.catalog.schemas.category import (
     CategoryCreate,
     CategoryRead,
     CategoryUpdate,
+    ProductCategoryResult,
 )
 
 
@@ -240,7 +241,6 @@ class ProductCategoryService:
     async def attach(
         self, product_id: int, category_ids: list[int]
     ) -> ProductCategoryResult:
-        category_ids = normalize_ids(category_ids)
 
         if not await self.repo.product_exists(product_id):
             raise HTTPException(status_code=404, detail="Product not found.")
@@ -273,7 +273,6 @@ class ProductCategoryService:
     async def detach(
         self, product_id: int, category_ids: list[int]
     ) -> ProductCategoryResult:
-        category_ids = normalize_ids(category_ids)
 
         if not await self.repo.product_exists(product_id):
             raise HTTPException(status_code=404, detail="Product not found.")
@@ -299,7 +298,6 @@ class ProductCategoryService:
     async def sync(
         self, product_id: int, category_ids: list[int]
     ) -> ProductCategoryResult:
-        category_ids = normalize_ids(category_ids)
 
         if not await self.repo.product_exists(product_id):
             raise HTTPException(status_code=404, detail="Product not found.")

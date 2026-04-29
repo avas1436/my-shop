@@ -1,8 +1,7 @@
-from app.modules.catalog.models.product_category import ProductCategory
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.catalog.models.category import Category
+from app.modules.catalog.models.category import Category, ProductCategory
 from app.modules.catalog.models.product import Product
 
 
