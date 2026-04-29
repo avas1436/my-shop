@@ -1,3 +1,4 @@
+# app/modules/catalog/models/attribute.py
 from __future__ import annotations
 
 from datetime import datetime
@@ -21,6 +22,9 @@ if TYPE_CHECKING:
     from app.modules.catalog.models.variant import ProductVariant
 
 
+# --------------------------------------------------
+# Attribure Model
+# --------------------------------------------------
 class Attribute(Base):
     __tablename__ = "attributes"
 
@@ -42,6 +46,9 @@ class Attribute(Base):
     )
 
 
+# --------------------------------------------------
+# Product Attribure Model
+# --------------------------------------------------
 class ProductAttribute(Base):
     __tablename__ = "product_attributes"
 
@@ -59,6 +66,9 @@ class ProductAttribute(Base):
     )
 
 
+# --------------------------------------------------
+# Product Variant Attribure Model
+# --------------------------------------------------
 class ProductVariantAttribute(Base):
     __tablename__ = "product_variant_attributes"
 
