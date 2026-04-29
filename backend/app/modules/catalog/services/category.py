@@ -92,6 +92,7 @@ class CategoryService:
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
+                "list",
                 "category",
                 search,
                 parent_id,
@@ -129,6 +130,7 @@ class CategoryService:
 
         if self.cache.is_available():
             await self.cache.set_list(
+                "list",
                 "category",
                 search,
                 parent_id,
