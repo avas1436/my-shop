@@ -124,11 +124,17 @@ class RedisCache:
     # -------------------------
     # ساخت کلید برای لیست ها
     # -------------------------
-    def _list_key(self, key: str) -> str:
+    def _list_key(self, *parts: Any) -> str:
         """
         کلیدهای لیست:  {prefix}{namespace}:list:{key}
         """
-        return self._build_key("list", key)
+        return self._build_key("list", *parts)
+
+    # -------------------------
+    # چک کردن عملکرد صحیح ردیس
+    # -------------------------
+    def is_available(self) -> bool:
+        return self._redis is not None
 
     # -------------------------
     # get a key
@@ -192,9 +198,9 @@ class RedisCache:
     # -------------------------
     # get a list
     # -------------------------
-    async def get_list(self, key: str) -> Any | None:
+    async def get_list(self, *parts: Any) -> Any | None:
         redis = self._ensure()
-        raw = await redis.get(self._list_key(key))
+        raw = await redis.get(self._list_key(*parts))
         if raw is None:
             return None
         try:
@@ -208,7 +214,7 @@ class RedisCache:
     # -------------------------
     async def set_list(
         self,
-        key: str,
+        *parts: Any,
         payload: Any,
         ttl: int | None = None,
     ) -> None:
@@ -218,9 +224,9 @@ class RedisCache:
         ex = self._list_ttl if ttl is None else ttl
 
         if ex is None:
-            await redis.set(self._list_key(key), value)
+            await redis.set(self._list_key(*parts), value)
         else:
-            await redis.set(self._list_key(key), value, ex=ex)
+            await redis.set(self._list_key(*parts), value, ex=ex)
 
     # -------------------------
     # invalidate single key
