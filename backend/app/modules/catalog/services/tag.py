@@ -7,10 +7,18 @@ from app.cache.redis_cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
 from app.modules.catalog.models.tag import Tag
-from app.modules.catalog.repository.tag import TagRepository
-from app.modules.catalog.schemas.tag import TagCreate, TagRead, TagUpdate
+from app.modules.catalog.repository.tag import ProductTagRepository, TagRepository
+from app.modules.catalog.schemas.tag import (
+    ProductTagResult,
+    TagCreate,
+    TagRead,
+    TagUpdate,
+)
 
 
+# --------------------------------------------------
+# Tag Service
+# --------------------------------------------------
 class TagService:
     def __init__(self, db: AsyncSession, request: Request):
         self.repo = TagRepository(db)
@@ -153,3 +161,96 @@ class TagService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("tag", tag_id)
+
+
+# --------------------------------------------------
+# Product Tag Service
+# --------------------------------------------------
+class ProductTagService:
+    def __init__(self, db: AsyncSession, request: Request):
+        self.repo = ProductTagRepository(db)
+        self.cache = RedisCache(request)
+
+    async def attach(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
+
+        if not await self.repo.product_exists(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        existing = await self.repo.existing_tags(tag_ids)
+        missing = set(tag_ids) - existing
+        if missing:
+            raise HTTPException(
+                status_code=404, detail=f"Tags not found: {sorted(missing)}"
+            )
+
+        current = await self.repo.current_tags(product_id)
+        to_add = list(set(tag_ids) - current)
+
+        await self.repo.add_links(product_id, to_add)
+
+        current = current | set(to_add)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("product", product_id)
+
+        return ProductTagResult(
+            product_id=product_id,
+            attached=sorted(to_add),
+            detached=[],
+            current=sorted(current),
+        )
+
+    async def detach(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
+
+        if not await self.repo.product_exists(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        current = await self.repo.current_tags(product_id)
+        to_remove = list(set(tag_ids) & current)
+
+        await self.repo.remove_links(product_id, to_remove)
+
+        current = current - set(to_remove)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("product", product_id)
+
+        return ProductTagResult(
+            product_id=product_id,
+            attached=[],
+            detached=sorted(to_remove),
+            current=sorted(current),
+        )
+
+    async def sync(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
+
+        if not await self.repo.product_exists(product_id):
+            raise HTTPException(status_code=404, detail="Product not found.")
+
+        existing = await self.repo.existing_tags(tag_ids)
+        missing = set(tag_ids) - existing
+        if missing:
+            raise HTTPException(
+                status_code=404, detail=f"Tags not found: {sorted(missing)}"
+            )
+
+        current = await self.repo.current_tags(product_id)
+
+        to_add = list(set(tag_ids) - current)
+        to_remove = list(current - set(tag_ids))
+
+        await self.repo.add_links(product_id, to_add)
+        await self.repo.remove_links(product_id, to_remove)
+
+        if self.cache.is_available():
+            await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("product", product_id)
+
+        return ProductTagResult(
+            product_id=product_id,
+            attached=sorted(to_add),
+            detached=sorted(to_remove),
+            current=sorted(set(tag_ids)),
+        )

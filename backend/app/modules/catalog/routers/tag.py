@@ -8,13 +8,24 @@ from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.pagination import PageResponse
 from app.core.database import get_db
-from app.modules.catalog.schemas.tag import TagCreate, TagRead, TagUpdate
-from app.modules.catalog.services.tag import TagService
+from app.modules.catalog.schemas.tag import (
+    ProductTagAttach,
+    ProductTagDetach,
+    ProductTagResult,
+    ProductTagSync,
+    TagCreate,
+    TagRead,
+    TagUpdate,
+)
+from app.modules.catalog.services.tag import ProductTagService, TagService
 from app.modules.users.models import User
 
 router = APIRouter()
 
 
+# --------------------------------------------------
+# Tag Routers
+# --------------------------------------------------
 @router.post("/admin", response_model=TagRead)
 async def create_tag(
     data: TagCreate,
@@ -104,3 +115,75 @@ async def delete_tag(
 ):
     await TagService(db=db, request=request).delete_tag(tag_id)
     return {"detail": "Tag deleted successfully."}
+
+
+# --------------------------------------------------
+# Product Tag Routers
+# --------------------------------------------------
+@router.post("/{product_id}/tags/attach", response_model=ProductTagResult)
+async def attach_tags(
+    product_id: int,
+    data: ProductTagAttach,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            )
+        ),
+    ],
+):
+    return await ProductTagService(db, request).attach(product_id, data.tag_ids)
+
+
+@router.post("/{product_id}/tags/detach", response_model=ProductTagResult)
+async def detach_tags(
+    product_id: int,
+    data: ProductTagDetach,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            )
+        ),
+    ],
+):
+    return await ProductTagService(db, request).detach(product_id, data.tag_ids)
+
+
+@router.put("/{product_id}/tags/sync", response_model=ProductTagResult)
+async def sync_tags(
+    product_id: int,
+    data: ProductTagSync,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            )
+        ),
+    ],
+):
+    return await ProductTagService(db, request).sync(product_id, data.tag_ids)
