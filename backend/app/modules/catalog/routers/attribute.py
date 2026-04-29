@@ -63,7 +63,7 @@ async def get_attribute(
     return await AttributeService(db=db, request=request).get_attribute(attribute_id)
 
 
-@router.get("/", response_model=PageResponse[dict])
+@router.get("/list", response_model=PageResponse[dict])
 async def list_attributes(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -128,7 +128,7 @@ async def delete_attribute(
 # --------------------------------------------------
 # Product Attribure Model
 # --------------------------------------------------
-@router.post("/", response_model=ProductAttributeRead)
+@router.post("/product", response_model=ProductAttributeRead)
 async def create_product_attribute(
     data: ProductAttributeCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -152,7 +152,7 @@ async def create_product_attribute(
     ).create_product_attribute(data)
 
 
-@router.get("/{pa_id}", response_model=ProductAttributeRead)
+@router.get("/product/{pa_id}", response_model=ProductAttributeRead)
 async def get_product_attribute(
     pa_id: int,
     request: Request,
@@ -163,7 +163,7 @@ async def get_product_attribute(
     )
 
 
-@router.get("/", response_model=PageResponse[dict])
+@router.get("/list/product/list", response_model=PageResponse[dict])
 async def list_product_attributes(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -178,7 +178,7 @@ async def list_product_attributes(
     ).list_product_attributes(search, product_id, attribute_id, page, size)
 
 
-@router.put("/{pa_id}", response_model=ProductAttributeRead)
+@router.put("/product/{pa_id}", response_model=ProductAttributeRead)
 async def update_product_attribute(
     pa_id: int,
     data: ProductAttributeUpdate,
@@ -203,7 +203,7 @@ async def update_product_attribute(
     ).update_product_attribute(pa_id, data)
 
 
-@router.delete("/{pa_id}")
+@router.delete("/product/{pa_id}")
 async def delete_product_attribute(
     pa_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -231,9 +231,7 @@ async def delete_product_attribute(
 # --------------------------------------------------
 # Product Variant Attribure Model
 # --------------------------------------------------
-
-
-@router.post("/", response_model=ProductVariantAttributeRead)
+@router.post("/product/variant", response_model=ProductVariantAttributeRead)
 async def create_product_variant_attribute(
     data: ProductVariantAttributeCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -257,7 +255,7 @@ async def create_product_variant_attribute(
     ).create_product_variant_attribute(data)
 
 
-@router.get("/{pva_id}", response_model=ProductVariantAttributeRead)
+@router.get("/product/variant/{pva_id}", response_model=ProductVariantAttributeRead)
 async def get_product_variant_attribute(
     pva_id: int,
     request: Request,
@@ -268,7 +266,7 @@ async def get_product_variant_attribute(
     ).get_product_variant_attribute(pva_id)
 
 
-@router.get("/", response_model=PageResponse[dict])
+@router.get("/list/product/variant", response_model=PageResponse[dict])
 async def list_product_variant_attributes(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -283,7 +281,7 @@ async def list_product_variant_attributes(
     ).list_product_variant_attributes(search, variant_id, attribute_id, page, size)
 
 
-@router.put("/{pva_id}", response_model=ProductVariantAttributeRead)
+@router.put("/product/variant/{pva_id}", response_model=ProductVariantAttributeRead)
 async def update_product_variant_attribute(
     pva_id: int,
     data: ProductVariantAttributeUpdate,
@@ -308,7 +306,7 @@ async def update_product_variant_attribute(
     ).update_product_variant_attribute(pva_id, data)
 
 
-@router.delete("/{pva_id}")
+@router.delete("/product/variant/{pva_id}")
 async def delete_product_variant_attribute(
     pva_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
