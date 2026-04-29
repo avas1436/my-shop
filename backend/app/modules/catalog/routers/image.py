@@ -2,7 +2,15 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Request,
+    UploadFile,
+    status,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.access_control import require_access
@@ -19,8 +27,16 @@ from app.modules.users.models import User
 router = APIRouter()
 
 
-def get_service(db: Annotated[AsyncSession, Depends(get_db)]):
-    return ImageService(ImageRepository(db))
+def get_service(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+):
+
+    repo = ImageRepository(db=db)
+
+    service = ImageService(repo=repo, request=request)
+
+    return service
 
 
 # =========================================================
@@ -72,12 +88,26 @@ async def upload_image(
 )
 async def list_images(
     product_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[ImageService, Depends(get_service)],
 ):
 
-    repo = ImageRepository(db)
+    return await service.get_product_images(product_id=product_id)
 
-    return await repo.list_by_product(product_id)
+
+# =========================================================
+# Get a Image
+# =========================================================
+@router.get(
+    "/admin/image/{image_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=GetImage,
+)
+async def get_image(
+    image_id: int,
+    service: Annotated[ImageService, Depends(get_service)],
+):
+
+    return await service.get_image(image_id=image_id)
 
 
 # =========================================================
@@ -89,10 +119,8 @@ async def list_images(
     response_model=GetImage,
 )
 async def update_image(
-    product_id: int,
     image_id: int,
     payload: ImageUpdate,
-    db: Annotated[AsyncSession, Depends(get_db)],
     service: Annotated[ImageService, Depends(get_service)],
     _: Annotated[
         User,
@@ -109,14 +137,7 @@ async def update_image(
     ],
 ):
 
-    repo = ImageRepository(db)
-
-    img = await repo.get(image_id)
-
-    if not img or img.product_id != product_id:
-        raise HTTPException(status_code=404, detail="Image not found")
-
-    return await service.update_image(img, **payload.model_dump(exclude_unset=True))
+    return await service.update_image(image_id=image_id, data=payload)
 
 
 # =========================================================
@@ -127,9 +148,7 @@ async def update_image(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_image(
-    product_id: int,
     image_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
     service: Annotated[ImageService, Depends(get_service)],
     _: Annotated[
         User,
@@ -146,11 +165,4 @@ async def delete_image(
     ],
 ):
 
-    repo = ImageRepository(db)
-
-    img = await repo.get(image_id)
-
-    if not img or img.product_id != product_id:
-        raise HTTPException(status_code=404, detail="Image not found")
-
-    await service.delete_image(img)
+    await service.delete_image(image_id=image_id)
