@@ -1,0 +1,333 @@
+from datetime import timedelta
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.common.access_control import require_access
+from app.common.enums import UserRole
+from app.common.pagination import PageResponse
+from app.core.database import get_db
+from app.modules.catalog.schemas.attribute import (
+    AttributeCreate,
+    AttributeRead,
+    AttributeUpdate,
+    ProductAttributeCreate,
+    ProductAttributeRead,
+    ProductAttributeUpdate,
+    ProductVariantAttributeCreate,
+    ProductVariantAttributeRead,
+    ProductVariantAttributeUpdate,
+)
+from app.modules.catalog.services.attribute import (
+    AttributeService,
+    ProductAttributeService,
+    ProductVariantAttributeService,
+)
+from app.modules.users.models import User
+
+router = APIRouter()
+
+
+# --------------------------------------------------
+# Attribure Model
+# --------------------------------------------------
+@router.post("/", response_model=AttributeRead)
+async def create_attribute(
+    data: AttributeCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    return await AttributeService(db=db, request=request).create_attribute(data)
+
+
+@router.get("/{attribute_id}", response_model=AttributeRead)
+async def get_attribute(
+    attribute_id: int,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    return await AttributeService(db=db, request=request).get_attribute(attribute_id)
+
+
+@router.get("/", response_model=PageResponse[dict])
+async def list_attributes(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    search: str | None = None,
+    attribute_id: int | None = None,
+    page: int = 1,
+    size: int = 10,
+):
+    return await AttributeService(db=db, request=request).list_attributes(
+        search, attribute_id, page, size
+    )
+
+
+@router.put("/{attribute_id}", response_model=AttributeRead)
+async def update_attribute(
+    attribute_id: int,
+    data: AttributeUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    return await AttributeService(db=db, request=request).update_attribute(
+        attribute_id, data
+    )
+
+
+@router.delete("/{attribute_id}")
+async def delete_attribute(
+    attribute_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    await AttributeService(db=db, request=request).delete_attribute(attribute_id)
+    return {"detail": "Attribute deleted successfully."}
+
+
+# --------------------------------------------------
+# Product Attribure Model
+# --------------------------------------------------
+@router.post("/", response_model=ProductAttributeRead)
+async def create_product_attribute(
+    data: ProductAttributeCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    return await ProductAttributeService(
+        db=db, request=request
+    ).create_product_attribute(data)
+
+
+@router.get("/{pa_id}", response_model=ProductAttributeRead)
+async def get_product_attribute(
+    pa_id: int,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    return await ProductAttributeService(db=db, request=request).get_product_attribute(
+        pa_id
+    )
+
+
+@router.get("/", response_model=PageResponse[dict])
+async def list_product_attributes(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    search: str | None = None,
+    product_id: int | None = None,
+    attribute_id: int | None = None,
+    page: int = 1,
+    size: int = 10,
+):
+    return await ProductAttributeService(
+        db=db, request=request
+    ).list_product_attributes(search, product_id, attribute_id, page, size)
+
+
+@router.put("/{pa_id}", response_model=ProductAttributeRead)
+async def update_product_attribute(
+    pa_id: int,
+    data: ProductAttributeUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    return await ProductAttributeService(
+        db=db, request=request
+    ).update_product_attribute(pa_id, data)
+
+
+@router.delete("/{pa_id}")
+async def delete_product_attribute(
+    pa_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    await ProductAttributeService(db=db, request=request).delete_product_attribute(
+        pa_id
+    )
+    return {"detail": "Product attribute deleted successfully."}
+
+
+# --------------------------------------------------
+# Product Variant Attribure Model
+# --------------------------------------------------
+
+
+@router.post("/", response_model=ProductVariantAttributeRead)
+async def create_product_variant_attribute(
+    data: ProductVariantAttributeCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    return await ProductVariantAttributeService(
+        db=db, request=request
+    ).create_product_variant_attribute(data)
+
+
+@router.get("/{pva_id}", response_model=ProductVariantAttributeRead)
+async def get_product_variant_attribute(
+    pva_id: int,
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    return await ProductVariantAttributeService(
+        db=db, request=request
+    ).get_product_variant_attribute(pva_id)
+
+
+@router.get("/", response_model=PageResponse[dict])
+async def list_product_variant_attributes(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    search: str | None = None,
+    variant_id: int | None = None,
+    attribute_id: int | None = None,
+    page: int = 1,
+    size: int = 10,
+):
+    return await ProductVariantAttributeService(
+        db=db, request=request
+    ).list_product_variant_attributes(search, variant_id, attribute_id, page, size)
+
+
+@router.put("/{pva_id}", response_model=ProductVariantAttributeRead)
+async def update_product_variant_attribute(
+    pva_id: int,
+    data: ProductVariantAttributeUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    return await ProductVariantAttributeService(
+        db=db, request=request
+    ).update_product_variant_attribute(pva_id, data)
+
+
+@router.delete("/{pva_id}")
+async def delete_product_variant_attribute(
+    pva_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    request: Request,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    await ProductVariantAttributeService(
+        db=db, request=request
+    ).delete_product_variant_attribute(pva_id)
+    return {"detail": "Variant attribute deleted successfully."}
