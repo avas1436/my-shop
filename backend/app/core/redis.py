@@ -1,6 +1,5 @@
 from collections.abc import AsyncIterator
 
-from fastapi import Request
 from redis.asyncio import ConnectionPool, Redis
 
 
@@ -53,11 +52,3 @@ class RedisController:
         if not self.redis_client:
             raise RuntimeError("Redis is not initialized")
         yield self.redis_client
-
-
-def get_redis_client(request: Request) -> Redis | None:
-    controller = getattr(request.app.state, "redis", None)
-    if controller is None:
-        return None
-
-    return getattr(controller, "redis_client", None)

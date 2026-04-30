@@ -3,7 +3,6 @@ from collections.abc import Callable
 from typing import Any
 
 import orjson
-from fastapi import Request
 from redis.asyncio import Redis
 
 from app.config.settings import get_settings
@@ -26,16 +25,15 @@ class RedisInvalidKeyError(ValueError):
 class RedisCache:
     def __init__(
         self,
-        request: Request,
+        redis: Redis,
         namespace: str = "",
         default_ttl: int = 300,
         list_ttl: int = 120,
         serializer: Callable[[Any], str] | None = None,
         deserializer: Callable[[str], Any] | None = None,
     ):
-        self._request = request
-        self._controller = getattr(request.app.state, "redis", None)
-        self._redis: Redis | None = None
+
+        self._redis = redis
 
         self._base_prefix: str = (settings.session_prefix or "").strip()
 
@@ -48,9 +46,6 @@ class RedisCache:
 
         # ورودی deserializer باید str باشد
         self._loads = deserializer or (lambda x: orjson.loads(x))
-
-        if self._controller:
-            self._redis = getattr(self._controller, "redis_client", None)
 
     # -------------------------
     # اطمینان از عملکرد درست ردیس
