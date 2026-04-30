@@ -36,11 +36,15 @@ def validate_phone(phone_number: str):
 # Password Validator
 # ==============================================================================
 def validate_password(password: str):
-    if not any(c.isupper() for c in password):
-        raise ValueError("Password must contain uppercase")
-    if not any(c.islower() for c in password):
-        raise ValueError("Password must contain lowercase")
+
+    # if not any(c.isupper() for c in password):
+    #     raise ValueError("Password must contain uppercase")
+
+    # if not any(c.islower() for c in password):
+    #     raise ValueError("Password must contain lowercase")
+
     if not any(c.isdigit() for c in password):
         raise ValueError("Password must contain digit")
-    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
-        raise ValueError("Password must contain special char")
+
+    # if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+    #     raise ValueError("Password must contain special char")
