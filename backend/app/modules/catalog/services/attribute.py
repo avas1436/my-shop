@@ -1,11 +1,11 @@
 import math
 
-from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.redis_cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
+from app.errors.errors import BadRequest, Conflict, NotFound
 from app.modules.catalog.models.attribute import (
     Attribute,
     ProductAttribute,
@@ -30,24 +30,20 @@ from app.modules.catalog.schemas.attribute import (
 
 
 # --------------------------------------------------
-# Attribure Service
+# Attribute Service
 # --------------------------------------------------
 class AttributeService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = AttributeRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     async def create_attribute(self, data: AttributeCreate) -> Attribute:
         if await self.repo.get_by_name(data.name):
-            raise HTTPException(
-                status_code=409, detail="Attribute name already exists."
-            )
+            raise Conflict("Attribute name already exists.")
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise HTTPException(
-                status_code=409, detail="Attribute slug already exists."
-            )
+            raise Conflict("Attribute slug already exists.")
 
         attribute = Attribute(name=data.name, slug=slug)
         attribute = await self.repo.create(attribute)
@@ -65,7 +61,7 @@ class AttributeService:
 
         attribute = await self.repo.get_by_id(attribute_id)
         if not attribute:
-            raise HTTPException(status_code=404, detail="Attribute not found.")
+            raise NotFound("Attribute not found.")
 
         payload = AttributeRead.model_validate(attribute).model_dump(mode="json")
 
@@ -81,18 +77,12 @@ class AttributeService:
         page: int,
         size: int,
     ) -> PageResponse[dict]:
-
         if page < 1 or size < 1 or size > 100:
-            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+            raise BadRequest("Invalid pagination values.")
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
-                "list",
-                "attribute",
-                search,
-                attribute_id,
-                page,
-                size,
+                "list", "attribute", search, attribute_id, page, size
             )
             if cached is not None:
                 return PageResponse(**cached)
@@ -100,16 +90,10 @@ class AttributeService:
         items, total = await self.repo.list_filtered(search, attribute_id, page, size)
 
         pages = math.ceil(total / size) if total else 1
-        response_items = []
-        for a in items:
-            response_items.append(
-                {
-                    "id": a.id,
-                    "name": a.name,
-                    "slug": a.slug,
-                    "created_at": a.created_at,
-                }
-            )
+        response_items = [
+            {"id": a.id, "name": a.name, "slug": a.slug, "created_at": a.created_at}
+            for a in items
+        ]
 
         resp = PageResponse(
             items=response_items,
@@ -134,20 +118,16 @@ class AttributeService:
     ) -> Attribute:
         attribute = await self.repo.get_by_id(attribute_id)
         if not attribute:
-            raise HTTPException(status_code=404, detail="Attribute not found.")
+            raise NotFound("Attribute not found.")
 
         if data.name and data.name != attribute.name:
             if await self.repo.get_by_name(data.name):
-                raise HTTPException(
-                    status_code=409, detail="Attribute name already exists."
-                )
+                raise Conflict("Attribute name already exists.")
             attribute.name = data.name
 
         if data.slug:
             if data.slug != attribute.slug and await self.repo.get_by_slug(data.slug):
-                raise HTTPException(
-                    status_code=409, detail="Attribute slug already exists."
-                )
+                raise Conflict("Attribute slug already exists.")
             attribute.slug = data.slug
 
         attribute = await self.repo.update(attribute)
@@ -161,7 +141,7 @@ class AttributeService:
     async def delete_attribute(self, attribute_id: int) -> None:
         attribute = await self.repo.get_by_id(attribute_id)
         if not attribute:
-            raise HTTPException(status_code=404, detail="Attribute not found.")
+            raise NotFound("Attribute not found.")
 
         await self.repo.delete(attribute)
 
@@ -171,26 +151,22 @@ class AttributeService:
 
 
 # --------------------------------------------------
-# Product Attribure Service
+# Product Attribute Service
 # --------------------------------------------------
 class ProductAttributeService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = ProductAttributeRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     async def create_product_attribute(
         self, data: ProductAttributeCreate
     ) -> ProductAttribute:
         if not await self.repo.product_exists(data.product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
-
+            raise NotFound("Product not found.")
         if not await self.repo.attribute_exists(data.attribute_id):
-            raise HTTPException(status_code=404, detail="Attribute not found.")
-
+            raise NotFound("Attribute not found.")
         if await self.repo.get_by_pair(data.product_id, data.attribute_id):
-            raise HTTPException(
-                status_code=409, detail="Attribute already exists for product."
-            )
+            raise Conflict("Attribute already exists for product.")
 
         pa = ProductAttribute(
             product_id=data.product_id,
@@ -213,7 +189,7 @@ class ProductAttributeService:
 
         pa = await self.repo.get_by_id(pa_id)
         if not pa:
-            raise HTTPException(status_code=404, detail="Product attribute not found.")
+            raise NotFound("Product attribute not found.")
 
         payload = ProductAttributeRead.model_validate(pa).model_dump(mode="json")
 
@@ -230,9 +206,8 @@ class ProductAttributeService:
         page: int,
         size: int,
     ) -> PageResponse[dict]:
-
         if page < 1 or size < 1 or size > 100:
-            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+            raise BadRequest("Invalid pagination values.")
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -252,16 +227,15 @@ class ProductAttributeService:
         )
 
         pages = math.ceil(total / size) if total else 1
-        response_items = []
-        for pa in items:
-            response_items.append(
-                {
-                    "id": pa.id,
-                    "product_id": pa.product_id,
-                    "attribute_id": pa.attribute_id,
-                    "value": pa.value,
-                }
-            )
+        response_items = [
+            {
+                "id": pa.id,
+                "product_id": pa.product_id,
+                "attribute_id": pa.attribute_id,
+                "value": pa.value,
+            }
+            for pa in items
+        ]
 
         resp = PageResponse(
             items=response_items,
@@ -287,7 +261,7 @@ class ProductAttributeService:
     ) -> ProductAttribute:
         pa = await self.repo.get_by_id(pa_id)
         if not pa:
-            raise HTTPException(status_code=404, detail="Product attribute not found.")
+            raise NotFound("Product attribute not found.")
 
         pa.value = data.value
         pa = await self.repo.update(pa)
@@ -302,7 +276,7 @@ class ProductAttributeService:
     async def delete_product_attribute(self, pa_id: int) -> None:
         pa = await self.repo.get_by_id(pa_id)
         if not pa:
-            raise HTTPException(status_code=404, detail="Product attribute not found.")
+            raise NotFound("Product attribute not found.")
 
         await self.repo.delete(pa)
 
@@ -313,26 +287,22 @@ class ProductAttributeService:
 
 
 # --------------------------------------------------
-# Product Variant Attribure Service
+# Product Variant Attribute Service
 # --------------------------------------------------
 class ProductVariantAttributeService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = ProductVariantAttributeRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     async def create_product_variant_attribute(
         self, data: ProductVariantAttributeCreate
     ) -> ProductVariantAttribute:
         if not await self.repo.variant_exists(data.variant_id):
-            raise HTTPException(status_code=404, detail="Variant not found.")
-
+            raise NotFound("Variant not found.")
         if not await self.repo.attribute_exists(data.attribute_id):
-            raise HTTPException(status_code=404, detail="Attribute not found.")
-
+            raise NotFound("Attribute not found.")
         if await self.repo.get_by_pair(data.variant_id, data.attribute_id):
-            raise HTTPException(
-                status_code=409, detail="Attribute already exists for variant."
-            )
+            raise Conflict("Attribute already exists for variant.")
 
         pva = ProductVariantAttribute(
             variant_id=data.variant_id,
@@ -355,7 +325,7 @@ class ProductVariantAttributeService:
 
         pva = await self.repo.get_by_id(pva_id)
         if not pva:
-            raise HTTPException(status_code=404, detail="Variant attribute not found.")
+            raise NotFound("Variant attribute not found.")
 
         payload = ProductVariantAttributeRead.model_validate(pva).model_dump(
             mode="json"
@@ -374,9 +344,8 @@ class ProductVariantAttributeService:
         page: int,
         size: int,
     ) -> PageResponse[dict]:
-
         if page < 1 or size < 1 or size > 100:
-            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+            raise BadRequest("Invalid pagination values.")
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -396,16 +365,15 @@ class ProductVariantAttributeService:
         )
 
         pages = math.ceil(total / size) if total else 1
-        response_items = []
-        for pva in items:
-            response_items.append(
-                {
-                    "id": pva.id,
-                    "variant_id": pva.variant_id,
-                    "attribute_id": pva.attribute_id,
-                    "value": pva.value,
-                }
-            )
+        response_items = [
+            {
+                "id": pva.id,
+                "variant_id": pva.variant_id,
+                "attribute_id": pva.attribute_id,
+                "value": pva.value,
+            }
+            for pva in items
+        ]
 
         resp = PageResponse(
             items=response_items,
@@ -431,7 +399,7 @@ class ProductVariantAttributeService:
     ) -> ProductVariantAttribute:
         pva = await self.repo.get_by_id(pva_id)
         if not pva:
-            raise HTTPException(status_code=404, detail="Variant attribute not found.")
+            raise NotFound("Variant attribute not found.")
 
         pva.value = data.value
         pva = await self.repo.update(pva)
@@ -446,7 +414,7 @@ class ProductVariantAttributeService:
     async def delete_product_variant_attribute(self, pva_id: int) -> None:
         pva = await self.repo.get_by_id(pva_id)
         if not pva:
-            raise HTTPException(status_code=404, detail="Variant attribute not found.")
+            raise NotFound("Variant attribute not found.")
 
         await self.repo.delete(pva)
 

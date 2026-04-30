@@ -4,6 +4,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.errors.errors import HttpError, InternalServerError, ServiceError
+from app.errors.http_errors import map_service_error, to_http_exception
+
 
 def error_payload(status_code: int, detail, error_type: str, request: Request):
     return {
@@ -50,23 +53,46 @@ def register_exception_handlers(app: FastAPI, logger) -> None:
             ),
         )
 
-    @app.middleware("http")
-    async def catch_exceptions(request: Request, call_next):
+    @app.exception_handler(HttpError)
+    async def http_error_handler(request: Request, exc: HttpError):
+        logger.warning(f"HttpError: {exc.message} - Path: {request.url}")
+        http_exc = to_http_exception(exc)
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content=error_payload(
+                status_code=http_exc.status_code,
+                detail=http_exc.detail,
+                error_type=exc.__class__.__name__,
+                request=request,
+            ),
+        )
 
-        try:
-            return await call_next(request)
+    @app.exception_handler(ServiceError)
+    async def service_error_handler(request: Request, exc: ServiceError):
+        logger.warning(f"ServiceError: {exc} - Path: {request.url}")
+        http_err = map_service_error(exc)
+        http_exc = to_http_exception(http_err)
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content=error_payload(
+                status_code=http_exc.status_code,
+                detail=http_exc.detail,
+                error_type=exc.__class__.__name__,
+                request=request,
+            ),
+        )
 
-        except Exception as e:
-            logger.error(
-                f"Unhandled Exception: {e} - Path: {request.url}",
-                exc_info=True,  # شامل traceback
-            )
-            return JSONResponse(
-                status_code=500,
-                content=error_payload(
-                    status_code=500,
-                    detail="Internal server error",
-                    error_type="ServerError",
-                    request=request,
-                ),
-            )
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Unhandled Exception: {exc} - Path: {request.url}", exc_info=True)
+        http_err = InternalServerError(message="Internal server error")
+        http_exc = to_http_exception(http_err)
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content=error_payload(
+                status_code=http_exc.status_code,
+                detail=http_exc.detail,
+                error_type="ServerError",
+                request=request,
+            ),
+        )

@@ -51,7 +51,6 @@ def require_access(
     deny_roles = set(deny_roles or [])
 
     async def role_checker(
-        request: Request,
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
         now = _utcnow()
