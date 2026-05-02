@@ -1,14 +1,14 @@
+from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
-from kavenegar import APIException, HTTPException as KHTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.common.access_control import require_access
-from app.common.responses import success_response
-from app.core.database import get_db
-from app.core.redis import get_redis_client
+from app.common.enums import UserRole
+from app.common.responses import SuccessMessage, SuccessResponse
 from app.core.sms_service import send_sms
+from app.errors.errors import TooManyRequests
+from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
 from app.modules.users.schemas import (
     LoginWithPassword,
@@ -20,214 +20,210 @@ from app.modules.users.schemas import (
     UserGet,
 )
 from app.modules.users.service import (
-    complete_register_service,
-    login_with_password_service,
-    refresh_token_service,
-    request_otp_service,
-    revoke_all_refresh_tokens_for_subject_service,
-    revoke_refresh_token_service,
-    verify_otp_service,
+    AuthService,
 )
 
 router = APIRouter()
 
 
-# ==============================================================================
-# Get Meta Data from request
-# ==============================================================================
-def _client_meta(request: Request) -> tuple[str, str, str]:
-    ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    device_id = request.headers.get("device-id", "unknown")
-    return ip, user_agent, device_id
-
-
-# ==============================================================================
+# ====================================================================
 # Register User or Login
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/otp/request",
     status_code=status.HTTP_201_CREATED,
 )
 async def request_otp(
-    request: Request,
     data: RequestOTP,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[AuthService, Depends(get_auth_service)],
     background: BackgroundTasks,
 ):
-    ip, user_agent, device_id = _client_meta(request)
 
-    try:
-        code, wait = await request_otp_service(
-            db=db,
-            phone_number=data.phone_number,
-            purpose=data.purpose,
-            ip_address=ip,
-            user_agent=user_agent,
-            device_id=device_id,
-        )
+    code, wait = await service.request_otp_service(data=data)
 
-        if wait:
-            raise HTTPException(
-                status_code=429,
-                detail=f"please wait for {wait} seconds",
-            )
+    if wait:
+        raise TooManyRequests(f"please wait for {wait} seconds")
 
-        background.add_task(
-            send_sms,
-            receptor=data.phone_number,
-            code=code,
-        )
+    background.add_task(
+        send_sms,
+        receptor=data.phone_number,
+        code=code,
+    )
 
-        return success_response(message="OTP sent successfully")
-
-    except APIException as e:
-        raise HTTPException(status_code=400, detail=str(e)) from None
-
-    except KHTTPException as e:
-        raise HTTPException(status_code=502, detail=str(e)) from None
-
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e)) from None
+    return SuccessResponse(message="OTP sent successfully")
 
 
-# ==============================================================================
+# ====================================================================
 # verify OTP Code
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/otp/verify",
-    response_model=TokenPair,
+    response_model=SuccessResponse[TokenPair],
     status_code=status.HTTP_200_OK,
     summary="Verify OTP and issue token pair",
 )
 async def verify_otp_route(
-    request: Request,
     data: OTPVerify,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[AuthService, Depends(get_auth_service)],
 ):
 
-    ip, user_agent, device_id = _client_meta(request)
-
-    return await verify_otp_service(
-        db=db,
-        data=data,
-        ip_address=ip,
-        user_agent=user_agent,
-        device_id=device_id,
-        redis_client=get_redis_client(request),
-    )
+    return await service.verify_otp_service(data=data)
 
 
-# ==============================================================================
+# ====================================================================
 # Complete Register
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/register/complete",
-    response_model=UserGet,
+    response_model=SuccessResponse[UserGet],
     status_code=status.HTTP_200_OK,
     summary="Complete register after first login",
 )
 async def register_complete(
     data: Register,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_access())],
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    current_user: Annotated[
+        User,
+        Depends(
+            require_access(
+                require_recent_login_within=timedelta(minutes=30),
+                profile_required_fields=("phone_number"),
+            )
+        ),
+    ],
 ) -> User:
-    return await complete_register_service(
-        db=db,
-        current_user=current_user,
+
+    return await service.complete_register_service(
         data=data,
+        current_user=current_user,
     )
 
 
-# ==============================================================================
+# ====================================================================
 # Login with Password
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/login/password",
-    response_model=TokenPair,
+    response_model=SuccessResponse[TokenPair],
     status_code=status.HTTP_200_OK,
     summary="Login with password",
 )
 async def login_with_password(
-    request: Request,
     data: LoginWithPassword,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                require_recent_login_within=timedelta(days=30),
+                require_password=True,
+            )
+        ),
+    ],
 ):
-    return await login_with_password_service(
-        db=db,
-        data=data,
-        redis_client=get_redis_client(request),
-    )
+    return await service.login_with_password_service(data=data)
 
 
-# ==============================================================================
+# ====================================================================
 # Login with Password
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/token/refresh",
-    response_model=TokenPair,
+    response_model=SuccessResponse[TokenPair],
     status_code=status.HTTP_200_OK,
     summary="Refresh access and refresh tokens",
 )
 async def refresh_token(
-    request: Request,
     data: RefreshTokenRequest,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                require_recent_login_within=timedelta(days=15),
+            )
+        ),
+    ],
 ):
-    return await refresh_token_service(
-        db=db,
-        refresh_token=data.refresh_token,
-        redis_client=get_redis_client(request),
-    )
+    return await service.refresh_token_service(refresh_token=data.refresh_token)
 
 
-# ==============================================================================
+# ====================================================================
 # Logout and remove refresh token from redis
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/logout", status_code=status.HTTP_200_OK, summary="Revoke current refresh token"
 )
 async def logout(
-    request: Request,
     data: RefreshTokenRequest,
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                require_recent_login_within=timedelta(days=15),
+            )
+        ),
+    ],
 ):
-    await revoke_refresh_token_service(
-        refresh_token=data.refresh_token,
-        redis_client=get_redis_client(request),
-    )
-    return success_response(message="Logged out successfully")
+    await service.revoke_refresh_token_service(refresh_token=data.refresh_token)
+
+    return SuccessMessage(message="Logged out successfully")
 
 
-# ==============================================================================
+# ====================================================================
 # New Feature: Logout all sessions
-# ==============================================================================
+# ====================================================================
 @router.post(
     "/logout/all",
     status_code=status.HTTP_200_OK,
     summary="Revoke all refresh tokens for current user",
 )
 async def logout_all(
-    request: Request,
-    current_user: Annotated[User, Depends(require_access())],
+    service: Annotated[AuthService, Depends(get_auth_service)],
+    phone_number: str,
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(days=7),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            )
+        ),
+    ],
 ):
-    await revoke_all_refresh_tokens_for_subject_service(
-        redis_client=get_redis_client(request),
-        subject=str(current_user.phone_number),
+    await service.revoke_all_refresh_tokens_for_subject_service(
+        phone_number=phone_number,
     )
-    return success_response(message="Logged out from all devices successfully")
+
+    return SuccessMessage(message="Logged out from all devices successfully")
 
 
-# ==============================================================================
+# ====================================================================
 # Get current user
-# ==============================================================================
+# ====================================================================
 @router.get(
     "/me",
-    response_model=UserGet,
+    response_model=SuccessResponse[UserGet],
     status_code=status.HTTP_200_OK,
     summary="Get User Status",
 )
 def me(
-    current_user: Annotated[User, Depends(require_access())],
+    current_user: Annotated[
+        User,
+        Depends(
+            require_access(
+                require_recent_login_within=timedelta(days=15),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name"),
+            )
+        ),
+    ],
 ) -> User:
 
     return current_user

@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import HTTPException, Request
 
-from app.cache.redis_cache import RedisCache
+from app.cache.cache import RedisCache
 from app.core.storage import get_storage
 from app.modules.catalog.models.image import ProductImage
 from app.modules.catalog.repository.image import ImageRepository

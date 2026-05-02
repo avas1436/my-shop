@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.cache.redis_cache import RedisCache
+from app.cache.cache import RedisCache
+from app.cache.redis_dependency import get_cache
 from app.core.database import get_db
-from app.core.redis_deps import get_cache
 from app.modules.catalog.services.attribute import (
     AttributeService,
     ProductAttributeService,

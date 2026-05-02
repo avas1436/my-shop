@@ -2,7 +2,7 @@ import math
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.cache.redis_cache import RedisCache
+from app.cache.cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
 from app.errors.errors import BadRequest, Conflict, NotFound

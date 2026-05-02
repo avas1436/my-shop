@@ -3,7 +3,7 @@ import math
 from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.cache.redis_cache import RedisCache
+from app.cache.cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
 from app.modules.catalog.models.category import Category

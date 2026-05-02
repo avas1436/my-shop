@@ -100,6 +100,6 @@ class OTPCode(Base):
             "phone_number",
             "purpose",
             unique=True,
-            postgresql_where=(~used),
+            postgresql_where=(used.is_(False)),
         ),
     )

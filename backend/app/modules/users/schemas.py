@@ -37,6 +37,11 @@ class OTPVerify(BaseModel):
     code: Annotated[str, StringConstraints(min_length=4, max_length=6)]
     purpose: PurposeOTP = Field(default=PurposeOTP.LOGIN)
 
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, v: str):
+        return validate_phone(phone_number=v)
+
 
 # ==============================================================================
 # Rgister
@@ -110,7 +115,7 @@ class UserGet(BaseModel):
     @property
     def age(self) -> int | None:
         if self.birth_date is None:
-            return self.birth_date
+            return None
 
         today = date.today()
         age = (

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Request
 from redis.asyncio import Redis
 
-from app.cache.redis_cache import RedisCache
+from app.cache.cache import RedisCache
 from app.config.settings import get_settings
 from app.core.redis import RedisController
 

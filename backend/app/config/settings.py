@@ -88,6 +88,11 @@ class Settings(BaseSettings):
     s3_bucket: str | None = None
     s3_region: str | None = None
 
+    # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
+    @property
+    def refresh_token_ttl(self) -> int:
+        return self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+
     model_config = SettingsConfigDict(
         env_file=".env.dev",
         # env_file=".env.dev",

@@ -3,7 +3,35 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.cache.cache import RedisCache
 from app.modules.users.models import User
+
+
+class RefreshTokenCache:
+    def __init__(self, cache: RedisCache, ttl_seconds: int):
+        self.cache = cache
+        self.ttl_seconds = ttl_seconds
+
+    async def store(self, jti: str, subject: str) -> None:
+        await self.cache.set(
+            "refresh",
+            subject,
+            jti,
+            payload=subject,
+            ttl=self.ttl_seconds,
+        )
+
+    async def is_active(self, jti: str, subject: str) -> bool:
+        data = await self.cache.get("refresh", subject, jti)
+        if not isinstance(data, str):
+            return False
+        return data == subject
+
+    async def revoke(self, jti: str, subject: str) -> None:
+        await self.cache.invalidate_key("refresh", subject, jti)
+
+    async def revoke_all(self, phone_number: str) -> None:
+        await self.cache.invalidate_key("refresh", phone_number, "*")
 
 
 class UserRepository:
@@ -27,15 +55,15 @@ class UserRepository:
     # Create
     # ---------------------------
     async def create_user(self, phone_number: str) -> User:
-        user = User(phone_number=phone_number, is_verified=True)
+        user = User(phone_number=phone_number, is_phone_verified=True)
         self.db.add(user)
         await self.db.flush()  # برای گرفتن id بدون commit
         return user
 
     def mark_verified(self, user: User) -> bool:
         changed = False
-        if not user.is_verified:
-            user.is_verified = True
+        if not user.is_phone_verified:
+            user.is_phone_verified = True
             changed = True
         return changed
 

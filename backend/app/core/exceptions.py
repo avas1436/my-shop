@@ -1,22 +1,10 @@
-from datetime import UTC, datetime
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.common.responses import error_payload
 from app.errors.errors import HttpError, InternalServerError, ServiceError
 from app.errors.http_errors import map_service_error, to_http_exception
-
-
-def error_payload(status_code: int, detail, error_type: str, request: Request):
-    return {
-        "success": False,
-        "status_code": status_code,
-        "error_type": error_type,
-        "detail": detail,
-        "path": request.url.path,
-        "timestamp": datetime.now(UTC).isoformat(),
-    }
 
 
 def register_exception_handlers(app: FastAPI, logger) -> None:

@@ -2,6 +2,7 @@
 # from app.modules.inventory.routers import router as inventory_router
 from fastapi import APIRouter
 
+from app.common.responses import SuccessAPIRoute
 from app.modules.catalog.routers.attribute import router as attribute_router
 from app.modules.catalog.routers.brand import router as brand_router
 from app.modules.catalog.routers.category import router as categories_router
@@ -10,7 +11,10 @@ from app.modules.catalog.routers.product import router as products_router
 from app.modules.catalog.routers.tag import router as tag_router
 from app.modules.users.routers import router as users_router
 
-api_router = APIRouter()
+# با اضافه کردن این قسمت در کل پروژه فرمت پاسخ موفق متحد الشکل می شود
+api_router = APIRouter(route_class=SuccessAPIRoute)
+
+
 api_router.include_router(users_router, prefix="/users", tags=["users"])
 api_router.include_router(products_router, prefix="/products", tags=["products"])
 api_router.include_router(images_router, prefix="/images", tags=["images"])
