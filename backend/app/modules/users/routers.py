@@ -5,9 +5,9 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
+from app.common.request_meta import request_metadata
 from app.common.responses import SuccessMessage, SuccessResponse
 from app.core.sms_service import send_sms
-from app.errors.errors import TooManyRequests
 from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
 from app.modules.users.schemas import (
@@ -32,17 +32,18 @@ router = APIRouter()
 @router.post(
     "/otp/request",
     status_code=status.HTTP_201_CREATED,
+    response_model=SuccessResponse[SuccessMessage],
 )
 async def request_otp(
     data: RequestOTP,
     service: Annotated[AuthService, Depends(get_auth_service)],
     background: BackgroundTasks,
+    metadata: Annotated[dict, Depends(request_metadata)],
 ):
 
-    code, wait = await service.request_otp_service(data=data)
+    code = await service.request_otp_service(data=data)
 
-    if wait:
-        raise TooManyRequests(f"please wait for {wait} seconds")
+    # print(code)
 
     background.add_task(
         send_sms,
@@ -50,7 +51,11 @@ async def request_otp(
         code=code,
     )
 
-    return SuccessResponse(message="OTP sent successfully")
+    return SuccessResponse(
+        status_code=201,
+        data=SuccessMessage(message="OTP sent successfully"),
+        path=metadata,
+    )
 
 
 # ====================================================================
@@ -65,9 +70,16 @@ async def request_otp(
 async def verify_otp_route(
     data: OTPVerify,
     service: Annotated[AuthService, Depends(get_auth_service)],
+    metadata: Annotated[dict, Depends(request_metadata)],
 ):
 
-    return await service.verify_otp_service(data=data)
+    token_pair = await service.verify_otp_service(data=data)
+
+    return SuccessResponse(
+        status_code=200,
+        data=token_pair,
+        path=metadata,
+    )
 
 
 # ====================================================================
@@ -82,20 +94,27 @@ async def verify_otp_route(
 async def register_complete(
     data: Register,
     service: Annotated[AuthService, Depends(get_auth_service)],
+    metadata: Annotated[dict, Depends(request_metadata)],
     current_user: Annotated[
         User,
         Depends(
             require_access(
                 require_recent_login_within=timedelta(minutes=30),
-                profile_required_fields=("phone_number"),
+                profile_required_fields=("phone_number",),
             )
         ),
     ],
-) -> User:
+):
 
-    return await service.complete_register_service(
+    user = await service.complete_register_service(
         data=data,
         current_user=current_user,
+    )
+
+    return SuccessResponse(
+        status_code=200,
+        data=user,
+        path=metadata,
     )
 
 
@@ -111,17 +130,16 @@ async def register_complete(
 async def login_with_password(
     data: LoginWithPassword,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    _: Annotated[
-        User,
-        Depends(
-            require_access(
-                require_recent_login_within=timedelta(days=30),
-                require_password=True,
-            )
-        ),
-    ],
+    metadata: Annotated[dict, Depends(request_metadata)],
 ):
-    return await service.login_with_password_service(data=data)
+
+    tokens = await service.login_with_password_service(data=data)
+
+    return SuccessResponse(
+        status_code=200,
+        data=tokens,
+        path=metadata,
+    )
 
 
 # ====================================================================
@@ -136,6 +154,7 @@ async def login_with_password(
 async def refresh_token(
     data: RefreshTokenRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
+    metadata: Annotated[dict, Depends(request_metadata)],
     _: Annotated[
         User,
         Depends(
@@ -145,18 +164,28 @@ async def refresh_token(
         ),
     ],
 ):
-    return await service.refresh_token_service(refresh_token=data.refresh_token)
+
+    tokens = await service.refresh_token_service(refresh_token=data.refresh_token)
+
+    return SuccessResponse(
+        status_code=200,
+        data=tokens,
+        path=metadata,
+    )
 
 
 # ====================================================================
 # Logout and remove refresh token from redis
 # ====================================================================
 @router.post(
-    "/logout", status_code=status.HTTP_200_OK, summary="Revoke current refresh token"
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Revoke current refresh token",
 )
 async def logout(
     data: RefreshTokenRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
+    metadata: Annotated[dict, Depends(request_metadata)],
     _: Annotated[
         User,
         Depends(
@@ -168,7 +197,11 @@ async def logout(
 ):
     await service.revoke_refresh_token_service(refresh_token=data.refresh_token)
 
-    return SuccessMessage(message="Logged out successfully")
+    return SuccessResponse(
+        status_code=200,
+        data=SuccessMessage(message="Logged out successfully"),
+        path=metadata,
+    )
 
 
 # ====================================================================
@@ -182,6 +215,7 @@ async def logout(
 async def logout_all(
     service: Annotated[AuthService, Depends(get_auth_service)],
     phone_number: str,
+    metadata: Annotated[dict, Depends(request_metadata)],
     _: Annotated[
         User,
         Depends(
@@ -200,7 +234,11 @@ async def logout_all(
         phone_number=phone_number,
     )
 
-    return SuccessMessage(message="Logged out from all devices successfully")
+    return SuccessResponse(
+        status_code=200,
+        data=SuccessMessage(message="Logged out from all devices successfully"),
+        path=metadata,
+    )
 
 
 # ====================================================================
@@ -213,6 +251,7 @@ async def logout_all(
     summary="Get User Status",
 )
 def me(
+    metadata: Annotated[dict, Depends(request_metadata)],
     current_user: Annotated[
         User,
         Depends(
@@ -224,6 +263,10 @@ def me(
             )
         ),
     ],
-) -> User:
+):
 
-    return current_user
+    return SuccessResponse(
+        status_code=200,
+        data=current_user,
+        path=metadata,
+    )

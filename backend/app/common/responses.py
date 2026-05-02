@@ -5,7 +5,7 @@ from typing import Any, Generic, TypeVar
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response
 from fastapi.routing import APIRoute
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
@@ -24,7 +24,7 @@ class SuccessResponse(BaseModel, Generic[T]):
     data: T
     meta: dict[str, Any] | None = None
     path: str
-    timestamp: str
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 def success_payload(
@@ -35,7 +35,8 @@ def success_payload(
     message: str = "ok",
     code: str | None = None,
     meta: dict[str, Any] | None = None,
-):
+) -> SuccessResponse:
+
     return SuccessResponse(
         status_code=status_code,
         message=message,

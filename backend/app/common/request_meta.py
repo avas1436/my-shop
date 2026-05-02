@@ -1,4 +1,5 @@
 # app/common/request_meta.py
+
 from fastapi import Request
 from pydantic import BaseModel
 
@@ -19,3 +20,12 @@ def client_meta(request: Request) -> ClientMeta:
 
 # روش استفاده
 # meta: Annotated[ClientMeta, Depends(client_meta)]
+
+
+# برای دریافت اطلاعات اطلاعات مورد نیاز پاسخ موفق
+async def request_metadata(request: Request):
+    return request.url.path
+
+
+# روش استفاده
+# metadata: Annotated[dict, Depends(request_metadata)]

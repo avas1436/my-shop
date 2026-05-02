@@ -1,4 +1,3 @@
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
@@ -15,12 +14,13 @@ from app.core.security import (
 )
 from app.errors.errors import (
     BadRequest,
-    Conflict,
     HttpError,
     InternalServerError,
+    TooManyRequests,
     Unauthorized,
 )
 from app.modules.users.models import User
+from app.modules.users.repository import RefreshTokenCache, UserRepository
 from app.modules.users.schemas import (
     LoginWithPassword,
     OTPVerify,
@@ -30,17 +30,6 @@ from app.modules.users.schemas import (
 )
 
 settings = get_settings()
-
-
-# =========================
-# Check New User
-# =========================
-# def is_new_user(user: User) -> bool:
-#     return (
-#         user.first_name is None
-#         or user.last_name is None
-#         or user.hashed_password is None
-#     )
 
 
 # =========================
@@ -66,9 +55,10 @@ async def issue_token_pair(user: User, cache: RedisCache) -> TokenPair:
 
 
 class AuthService:
-    def __init__(self, db: AsyncSession, cache: RedisCache, meta: ClientMeta):
-        self.repo = db
-        self.cache = cache
+    def __init__(self, db: AsyncSession, cache: RedisCache, meta: ClientMeta, ttl: int):
+        self.db = db
+        self.repo = UserRepository(db=db)
+        self.cache = RefreshTokenCache(cache=cache, ttl_seconds=ttl)
         self.meta = meta
 
     # ============================================
@@ -87,35 +77,22 @@ class AuthService:
         if not user and data.purpose in (PurposeOTP.LOGIN, PurposeOTP.RESET):
             raise BadRequest("User not found")
 
-        try:
-            code, wait = await create_otp(
-                db=self.repo,
-                phone_number=data.phone_number,
-                ip_address=self.meta.ip,
-                user_agent=self.meta.user_agent,
-                device_id=self.meta.device_id,
-                purpose=data.purpose,
-            )
+        code, wait = await create_otp(
+            db=self.db,
+            phone_number=data.phone_number,
+            ip_address=self.meta.ip,
+            user_agent=self.meta.user_agent,
+            device_id=self.meta.device_id,
+            purpose=data.purpose,
+        )
 
-            if wait:
-                await self.repo.rollback()
-                return None, wait
-
-            await self.repo.commit()
-
-            return code, wait  # در صورت داشتن مقدار برای ویت کدی داده نمیشود
-
-        except HttpError:
+        if wait:
             await self.repo.rollback()
-            raise
+            raise TooManyRequests(f"please wait for {wait} seconds")
 
-        except IntegrityError:
-            await self.repo.rollback()
-            raise Conflict("Duplicate OTP or user state conflict") from None
+        await self.repo.commit()
 
-        except Exception:
-            await self.repo.rollback()
-            raise InternalServerError("Unexpected error") from None
+        return code
 
     # ============================================
     # verify OTP Code - Login with OTP Code
@@ -126,7 +103,7 @@ class AuthService:
     ) -> TokenPair:
 
         is_valid = await verify_otp(
-            db=self.repo,
+            db=self.db,
             phone=data.phone_number,
             ip_address=self.meta.ip,
             user_agent=self.meta.user_agent,
