@@ -24,7 +24,6 @@ class SuccessResponse(BaseModel, Generic[T]):
     message: str = "ok"
     code: str | None = None
     data: T
-    meta: dict[str, Any] | None = None
     path: str
     timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
@@ -35,8 +34,6 @@ def success_payload(
     path: str,
     status_code: int = 200,
     message: str = "ok",
-    code: str | None = None,
-    meta: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
 
     now = datetime.now(UTC)
@@ -45,9 +42,7 @@ def success_payload(
         "success": True,
         "status_code": status_code,
         "message": message,
-        "code": code,
         "data": data,
-        "meta": meta,
         "path": path,
         "timestamp": now.isoformat(),
     }

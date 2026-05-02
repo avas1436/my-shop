@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.request_meta import request_metadata
-from app.common.responses import SuccessAPIRoute, SuccessMessage, SuccessResponse
+from app.common.responses import SuccessAPIRoute, SuccessMessage
 from app.core.sms_service import send_sms
 from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
@@ -32,13 +32,12 @@ router = APIRouter(route_class=SuccessAPIRoute)
 @router.post(
     "/otp/request",
     status_code=status.HTTP_201_CREATED,
-    response_model=SuccessResponse[SuccessMessage],
+    response_model=SuccessMessage,
 )
 async def request_otp(
     data: RequestOTP,
     service: Annotated[AuthService, Depends(get_auth_service)],
     background: BackgroundTasks,
-    metadata: Annotated[dict, Depends(request_metadata)],
 ):
 
     code = await service.request_otp_service(data=data)
@@ -51,11 +50,7 @@ async def request_otp(
         code=code,
     )
 
-    return SuccessResponse(
-        status_code=201,
-        data=SuccessMessage(message="OTP sent successfully"),
-        path=metadata,
-    )
+    return SuccessMessage(message="OTP sent successfully")
 
 
 # ====================================================================
@@ -63,23 +58,16 @@ async def request_otp(
 # ====================================================================
 @router.post(
     "/otp/verify",
-    response_model=SuccessResponse[TokenPair],
+    response_model=TokenPair,
     status_code=status.HTTP_200_OK,
     summary="Verify OTP and issue token pair",
 )
 async def verify_otp_route(
     data: OTPVerify,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    metadata: Annotated[dict, Depends(request_metadata)],
 ):
 
-    token_pair = await service.verify_otp_service(data=data)
-
-    return SuccessResponse(
-        status_code=200,
-        data=token_pair,
-        path=metadata,
-    )
+    return await service.verify_otp_service(data=data)
 
 
 # ====================================================================
@@ -87,14 +75,13 @@ async def verify_otp_route(
 # ====================================================================
 @router.post(
     "/register/complete",
-    response_model=SuccessResponse[UserGet],
+    response_model=UserGet,
     status_code=status.HTTP_200_OK,
     summary="Complete register after first login",
 )
 async def register_complete(
     data: Register,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    metadata: Annotated[dict, Depends(request_metadata)],
     current_user: Annotated[
         User,
         Depends(
@@ -106,15 +93,9 @@ async def register_complete(
     ],
 ):
 
-    user = await service.complete_register_service(
+    return await service.complete_register_service(
         data=data,
         current_user=current_user,
-    )
-
-    return SuccessResponse(
-        status_code=200,
-        data=user,
-        path=metadata,
     )
 
 
@@ -123,23 +104,16 @@ async def register_complete(
 # ====================================================================
 @router.post(
     "/login/password",
-    response_model=SuccessResponse[TokenPair],
+    response_model=TokenPair,
     status_code=status.HTTP_200_OK,
     summary="Login with password",
 )
 async def login_with_password(
     data: LoginWithPassword,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    metadata: Annotated[dict, Depends(request_metadata)],
 ):
 
-    tokens = await service.login_with_password_service(data=data)
-
-    return SuccessResponse(
-        status_code=200,
-        data=tokens,
-        path=metadata,
-    )
+    return await service.login_with_password_service(data=data)
 
 
 # ====================================================================
@@ -147,14 +121,13 @@ async def login_with_password(
 # ====================================================================
 @router.post(
     "/token/refresh",
-    response_model=SuccessResponse[TokenPair],
+    response_model=TokenPair,
     status_code=status.HTTP_200_OK,
     summary="Refresh access and refresh tokens",
 )
 async def refresh_token(
     data: RefreshTokenRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    metadata: Annotated[dict, Depends(request_metadata)],
     _: Annotated[
         User,
         Depends(
@@ -165,13 +138,7 @@ async def refresh_token(
     ],
 ):
 
-    tokens = await service.refresh_token_service(refresh_token=data.refresh_token)
-
-    return SuccessResponse(
-        status_code=200,
-        data=tokens,
-        path=metadata,
-    )
+    return await service.refresh_token_service(refresh_token=data.refresh_token)
 
 
 # ====================================================================
@@ -180,12 +147,12 @@ async def refresh_token(
 @router.post(
     "/logout",
     status_code=status.HTTP_200_OK,
+    response_model=SuccessMessage,
     summary="Revoke current refresh token",
 )
 async def logout(
     data: RefreshTokenRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    metadata: Annotated[dict, Depends(request_metadata)],
     _: Annotated[
         User,
         Depends(
@@ -197,11 +164,7 @@ async def logout(
 ):
     await service.revoke_refresh_token_service(refresh_token=data.refresh_token)
 
-    return SuccessResponse(
-        status_code=200,
-        data=SuccessMessage(message="Logged out successfully"),
-        path=metadata,
-    )
+    return SuccessMessage(message="Logged out successfully")
 
 
 # ====================================================================
@@ -210,6 +173,7 @@ async def logout(
 @router.post(
     "/logout/all",
     status_code=status.HTTP_200_OK,
+    response_model=SuccessMessage,
     summary="Revoke all refresh tokens for current user",
 )
 async def logout_all(
@@ -234,11 +198,7 @@ async def logout_all(
         phone_number=phone_number,
     )
 
-    return SuccessResponse(
-        status_code=200,
-        data=SuccessMessage(message="Logged out from all devices successfully"),
-        path=metadata,
-    )
+    return SuccessMessage(message="Logged out from all devices successfully")
 
 
 # ====================================================================
