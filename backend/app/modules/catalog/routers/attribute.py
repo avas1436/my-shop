@@ -1,11 +1,12 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.pagination import PageResponse
+from app.common.responses import SuccessAPIRoute, SuccessMessage
 from app.modules.catalog.dependencies.attribute import (
     get_attribute_service,
     get_product_attribute_service,
@@ -29,13 +30,17 @@ from app.modules.catalog.services.attribute import (
 )
 from app.modules.users.models import User
 
-router = APIRouter()
+router = APIRouter(route_class=SuccessAPIRoute)
 
 
 # --------------------------------------------------
 # Attribure Model
 # --------------------------------------------------
-@router.post("/", response_model=AttributeRead)
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AttributeRead,
+)
 async def create_attribute(
     data: AttributeCreate,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
@@ -56,15 +61,24 @@ async def create_attribute(
     return await service.create_attribute(data)
 
 
-@router.get("/{attribute_id}", response_model=AttributeRead)
+@router.get(
+    "/{attribute_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=AttributeRead,
+)
 async def get_attribute(
     attribute_id: int,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
 ):
+
     return await service.get_attribute(attribute_id)
 
 
-@router.get("/list", response_model=PageResponse[dict])
+@router.get(
+    "/list",
+    status_code=status.HTTP_200_OK,
+    response_model=PageResponse[dict],
+)
 async def list_attributes(
     service: Annotated[AttributeService, Depends(get_attribute_service)],
     search: str | None = None,
@@ -72,10 +86,15 @@ async def list_attributes(
     page: int = 1,
     size: int = 10,
 ):
+
     return await service.list_attributes(search, attribute_id, page, size)
 
 
-@router.put("/{attribute_id}", response_model=AttributeRead)
+@router.put(
+    "/{attribute_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=AttributeRead,
+)
 async def update_attribute(
     attribute_id: int,
     data: AttributeUpdate,
@@ -97,7 +116,11 @@ async def update_attribute(
     return await service.update_attribute(attribute_id, data)
 
 
-@router.delete("/{attribute_id}")
+@router.delete(
+    "/{attribute_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessMessage,
+)
 async def delete_attribute(
     attribute_id: int,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
@@ -118,13 +141,17 @@ async def delete_attribute(
 
     await service.delete_attribute(attribute_id)
 
-    return {"detail": "Attribute deleted successfully."}
+    return SuccessMessage(message="Attribute deleted successfully.")
 
 
 # --------------------------------------------------
 # Product Attribure Model
 # --------------------------------------------------
-@router.post("/product", response_model=ProductAttributeRead)
+@router.post(
+    "/product",
+    status_code=status.HTTP_200_OK,
+    response_model=ProductAttributeRead,
+)
 async def create_product_attribute(
     data: ProductAttributeCreate,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
@@ -142,18 +169,28 @@ async def create_product_attribute(
         ),
     ],
 ):
+
     return await service.create_product_attribute(data)
 
 
-@router.get("/product/{pa_id}", response_model=ProductAttributeRead)
+@router.get(
+    "/product/{pa_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ProductAttributeRead,
+)
 async def get_product_attribute(
     pa_id: int,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
 ):
+
     return await service.get_product_attribute(pa_id)
 
 
-@router.get("/list/product/list", response_model=PageResponse[dict])
+@router.get(
+    "/list/product/list",
+    status_code=status.HTTP_200_OK,
+    response_model=PageResponse[dict],
+)
 async def list_product_attributes(
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
     search: str | None = None,
@@ -167,7 +204,11 @@ async def list_product_attributes(
     )
 
 
-@router.put("/product/{pa_id}", response_model=ProductAttributeRead)
+@router.put(
+    "/product/{pa_id}",
+    response_model=ProductAttributeRead,
+    status_code=status.HTTP_200_OK,
+)
 async def update_product_attribute(
     pa_id: int,
     data: ProductAttributeUpdate,
@@ -189,7 +230,11 @@ async def update_product_attribute(
     return await service.update_product_attribute(pa_id, data)
 
 
-@router.delete("/product/{pa_id}")
+@router.delete(
+    "/product/{pa_id}",
+    response_model=SuccessMessage,
+    status_code=status.HTTP_200_OK,
+)
 async def delete_product_attribute(
     pa_id: int,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
@@ -210,13 +255,17 @@ async def delete_product_attribute(
 
     await service.delete_product_attribute(pa_id)
 
-    return {"detail": "Product attribute deleted successfully."}
+    return SuccessMessage(message="Product attribute deleted successfully.")
 
 
 # --------------------------------------------------
 # Product Variant Attribure Model
 # --------------------------------------------------
-@router.post("/product/variant", response_model=ProductVariantAttributeRead)
+@router.post(
+    "/product/variant",
+    response_model=ProductVariantAttributeRead,
+    status_code=status.HTTP_200_OK,
+)
 async def create_product_variant_attribute(
     data: ProductVariantAttributeCreate,
     service: Annotated[
@@ -239,17 +288,26 @@ async def create_product_variant_attribute(
     return await service.create_product_variant_attribute(data)
 
 
-@router.get("/product/variant/{pva_id}", response_model=ProductVariantAttributeRead)
+@router.get(
+    "/product/variant/{pva_id}",
+    response_model=ProductVariantAttributeRead,
+    status_code=status.HTTP_200_OK,
+)
 async def get_product_variant_attribute(
     pva_id: int,
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)
     ],
 ):
+
     return await service.get_product_variant_attribute(pva_id)
 
 
-@router.get("/list/product/variant", response_model=PageResponse[dict])
+@router.get(
+    "/list/product/variant",
+    response_model=PageResponse[dict],
+    status_code=status.HTTP_200_OK,
+)
 async def list_product_variant_attributes(
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)
@@ -266,7 +324,11 @@ async def list_product_variant_attributes(
     )
 
 
-@router.put("/product/variant/{pva_id}", response_model=ProductVariantAttributeRead)
+@router.put(
+    "/product/variant/{pva_id}",
+    response_model=ProductVariantAttributeRead,
+    status_code=status.HTTP_200_OK,
+)
 async def update_product_variant_attribute(
     pva_id: int,
     data: ProductVariantAttributeUpdate,
@@ -287,10 +349,15 @@ async def update_product_variant_attribute(
         ),
     ],
 ):
+
     return await service.update_product_variant_attribute(pva_id, data)
 
 
-@router.delete("/product/variant/{pva_id}")
+@router.delete(
+    "/product/variant/{pva_id}",
+    response_model=SuccessMessage,
+    status_code=status.HTTP_200_OK,
+)
 async def delete_product_variant_attribute(
     pva_id: int,
     service: Annotated[
@@ -313,4 +380,4 @@ async def delete_product_variant_attribute(
 
     await service.delete_product_variant_attribute(pva_id)
 
-    return {"detail": "Variant attribute deleted successfully."}
+    return SuccessMessage(message="Variant attribute deleted successfully.")

@@ -5,7 +5,6 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
-from app.common.request_meta import request_metadata
 from app.common.responses import SuccessAPIRoute, SuccessMessage
 from app.core.sms_service import send_sms
 from app.modules.users.dependencies import get_auth_service
@@ -179,7 +178,6 @@ async def logout(
 async def logout_all(
     service: Annotated[AuthService, Depends(get_auth_service)],
     phone_number: str,
-    metadata: Annotated[dict, Depends(request_metadata)],
     _: Annotated[
         User,
         Depends(

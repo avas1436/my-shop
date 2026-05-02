@@ -33,8 +33,8 @@ def get_redis(request: Request) -> Redis:
 # گرفتن کش برای روت ها
 def get_cache(
     namespace: str = "",
-    default_ttl: int = 300,
-    list_ttl: int = 120,
+    default_ttl: int = 1000,
+    list_ttl: int = 300,
 ):
     """
     این یک
