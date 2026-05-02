@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.request_meta import request_metadata
-from app.common.responses import SuccessMessage, SuccessResponse
+from app.common.responses import SuccessAPIRoute, SuccessMessage, SuccessResponse
 from app.core.sms_service import send_sms
 from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
@@ -23,7 +23,7 @@ from app.modules.users.service import (
     AuthService,
 )
 
-router = APIRouter()
+router = APIRouter(route_class=SuccessAPIRoute)
 
 
 # ====================================================================
@@ -246,12 +246,11 @@ async def logout_all(
 # ====================================================================
 @router.get(
     "/me",
-    response_model=SuccessResponse[UserGet],
+    response_model=UserGet,
     status_code=status.HTTP_200_OK,
     summary="Get User Status",
 )
 def me(
-    metadata: Annotated[dict, Depends(request_metadata)],
     current_user: Annotated[
         User,
         Depends(
@@ -265,8 +264,4 @@ def me(
     ],
 ):
 
-    return SuccessResponse(
-        status_code=200,
-        data=current_user,
-        path=metadata,
-    )
+    return current_user

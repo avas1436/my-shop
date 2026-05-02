@@ -1,9 +1,11 @@
 # app/common/responses.py
+import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, Generic, TypeVar
 
 from fastapi import Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from fastapi.routing import APIRoute
 from pydantic import BaseModel, Field
 
@@ -24,7 +26,7 @@ class SuccessResponse(BaseModel, Generic[T]):
     data: T
     meta: dict[str, Any] | None = None
     path: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 def success_payload(
@@ -35,17 +37,20 @@ def success_payload(
     message: str = "ok",
     code: str | None = None,
     meta: dict[str, Any] | None = None,
-) -> SuccessResponse:
+) -> dict[str, Any]:
 
-    return SuccessResponse(
-        status_code=status_code,
-        message=message,
-        code=code,
-        data=data,
-        meta=meta,
-        path=path,
-        timestamp=datetime.now(UTC).isoformat(),
-    )
+    now = datetime.now(UTC)
+
+    return {
+        "success": True,
+        "status_code": status_code,
+        "message": message,
+        "code": code,
+        "data": data,
+        "meta": meta,
+        "path": path,
+        "timestamp": now.isoformat(),
+    }
 
 
 # ---------- Error ----------
@@ -55,7 +60,7 @@ class ErrorResponse(BaseModel):
     error_type: str
     detail: Any
     path: str
-    timestamp: str
+    timestamp: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
 
 
 def error_payload(
@@ -64,45 +69,59 @@ def error_payload(
     detail: Any,
     error_type: str,
     path: str,
-):
-    return ErrorResponse(
-        status_code=status_code,
-        error_type=error_type,
-        detail=detail,
-        path=path,
-        timestamp=datetime.now(UTC).isoformat(),
-    )
+) -> dict[str, Any]:
+
+    now = datetime.now(UTC)
+
+    return {
+        "success": False,
+        "status_code": status_code,
+        "error_type": error_type,
+        "detail": detail,
+        "path": path,
+        "timestamp": now.isoformat(),
+    }
 
 
 # ---------- Auto Wrapper for Success ----------
 class SuccessAPIRoute(APIRoute):
-    def get_route_handler(self):
+    def get_route_handler(self) -> Callable:
         original_handler = super().get_route_handler()
 
-        async def custom_handler(request: Request):
-            result = await original_handler(request)
+        async def custom_handler(request: Request) -> Response:
+            # اجرای handler اصلی
+            response = await original_handler(request)
 
-            # اگر Response برگردونی (FileResponse و ...)
-            if isinstance(result, Response):
-                return result
+            # اگر response از نوع Response است، body را بخوانید
+            if isinstance(response, Response):
+                # خواندن body
+                body_bytes = response.body
 
-            # پیام سفارشی متنی
-            if isinstance(result, SuccessMessage):
-                status_code = self.status_code or 200
-                payload = success_payload(
-                    data=None,
-                    message=result.message,
+                try:
+                    body = json.loads(body_bytes)
+                except (json.JSONDecodeError, ValueError):
+                    # اگر JSON نیست، همان response را برگردانید
+                    return response
+
+                # اگر قبلاً wrap شده، برگردانید
+                if isinstance(body, dict) and "success" in body:
+                    return response
+
+                # wrap کردن data
+                status_code = response.status_code
+                wrapped = success_payload(
+                    data=body,
+                    path=str(request.url.path),
                     status_code=status_code,
-                    path=request.url.path,
                 )
-                return JSONResponse(payload.model_dump(), status_code=status_code)
 
-            status_code = self.status_code or 200
-            payload = success_payload(
-                data=result,
-                path=request.url.path,
-                status_code=status_code,
-            )
-            return JSONResponse(payload.model_dump(), status_code=status_code)
+                new_body_bytes = json.dumps(wrapped, separators=(",", ":")).encode(
+                    "utf-8"
+                )
+                response.body = new_body_bytes
+                response.headers["content-length"] = str(len(new_body_bytes))
+                return response
+
+            return response
 
         return custom_handler
