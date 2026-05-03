@@ -24,7 +24,10 @@ async def get_current_user(
 ) -> User:
 
     if credentials is None or not credentials.credentials:
-        raise Unauthorized("Not authenticated")
+        raise Unauthorized(
+            message="Not authenticated",
+            code="MISSING_TOKEN",
+        )
 
     token = credentials.credentials
 
@@ -34,20 +37,32 @@ async def get_current_user(
     subject = payload.get("sub")
 
     if not isinstance(subject, str) or not subject.strip():
-        raise Unauthorized("Invalid token payload")
+        raise Unauthorized(
+            message="Invalid token payload",
+            code="INVALID_TOKEN_PAYLOAD",
+        )
 
     repo = UserRepository(db)
 
     user = await repo.get_by_phone(subject)
 
     if user is None:
-        raise Unauthorized("User not found")
+        raise Unauthorized(
+            message="User not found",
+            code="USER_NOT_FOUND",
+        )
 
     # وضعیت پایه کاربر
     if not user.is_active:
-        raise Unauthorized("Inactive user")
+        raise Unauthorized(
+            message="Inactive user",
+            code="INACTIVE_USER",
+        )
 
     if user.deleted_at is not None:
-        raise Unauthorized("Deleted user")
+        raise Unauthorized(
+            message="User has been deleted",
+            code="USER_DELETED",
+        )
 
     return user

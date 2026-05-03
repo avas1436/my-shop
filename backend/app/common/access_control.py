@@ -5,10 +5,11 @@ from collections.abc import Callable, Iterable, Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Request
 
 from app.common.enums import UserRole
 from app.core.authentication import get_current_user
+from app.errors.errors import Forbidden
 from app.modules.users.models import User
 
 # -----------------------------
@@ -21,11 +22,8 @@ def _utcnow() -> datetime:
     return datetime.now(UTC)
 
 
-def _forbidden(detail: str) -> None:
-    raise HTTPException(
-        status_code=403,
-        detail=detail,
-    )
+def _forbidden(message: str, code: str) -> None:
+    raise Forbidden(message=message, code=code)
 
 
 def require_access(
@@ -61,30 +59,30 @@ def require_access(
             require_not_deleted
             and getattr(current_user, "deleted_at", None) is not None
         ):
-            _forbidden("deleted user")
+            _forbidden("User account is deleted", "USER_DELETED")
 
         if require_active and not bool(getattr(current_user, "is_active", False)):
-            _forbidden("inactive user")
+            _forbidden("User account is inactive", "ACCOUNT_INACTIVE")
 
         if require_phone_verified and not bool(
             getattr(current_user, "is_phone_verified", False)
         ):
-            _forbidden("phone not verified")
+            _forbidden("Phone number not verified", "PHONE_NOT_VERIFIED")
 
         # (5) deny roles اول بررسی شود
         if getattr(current_user, "role", None) in deny_roles:
-            _forbidden("role is explicitly denied")
+            _forbidden("Role is explicitly denied", "ROLE_DENIED")
 
         # نقش مجاز
         if getattr(current_user, "role", None) not in allowed_roles:
-            _forbidden("access denied")
+            _forbidden("Insufficient permissions", "ACCESS_DENIED")
 
         # (1) ورود اخیر
         if require_recent_login_within is not None:
             last_login = getattr(current_user, "last_login", None)
 
             if last_login is None:
-                _forbidden("recent login required")
+                _forbidden("Recent login required", "RECENT_LOGIN_REQUIRED")
 
             assert isinstance(last_login, datetime)
 
@@ -93,13 +91,13 @@ def require_access(
                 last_login = last_login.replace(tzinfo=UTC)
 
             if now - last_login > require_recent_login_within:
-                _forbidden("session too old, re-authentication required")
+                _forbidden("Session too old, re-authenticate", "SESSION_TOO_OLD")
 
         # (2) داشتن رمز
         if require_password:
             hp = getattr(current_user, "hashed_password", None)
             if not hp or not str(hp).strip():
-                _forbidden("password is required for this action")
+                _forbidden("Password is required for this action", "PASSWORD_REQUIRED")
 
         # (3) پروفایل کامل
         if require_profile_complete:
@@ -109,7 +107,10 @@ def require_access(
                 if val is None or (isinstance(val, str) and not val.strip()):
                     missing.append(field)
             if missing:
-                _forbidden(f"profile incomplete: missing {', '.join(missing)}")
+                _forbidden(
+                    f"Profile incomplete: missing {', '.join(missing)}",
+                    "PROFILE_INCOMPLETE",
+                )
 
         return current_user
 

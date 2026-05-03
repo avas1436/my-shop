@@ -3,7 +3,6 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
-from fastapi import HTTPException
 from jose import JWTError, jwt  # type: ignore
 from passlib.context import CryptContext
 
@@ -153,10 +152,11 @@ def decode_token(token: str) -> dict[str, Any]:
             algorithms=[settings.jwt_algorithm],
         )
         return dict(payload)
+
     except JWTError as exc:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token",
+        raise Unauthorized(
+            message="Invalid or expired token",
+            code="INVALID_TOKEN",
         ) from exc
 
 
@@ -170,7 +170,10 @@ def get_token_payload(token: str, expected_type: str = "access") -> dict[str, An
     exp = payload.get("exp")
 
     if exp and datetime.fromtimestamp(exp, tz=UTC) < datetime.now(UTC):
-        raise Unauthorized("Token expired")
+        raise Unauthorized(
+            message="Token has expired",
+            code="TOKEN_EXPIRED",
+        )
 
     token_type = payload.get("token_type")
     subject = payload.get("sub")
