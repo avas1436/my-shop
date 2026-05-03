@@ -32,15 +32,20 @@ class ProductVariantService:
                 return candidate
 
     async def create_variant(self, data: ProductVariantCreate) -> ProductVariant:
-        if not await self.repo.product_exists(data.product_id):
+        product_price = await self.repo.get_product_price(data.product_id)
+
+        if not product_price:
             raise NotFound("Product not found.")
 
         sku = await self._generate_unique_sku()
 
+        if data.price is None:
+            price = product_price
+
         variant = ProductVariant(
             product_id=data.product_id,
             sku=sku,
-            price=data.price,
+            price=price if data.price is None else data.price,
             is_active=data.is_active,
         )
         variant = await self.repo.create(variant)
@@ -104,7 +109,7 @@ class ProductVariantService:
                 "sku": v.sku,
                 "price": v.price,
                 "is_active": v.is_active,
-                "final_price": v.final_price,
+                "price": v.price,
             }
             for v in items
         ]

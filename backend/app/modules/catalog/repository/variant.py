@@ -17,9 +17,19 @@ class ProductVariantRepository(BaseRepository[ProductVariant]):
         )
         return result.scalar_one_or_none()
 
-    async def product_exists(self, product_id: int) -> bool:
-        q = select(Product.id).where(Product.id == product_id)
-        return (await self.db.execute(q)).scalar_one_or_none() is not None
+    # async def product_exists(self, product_id: int) -> bool:
+    #     q = select(Product.id).where(Product.id == product_id)
+    #     return (await self.db.execute(q)).scalar_one_or_none() is not None
+
+    async def get_product_price(self, product_id: int) -> int:
+        q = select(Product).where(Product.id == product_id)
+        result = await self.db.execute(q)
+        product = result.scalar_one_or_none()
+
+        if not product:
+            return None
+
+        return product.final_price
 
     async def list_filtered(
         self,

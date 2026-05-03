@@ -23,6 +23,6 @@ class ProductVariantRead(ProductVariantBase):
     id: int
     sku: str
     product_id: int
-    final_price: int
+    price: int
 
     model_config = ConfigDict(from_attributes=True)

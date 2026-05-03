@@ -46,18 +46,6 @@ async def create_variant(
 
 
 @router.get(
-    "/{variant_id}",
-    response_model=ProductVariantRead,
-    status_code=status.HTTP_200_OK,
-)
-async def get_variant(
-    variant_id: int,
-    service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
-):
-    return await service.get_variant(variant_id)
-
-
-@router.get(
     "/list",
     response_model=PageResponse[dict],
     status_code=status.HTTP_200_OK,
@@ -71,6 +59,18 @@ async def list_variants(
     size: int = 10,
 ):
     return await service.list_variants(search, product_id, is_active, page, size)
+
+
+@router.get(
+    "/{variant_id}",
+    response_model=ProductVariantRead,
+    status_code=status.HTTP_200_OK,
+)
+async def get_variant(
+    variant_id: int,
+    service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
+):
+    return await service.get_variant(variant_id)
 
 
 @router.put(
