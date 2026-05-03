@@ -2,25 +2,24 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.pagination import PageResponse
-from app.core.database import get_db
+from app.common.responses import SuccessAPIRoute, SuccessMessage
+from app.modules.catalog.dependencies.brand import get_brand_service
 from app.modules.catalog.schemas.brand import BrandCreate, BrandRead, BrandUpdate
 from app.modules.catalog.services.brand import BrandService
 from app.modules.users.models import User
 
-router = APIRouter()
+router = APIRouter(route_class=SuccessAPIRoute)
 
 
-@router.post("/", response_model=BrandRead)
+@router.post("/", response_model=BrandRead, status_code=status.HTTP_201_CREATED)
 async def create_brand(
     data: BrandCreate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[BrandService, Depends(get_brand_service)],
     _: Annotated[
         User,
         Depends(
@@ -35,40 +34,33 @@ async def create_brand(
         ),
     ],
 ):
-    return await BrandService(db=db, request=request).create_brand(data)
+    return await service.create_brand(data)
 
 
-@router.get("/{brand_id}", response_model=BrandRead)
+@router.get("/{brand_id}", response_model=BrandRead, status_code=status.HTTP_200_OK)
 async def get_brand(
     brand_id: int,
-    request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[BrandService, Depends(get_brand_service)],
 ):
+    return await service.get_brand(brand_id)
 
-    return await BrandService(db=db, request=request).get_brand(brand_id)
 
-
-@router.get("/", response_model=PageResponse[dict])
+@router.get("/", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
 async def list_brands(
-    request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[BrandService, Depends(get_brand_service)],
     search: str | None = None,
     brand_id: int | None = None,
     page: int = 1,
     size: int = 10,
 ):
-
-    return await BrandService(db=db, request=request).list_brands(
-        search, brand_id, page, size
-    )
+    return await service.list_brands(search, brand_id, page, size)
 
 
-@router.put("/{brand_id}", response_model=BrandRead)
+@router.put("/{brand_id}", response_model=BrandRead, status_code=status.HTTP_200_OK)
 async def update_brand(
     brand_id: int,
     data: BrandUpdate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[BrandService, Depends(get_brand_service)],
     _: Annotated[
         User,
         Depends(
@@ -83,14 +75,15 @@ async def update_brand(
         ),
     ],
 ):
-    return await BrandService(db=db, request=request).update_brand(brand_id, data)
+    return await service.update_brand(brand_id, data)
 
 
-@router.delete("/{brand_id}")
+@router.delete(
+    "/{brand_id}", response_model=SuccessMessage, status_code=status.HTTP_200_OK
+)
 async def delete_brand(
     brand_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[BrandService, Depends(get_brand_service)],
     _: Annotated[
         User,
         Depends(
@@ -105,5 +98,5 @@ async def delete_brand(
         ),
     ],
 ):
-    await BrandService(db=db, request=request).delete_brand(brand_id)
-    return {"detail": "Brand deleted successfully."}
+    await service.delete_brand(brand_id)
+    return SuccessMessage(message="Brand deleted successfully.")

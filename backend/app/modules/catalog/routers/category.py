@@ -1,13 +1,17 @@
+# app/modules/catalog/routers/category.py
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.pagination import PageResponse
-from app.core.database import get_db
+from app.common.responses import SuccessAPIRoute, SuccessMessage
+from app.modules.catalog.dependencies.category import (
+    get_category_service,
+    get_product_category_service,
+)
 from app.modules.catalog.schemas.category import (
     CategoryCreate,
     CategoryRead,
@@ -23,17 +27,16 @@ from app.modules.catalog.services.category import (
 )
 from app.modules.users.models import User
 
-router = APIRouter()
+router = APIRouter(route_class=SuccessAPIRoute)
 
 
 # --------------------------------------------------
 # Category Routes
 # --------------------------------------------------
-@router.post("/", response_model=CategoryRead)
+@router.post("/", response_model=CategoryRead, status_code=status.HTTP_201_CREATED)
 async def create_category(
     data: CategoryCreate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[CategoryService, Depends(get_category_service)],
     _: Annotated[
         User,
         Depends(
@@ -48,39 +51,38 @@ async def create_category(
         ),
     ],
 ):
-    return await CategoryService(db=db, request=request).create_category(data)
+    return await service.create_category(data)
 
 
-@router.get("/{category_id}", response_model=CategoryRead)
+@router.get(
+    "/{category_id}", response_model=CategoryRead, status_code=status.HTTP_200_OK
+)
 async def get_category(
     category_id: int,
-    request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[CategoryService, Depends(get_category_service)],
 ):
-    return await CategoryService(db=db, request=request).get_category(category_id)
+    return await service.get_category(category_id)
 
 
-@router.get("/", response_model=PageResponse[dict])
+@router.get("/", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
 async def list_categories(
-    request: Request,
-    db: Annotated[AsyncSession, Depends(get_db)],
+    service: Annotated[CategoryService, Depends(get_category_service)],
     search: str | None = None,
     parent_id: int | None = None,
     is_active: bool | None = None,
     page: int = 1,
     size: int = 10,
 ):
-    return await CategoryService(db=db, request=request).list_categories(
-        search, parent_id, is_active, page, size
-    )
+    return await service.list_categories(search, parent_id, is_active, page, size)
 
 
-@router.put("/{category_id}", response_model=CategoryRead)
+@router.put(
+    "/{category_id}", response_model=CategoryRead, status_code=status.HTTP_200_OK
+)
 async def update_category(
     category_id: int,
     data: CategoryUpdate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[CategoryService, Depends(get_category_service)],
     _: Annotated[
         User,
         Depends(
@@ -95,16 +97,15 @@ async def update_category(
         ),
     ],
 ):
-    return await CategoryService(db=db, request=request).update_category(
-        category_id, data
-    )
+    return await service.update_category(category_id, data)
 
 
-@router.delete("/{category_id}")
+@router.delete(
+    "/{category_id}", response_model=SuccessMessage, status_code=status.HTTP_200_OK
+)
 async def delete_category(
     category_id: int,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[CategoryService, Depends(get_category_service)],
     _: Annotated[
         User,
         Depends(
@@ -119,19 +120,22 @@ async def delete_category(
         ),
     ],
 ):
-    await CategoryService(db=db, request=request).delete_category(category_id)
-    return {"detail": "Category deleted successfully."}
+    await service.delete_category(category_id)
+    return SuccessMessage(message="Category deleted successfully.")
 
 
 # --------------------------------------------------
 # Product Category Routes
 # --------------------------------------------------
-@router.post("/{product_id}/categories/attach", response_model=ProductCategoryResult)
+@router.post(
+    "/{product_id}/categories/attach",
+    response_model=ProductCategoryResult,
+    status_code=status.HTTP_200_OK,
+)
 async def attach_categories(
     product_id: int,
     data: ProductCategoryAttach,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[ProductCategoryService, Depends(get_product_category_service)],
     _: Annotated[
         User,
         Depends(
@@ -146,17 +150,18 @@ async def attach_categories(
         ),
     ],
 ):
-    return await ProductCategoryService(db, request).attach(
-        product_id, data.category_ids
-    )
+    return await service.attach(product_id, data.category_ids)
 
 
-@router.post("/{product_id}/categories/detach", response_model=ProductCategoryResult)
+@router.post(
+    "/{product_id}/categories/detach",
+    response_model=ProductCategoryResult,
+    status_code=status.HTTP_200_OK,
+)
 async def detach_categories(
     product_id: int,
     data: ProductCategoryDetach,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[ProductCategoryService, Depends(get_product_category_service)],
     _: Annotated[
         User,
         Depends(
@@ -171,17 +176,18 @@ async def detach_categories(
         ),
     ],
 ):
-    return await ProductCategoryService(db, request).detach(
-        product_id, data.category_ids
-    )
+    return await service.detach(product_id, data.category_ids)
 
 
-@router.put("/{product_id}/categories/sync", response_model=ProductCategoryResult)
+@router.put(
+    "/{product_id}/categories/sync",
+    response_model=ProductCategoryResult,
+    status_code=status.HTTP_200_OK,
+)
 async def sync_categories(
     product_id: int,
     data: ProductCategorySync,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
+    service: Annotated[ProductCategoryService, Depends(get_product_category_service)],
     _: Annotated[
         User,
         Depends(
@@ -196,4 +202,4 @@ async def sync_categories(
         ),
     ],
 ):
-    return await ProductCategoryService(db, request).sync(product_id, data.category_ids)
+    return await service.sync(product_id, data.category_ids)

@@ -7,16 +7,14 @@ from fastapi import (
     Depends,
     File,
     Form,
-    Request,
     UploadFile,
     status,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
-from app.core.database import get_db
-from app.modules.catalog.repository.image import ImageRepository
+from app.common.responses import SuccessAPIRoute, SuccessMessage
+from app.modules.catalog.dependencies.image import get_image_service
 from app.modules.catalog.schemas.image import (
     GetImage,
     ImageUpdate,
@@ -24,19 +22,7 @@ from app.modules.catalog.schemas.image import (
 from app.modules.catalog.services.image import ImageService
 from app.modules.users.models import User
 
-router = APIRouter()
-
-
-def get_service(
-    db: Annotated[AsyncSession, Depends(get_db)],
-    request: Request,
-):
-
-    repo = ImageRepository(db=db)
-
-    service = ImageService(repo=repo, request=request)
-
-    return service
+router = APIRouter(route_class=SuccessAPIRoute)
 
 
 # =========================================================
@@ -48,7 +34,7 @@ def get_service(
     response_model=GetImage,
 )
 async def upload_image(
-    service: Annotated[ImageService, Depends(get_service)],
+    service: Annotated[ImageService, Depends(get_image_service)],
     _: Annotated[
         User,
         Depends(
@@ -68,7 +54,6 @@ async def upload_image(
     is_primary: bool = Form(False),
     sort_order: int = Form(0),
 ):
-
     return await service.add_image(
         product_id=product_id,
         file=file,
@@ -88,9 +73,8 @@ async def upload_image(
 )
 async def list_images(
     product_id: int,
-    service: Annotated[ImageService, Depends(get_service)],
+    service: Annotated[ImageService, Depends(get_image_service)],
 ):
-
     return await service.get_product_images(product_id=product_id)
 
 
@@ -104,9 +88,8 @@ async def list_images(
 )
 async def get_image(
     image_id: int,
-    service: Annotated[ImageService, Depends(get_service)],
+    service: Annotated[ImageService, Depends(get_image_service)],
 ):
-
     return await service.get_image(image_id=image_id)
 
 
@@ -121,7 +104,7 @@ async def get_image(
 async def update_image(
     image_id: int,
     payload: ImageUpdate,
-    service: Annotated[ImageService, Depends(get_service)],
+    service: Annotated[ImageService, Depends(get_image_service)],
     _: Annotated[
         User,
         Depends(
@@ -136,7 +119,6 @@ async def update_image(
         ),
     ],
 ):
-
     return await service.update_image(image_id=image_id, data=payload)
 
 
@@ -145,11 +127,12 @@ async def update_image(
 # =========================================================
 @router.delete(
     "/admin/products/{product_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessMessage,
 )
 async def delete_image(
     image_id: int,
-    service: Annotated[ImageService, Depends(get_service)],
+    service: Annotated[ImageService, Depends(get_image_service)],
     _: Annotated[
         User,
         Depends(
@@ -164,5 +147,5 @@ async def delete_image(
         ),
     ],
 ):
-
     await service.delete_image(image_id=image_id)
+    return SuccessMessage(message="Image deleted successfully.")
