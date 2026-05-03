@@ -1,3 +1,4 @@
+# app/modules/catalog/services/product.py
 import re
 import uuid
 

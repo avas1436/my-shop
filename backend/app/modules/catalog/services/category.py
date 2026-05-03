@@ -1,3 +1,4 @@
+# app/modules/catalog/services/category.py
 import math
 
 from fastapi import HTTPException, Request
