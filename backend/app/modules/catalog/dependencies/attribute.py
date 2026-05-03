@@ -1,3 +1,4 @@
+# app/modules/catalog/dependencies/attribute.py
 from typing import Annotated
 
 from fastapi import Depends

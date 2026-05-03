@@ -1,3 +1,4 @@
+# app/modules/catalog/routers/attribute.py
 from datetime import timedelta
 from typing import Annotated
 

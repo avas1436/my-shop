@@ -1,3 +1,4 @@
+# app/modules/catalog/repository/product.py
 from datetime import UTC, datetime
 
 from sqlalchemy import delete, exists, select, update

@@ -1,3 +1,4 @@
+# app/modules/catalog/repository/attribute.py
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

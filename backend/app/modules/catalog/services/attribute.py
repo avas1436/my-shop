@@ -1,3 +1,4 @@
+# app/modules/catalog/services/attribute.py
 import math
 
 from sqlalchemy.ext.asyncio import AsyncSession
