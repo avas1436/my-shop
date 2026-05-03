@@ -9,13 +9,13 @@ from app.modules.catalog.models.attribute import (
 )
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.models.variant import ProductVariant
-from app.modules.catalog.repository.base import BaseSimpleRepository
+from app.modules.catalog.repository.base import BaseRepository
 
 
 # --------------------------------------------------
 # Attribute Repository
 # --------------------------------------------------
-class AttributeRepository(BaseSimpleRepository[Attribute]):
+class AttributeRepository(BaseRepository[Attribute]):
     def __init__(self, db: AsyncSession):
         super().__init__(db=db, model=Attribute)
 

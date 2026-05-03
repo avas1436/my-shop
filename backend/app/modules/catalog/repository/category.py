@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.catalog.models.category import Category, ProductCategory
 from app.modules.catalog.models.product import Product
-from app.modules.catalog.repository.base import BaseSimpleRepository
+from app.modules.catalog.repository.base import BaseRepository
 
 
-class CategoryRepository(BaseSimpleRepository[Category]):
+class CategoryRepository(BaseRepository[Category]):
     def __init__(self, db: AsyncSession):
         super().__init__(db=db, model=Category)
 

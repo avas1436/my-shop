@@ -4,13 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.models.tag import ProductTag, Tag
-from app.modules.catalog.repository.base import BaseSimpleRepository
+from app.modules.catalog.repository.base import BaseRepository
 
 
 # --------------------------------------------------
 # Tag Repository
 # --------------------------------------------------
-class TagRepository(BaseSimpleRepository[Tag]):
+class TagRepository(BaseRepository[Tag]):
     def __init__(self, db: AsyncSession):
         super().__init__(db=db, model=Tag)
 

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 ModelT = TypeVar("ModelT")
 
 
-class BaseSimpleRepository(Generic[ModelT]):
+class BaseRepository(Generic[ModelT]):
     def __init__(self, db: AsyncSession, model: type[ModelT]):
         self.db = db
         self.model = model
