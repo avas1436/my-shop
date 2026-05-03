@@ -21,7 +21,7 @@ def register_exception_handlers(app: FastAPI, logger) -> None:
                 detail=exc.detail,
                 error_type="HTTPException",
                 path=request.url.path,
-            ).dict(),
+            ),
         )
 
     @app.exception_handler(RequestValidationError)
@@ -38,7 +38,7 @@ def register_exception_handlers(app: FastAPI, logger) -> None:
                 detail=exc.errors(),
                 error_type="RequestValidationError",
                 path=request.url.path,
-            ).dict(),
+            ),
         )
 
     @app.exception_handler(HttpError)
@@ -52,7 +52,7 @@ def register_exception_handlers(app: FastAPI, logger) -> None:
                 detail=http_exc.detail,
                 error_type=exc.__class__.__name__,
                 path=request.url.path,
-            ).dict(),
+            ),
         )
 
     @app.exception_handler(ServiceError)
@@ -67,7 +67,7 @@ def register_exception_handlers(app: FastAPI, logger) -> None:
                 detail=http_exc.detail,
                 error_type=exc.__class__.__name__,
                 path=request.url.path,
-            ).dict(),
+            ),
         )
 
     @app.exception_handler(Exception)
@@ -82,5 +82,5 @@ def register_exception_handlers(app: FastAPI, logger) -> None:
                 detail=http_exc.detail,
                 error_type="ServerError",
                 path=request.url.path,
-            ).dict(),
+            ),
         )
