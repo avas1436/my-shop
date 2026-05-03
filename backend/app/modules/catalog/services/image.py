@@ -1,20 +1,19 @@
 # app/modules/catalog/services/image.py
 import uuid
 
-from fastapi import HTTPException, Request
-
 from app.cache.cache import RedisCache
 from app.core.storage import get_storage
+from app.errors.errors import NotFound
 from app.modules.catalog.models.image import ProductImage
 from app.modules.catalog.repository.image import ImageRepository
 from app.modules.catalog.schemas.image import GetImage, ImageUpdate
 
 
 class ImageService:
-    def __init__(self, repo: ImageRepository, request: Request):
+    def __init__(self, repo: ImageRepository, cache: RedisCache):
         self.repo = repo
         self.storage = get_storage()
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     # =========================================================
     # Add Image
@@ -58,7 +57,7 @@ class ImageService:
 
         image = await self.repo.get(image_id)
         if not image:
-            raise HTTPException(status_code=404, detail="image not found.")
+            raise NotFound("image not found.")
 
         payload = GetImage.model_validate(image).model_dump(mode="json")
 
@@ -76,7 +75,7 @@ class ImageService:
     ) -> list[GetImage]:
 
         if self.cache.is_available():
-            cached = await self.cache.get(
+            cached = await self.cache.get_list(
                 "list",
                 "image",
                 "product",
@@ -88,14 +87,14 @@ class ImageService:
         images = await self.repo.list_by_product(product_id)
 
         if not images:
-            raise HTTPException(status_code=404, detail="images not found.")
+            raise NotFound("images not found.")
 
         payload = [
             GetImage.model_validate(img).model_dump(mode="json") for img in images
         ]
 
         if self.cache.is_available():
-            await self.cache.set(
+            await self.cache.set_list(
                 "list",
                 "image",
                 "product",
@@ -116,7 +115,7 @@ class ImageService:
 
         image = await self.repo.get(image_id)
         if not image:
-            raise HTTPException(status_code=404, detail="image not found.")
+            raise NotFound("image not found.")
 
         for k, v in data.model_dump(exclude_unset=True).items():
             setattr(image, k, v)
@@ -136,7 +135,7 @@ class ImageService:
 
         image = await self.repo.get(image_id)
         if not image:
-            raise HTTPException(status_code=404, detail="image not found.")
+            raise NotFound("image not found.")
 
         await self.storage.delete(image.url)
         await self.repo.delete(image)

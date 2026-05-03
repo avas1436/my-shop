@@ -1,12 +1,12 @@
 # app/modules/catalog/services/tag.py
 import math
 
-from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
+from app.errors.errors import BadRequest, Conflict, NotFound
 from app.modules.catalog.models.tag import Tag
 from app.modules.catalog.repository.tag import ProductTagRepository, TagRepository
 from app.modules.catalog.schemas.tag import (
@@ -21,9 +21,9 @@ from app.modules.catalog.schemas.tag import (
 # Tag Service
 # --------------------------------------------------
 class TagService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = TagRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     # -------------------------
     # create a tag
@@ -31,11 +31,11 @@ class TagService:
     async def create_tag(self, data: TagCreate) -> Tag:
 
         if await self.repo.get_by_name(data.name):
-            raise HTTPException(status_code=409, detail="Tag name already exists.")
+            raise Conflict("Tag name already exists.")
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise HTTPException(status_code=409, detail="Tag slug already exists.")
+            raise Conflict("Tag slug already exists.")
 
         tag = Tag(name=data.name, slug=slug)
         tag = await self.repo.create(tag)
@@ -56,7 +56,7 @@ class TagService:
 
         tag = await self.repo.get_by_id(tag_id)
         if not tag:
-            raise HTTPException(status_code=404, detail="Tag not found.")
+            raise NotFound("Tag not found.")
 
         payload = TagRead.model_validate(tag).model_dump(mode="json")
 
@@ -77,7 +77,7 @@ class TagService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+            raise BadRequest("Invalid pagination values.")
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -129,16 +129,16 @@ class TagService:
     async def update_tag(self, tag_id: int, data: TagUpdate) -> Tag:
         tag = await self.repo.get_by_id(tag_id)
         if not tag:
-            raise HTTPException(status_code=404, detail="Tag not found.")
+            raise NotFound("Tag not found.")
 
         if data.name and data.name != tag.name:
             if await self.repo.get_by_name(data.name):
-                raise HTTPException(status_code=409, detail="Tag name already exists.")
+                raise Conflict("Tag name already exists.")
             tag.name = data.name
 
         if data.slug:
             if data.slug != tag.slug and await self.repo.get_by_slug(data.slug):
-                raise HTTPException(status_code=409, detail="Tag slug already exists.")
+                raise Conflict("Tag slug already exists.")
             tag.slug = data.slug
 
         tag = await self.repo.update(tag)
@@ -155,7 +155,7 @@ class TagService:
     async def delete_tag(self, tag_id: int) -> None:
         tag = await self.repo.get_by_id(tag_id)
         if not tag:
-            raise HTTPException(status_code=404, detail="Tag not found.")
+            raise NotFound("Tag not found.")
 
         await self.repo.delete(tag)
 
@@ -168,21 +168,19 @@ class TagService:
 # Product Tag Service
 # --------------------------------------------------
 class ProductTagService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = ProductTagRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     async def attach(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
 
         if not await self.repo.product_exists(product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise NotFound("Product not found.")
 
         existing = await self.repo.existing_tags(tag_ids)
         missing = set(tag_ids) - existing
         if missing:
-            raise HTTPException(
-                status_code=404, detail=f"Tags not found: {sorted(missing)}"
-            )
+            raise NotFound(f"Tags not found: {sorted(missing)}")
 
         current = await self.repo.current_tags(product_id)
         to_add = list(set(tag_ids) - current)
@@ -205,7 +203,7 @@ class ProductTagService:
     async def detach(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
 
         if not await self.repo.product_exists(product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise NotFound("Product not found.")
 
         current = await self.repo.current_tags(product_id)
         to_remove = list(set(tag_ids) & current)
@@ -228,14 +226,12 @@ class ProductTagService:
     async def sync(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
 
         if not await self.repo.product_exists(product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise NotFound("Product not found.")
 
         existing = await self.repo.existing_tags(tag_ids)
         missing = set(tag_ids) - existing
         if missing:
-            raise HTTPException(
-                status_code=404, detail=f"Tags not found: {sorted(missing)}"
-            )
+            raise NotFound(f"Tags not found: {sorted(missing)}")
 
         current = await self.repo.current_tags(product_id)
 

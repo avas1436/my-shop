@@ -1,12 +1,12 @@
 # app/modules/catalog/services/category.py
 import math
 
-from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
+from app.errors.errors import BadRequest, Conflict, NotFound
 from app.modules.catalog.models.category import Category
 from app.modules.catalog.repository.category import (
     CategoryRepository,
@@ -24,9 +24,9 @@ from app.modules.catalog.schemas.category import (
 # Category Service
 # --------------------------------------------------
 class CategoryService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = CategoryRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     # -------------------------
     # create a category
@@ -34,19 +34,17 @@ class CategoryService:
     async def create_category(self, data: CategoryCreate) -> Category:
 
         if await self.repo.get_by_name(data.name):
-            raise HTTPException(status_code=409, detail="Category name already exists.")
+            raise Conflict("Category name already exists.")
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise HTTPException(status_code=409, detail="Category slug already exists.")
+            raise Conflict("Category slug already exists.")
 
         parent_id = None
         if data.parent_id is not None:
             parent = await self.repo.get_by_id(data.parent_id)
             if not parent:
-                raise HTTPException(
-                    status_code=404, detail="Parent category not found."
-                )
+                raise NotFound("Parent category not found.")
             parent_id = data.parent_id
 
         category = Category(
@@ -74,7 +72,7 @@ class CategoryService:
 
         category = await self.repo.get_by_id(category_id)
         if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+            raise NotFound("Category not found.")
 
         payload = CategoryRead.model_validate(category).model_dump(mode="json")
 
@@ -96,7 +94,7 @@ class CategoryService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+            raise BadRequest("Invalid pagination values.")
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -156,20 +154,16 @@ class CategoryService:
     async def update_category(self, category_id: int, data: CategoryUpdate) -> Category:
         category = await self.repo.get_by_id(category_id)
         if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+            raise NotFound("Category not found.")
 
         if data.name and data.name != category.name:
             if await self.repo.get_by_name(data.name):
-                raise HTTPException(
-                    status_code=409, detail="Category name already exists."
-                )
+                raise Conflict("Category name already exists.")
             category.name = data.name
 
         if data.slug:
             if data.slug != category.slug and await self.repo.get_by_slug(data.slug):
-                raise HTTPException(
-                    status_code=409, detail="Category slug already exists."
-                )
+                raise Conflict("Category slug already exists.")
             category.slug = data.slug
 
         if data.description is not None:
@@ -180,23 +174,16 @@ class CategoryService:
 
         if data.parent_id is not None:
             if data.parent_id == category.id:
-                raise HTTPException(
-                    status_code=409, detail="Category cannot be its own parent."
-                )
+                raise Conflict("Category cannot be its own parent.")
             parent = await self.repo.get_by_id(data.parent_id)
             if not parent:
-                raise HTTPException(
-                    status_code=404, detail="Parent category not found."
-                )
+                raise NotFound("Parent category not found.")
 
             # prevent cycles (parent cannot be a descendant)
             current = parent
             while current:
                 if current.id == category.id:
-                    raise HTTPException(
-                        status_code=409,
-                        detail="Parent category cannot be a descendant.",
-                    )
+                    raise Conflict("Parent category cannot be a descendant.")
                 if current.parent_id is None:
                     break
                 current = await self.repo.get_by_id(current.parent_id)
@@ -217,12 +204,10 @@ class CategoryService:
     async def delete_category(self, category_id: int) -> None:
         category = await self.repo.get_by_id(category_id)
         if not category:
-            raise HTTPException(status_code=404, detail="Category not found.")
+            raise NotFound("Category not found.")
 
         if await self.repo.has_children(category_id):
-            raise HTTPException(
-                status_code=409, detail="Cannot delete category with children."
-            )
+            raise Conflict("Cannot delete category with children.")
 
         await self.repo.delete(category)
 
@@ -235,23 +220,21 @@ class CategoryService:
 # Product Category Service
 # --------------------------------------------------
 class ProductCategoryService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = ProductCategoryRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     async def attach(
         self, product_id: int, category_ids: list[int]
     ) -> ProductCategoryResult:
 
         if not await self.repo.product_exists(product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise NotFound("Product not found.")
 
         existing = await self.repo.existing_categories(category_ids)
         missing = set(category_ids) - existing
         if missing:
-            raise HTTPException(
-                status_code=404, detail=f"Categories not found: {sorted(missing)}"
-            )
+            raise NotFound(f"Categories not found: {sorted(missing)}")
 
         current = await self.repo.current_categories(product_id)
         to_add = list(set(category_ids) - current)
@@ -276,7 +259,7 @@ class ProductCategoryService:
     ) -> ProductCategoryResult:
 
         if not await self.repo.product_exists(product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise NotFound("Product not found.")
 
         current = await self.repo.current_categories(product_id)
         to_remove = list(set(category_ids) & current)
@@ -301,14 +284,12 @@ class ProductCategoryService:
     ) -> ProductCategoryResult:
 
         if not await self.repo.product_exists(product_id):
-            raise HTTPException(status_code=404, detail="Product not found.")
+            raise NotFound("Product not found.")
 
         existing = await self.repo.existing_categories(category_ids)
         missing = set(category_ids) - existing
         if missing:
-            raise HTTPException(
-                status_code=404, detail=f"Categories not found: {sorted(missing)}"
-            )
+            raise NotFound(f"Categories not found: {sorted(missing)}")
 
         current = await self.repo.current_categories(product_id)
 

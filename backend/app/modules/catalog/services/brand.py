@@ -1,21 +1,21 @@
 # app/modules/catalog/services/brand.py
 import math
 
-from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
 from app.core.utils import slugify
+from app.errors.errors import BadRequest, Conflict, NotFound
 from app.modules.catalog.models.brand import Brand
 from app.modules.catalog.repository.brand import BrandRepository
 from app.modules.catalog.schemas.brand import BrandCreate, BrandRead, BrandUpdate
 
 
 class BrandService:
-    def __init__(self, db: AsyncSession, request: Request):
+    def __init__(self, db: AsyncSession, cache: RedisCache):
         self.repo = BrandRepository(db)
-        self.cache = RedisCache(request)
+        self.cache = cache
 
     # -------------------------
     # create a brand
@@ -23,11 +23,11 @@ class BrandService:
     async def create_brand(self, data: BrandCreate) -> Brand:
 
         if await self.repo.get_by_name(data.name):
-            raise HTTPException(status_code=409, detail="Brand name already exists.")
+            raise Conflict("Brand name already exists.")
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise HTTPException(status_code=409, detail="Brand slug already exists.")
+            raise Conflict("Brand slug already exists.")
 
         brand = Brand(name=data.name, slug=slug)
         brand = await self.repo.create(brand)
@@ -48,7 +48,7 @@ class BrandService:
 
         brand = await self.repo.get_by_id(brand_id)
         if not brand:
-            raise HTTPException(status_code=404, detail="Brand not found.")
+            raise NotFound("Brand not found.")
 
         payload = BrandRead.model_validate(brand).model_dump(mode="json")
 
@@ -69,10 +69,11 @@ class BrandService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise HTTPException(status_code=400, detail="Invalid pagination values.")
+            raise BadRequest("Invalid pagination values.")
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
+                "list",
                 "brand",
                 search,
                 brand_id,
@@ -105,6 +106,7 @@ class BrandService:
 
         if self.cache.is_available():
             await self.cache.set_list(
+                "list",
                 "brand",
                 search,
                 brand_id,
@@ -121,20 +123,16 @@ class BrandService:
     async def update_brand(self, brand_id: int, data: BrandUpdate) -> Brand:
         brand = await self.repo.get_by_id(brand_id)
         if not brand:
-            raise HTTPException(status_code=404, detail="Brand not found.")
+            raise NotFound("Brand not found.")
 
         if data.name and data.name != brand.name:
             if await self.repo.get_by_name(data.name):
-                raise HTTPException(
-                    status_code=409, detail="Brand name already exists."
-                )
+                raise Conflict("Brand name already exists.")
             brand.name = data.name
 
         if data.slug:
             if data.slug != brand.slug and await self.repo.get_by_slug(data.slug):
-                raise HTTPException(
-                    status_code=409, detail="Brand slug already exists."
-                )
+                raise Conflict("Brand slug already exists.")
             brand.slug = data.slug
 
         brand = await self.repo.update(brand)
@@ -151,7 +149,7 @@ class BrandService:
     async def delete_brand(self, brand_id: int) -> None:
         brand = await self.repo.get_by_id(brand_id)
         if not brand:
-            raise HTTPException(status_code=404, detail="Brand not found.")
+            raise NotFound("Brand not found.")
 
         await self.repo.delete(brand)
 
