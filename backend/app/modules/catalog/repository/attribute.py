@@ -9,73 +9,19 @@ from app.modules.catalog.models.attribute import (
 )
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.models.variant import ProductVariant
+from app.modules.catalog.repository.base import BaseSimpleRepository
 
 
 # --------------------------------------------------
-# Attribure Repository
+# Attribute Repository
 # --------------------------------------------------
-class AttributeRepository:
+class AttributeRepository(BaseSimpleRepository[Attribute]):
     def __init__(self, db: AsyncSession):
-        self.db = db
-
-    async def get_by_id(self, attribute_id: int) -> Attribute | None:
-        result = await self.db.execute(
-            select(Attribute).where(Attribute.id == attribute_id)
-        )
-        return result.scalar_one_or_none()
-
-    async def get_by_name(self, name: str) -> Attribute | None:
-        result = await self.db.execute(select(Attribute).where(Attribute.name == name))
-        return result.scalar_one_or_none()
-
-    async def get_by_slug(self, slug: str) -> Attribute | None:
-        result = await self.db.execute(select(Attribute).where(Attribute.slug == slug))
-        return result.scalar_one_or_none()
-
-    async def list_filtered(
-        self,
-        search: str | None,
-        attribute_id: int | None,
-        page: int,
-        size: int,
-    ) -> tuple[list[Attribute], int]:
-        query = select(Attribute)
-        count_query = select(func.count(Attribute.id))
-
-        if search:
-            query = query.where(Attribute.name.ilike(f"%{search}%"))
-            count_query = count_query.where(Attribute.name.ilike(f"%{search}%"))
-
-        if attribute_id:
-            query = query.where(Attribute.id == attribute_id)
-            count_query = count_query.where(Attribute.id == attribute_id)
-
-        query = query.offset((page - 1) * size).limit(size)
-
-        items = (await self.db.execute(query)).scalars().all()
-        total = (await self.db.execute(count_query)).scalar_one()
-
-        return list(items), total
-
-    async def create(self, attribute: Attribute) -> Attribute:
-        self.db.add(attribute)
-        await self.db.commit()
-        await self.db.refresh(attribute)
-        return attribute
-
-    async def update(self, attribute: Attribute) -> Attribute:
-        self.db.add(attribute)
-        await self.db.commit()
-        await self.db.refresh(attribute)
-        return attribute
-
-    async def delete(self, attribute: Attribute) -> None:
-        await self.db.delete(attribute)
-        await self.db.commit()
+        super().__init__(db=db, model=Attribute)
 
 
 # --------------------------------------------------
-# Product Attribure Repository
+# Product Attribute Repository
 # --------------------------------------------------
 class ProductAttributeRepository:
     def __init__(self, db: AsyncSession):
@@ -154,7 +100,7 @@ class ProductAttributeRepository:
 
 
 # --------------------------------------------------
-# Product Variant Attribure Repository
+# Product Variant Attribute Repository
 # --------------------------------------------------
 class ProductVariantAttributeRepository:
     def __init__(self, db: AsyncSession):
