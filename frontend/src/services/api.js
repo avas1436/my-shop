@@ -101,13 +101,26 @@ function getAuthHeaders(headers = {}, { skipAuth = false } = {}) {
   }
 }
 
+function hasDataEnvelope(payload) {
+  return Boolean(payload && typeof payload === 'object' && Object.hasOwn(payload, 'data'))
+}
+
+export function extractApiData(payload) {
+  return hasDataEnvelope(payload) ? payload.data : payload
+}
+
 async function request(path, options = {}) {
   const { skipAuth = false, skipAuthRefresh = false, ...fetchOptions } = options
+  const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData
   const headers = getAuthHeaders(
-    {
-      'Content-Type': 'application/json',
-      ...fetchOptions.headers,
-    },
+    isFormData
+      ? {
+          ...fetchOptions.headers,
+        }
+      : {
+          'Content-Type': 'application/json',
+          ...fetchOptions.headers,
+        },
     { skipAuth },
   )
 
@@ -192,7 +205,39 @@ export const api = {
       ...options,
     })
   },
+  patch(path, body, options) {
+    return request(path, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      ...options,
+    })
+  },
   delete(path, options) {
     return request(path, { method: 'DELETE', ...options })
+  },
+  postForm(path, formData, options) {
+    return request(path, {
+      method: 'POST',
+      body: formData,
+      ...options,
+    })
+  },
+  async getData(path, options) {
+    return extractApiData(await this.get(path, options))
+  },
+  async postData(path, body, options) {
+    return extractApiData(await this.post(path, body, options))
+  },
+  async putData(path, body, options) {
+    return extractApiData(await this.put(path, body, options))
+  },
+  async patchData(path, body, options) {
+    return extractApiData(await this.patch(path, body, options))
+  },
+  async deleteData(path, options) {
+    return extractApiData(await this.delete(path, options))
+  },
+  async postFormData(path, formData, options) {
+    return extractApiData(await this.postForm(path, formData, options))
   },
 }

@@ -11,6 +11,11 @@ const router = createRouter({
     { path: '/cart', name: 'cart', component: () => import('@/views/CartView.vue') },
     { path: '/checkout', name: 'checkout', component: () => import('@/views/CheckoutView.vue') },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue') },
+    {
+      path: '/admin/products/new',
+      name: 'admin-product-composer',
+      component: () => import('@/views/AdminProductComposerView.vue'),
+    },
     { path: '/about', name: 'about', component: () => import('@/views/AboutView.vue') },
   ],
   scrollBehavior() {

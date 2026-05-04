@@ -47,6 +47,7 @@
         <router-link to="/category/audio">صوتی و پوشیدنی</router-link>
         <router-link to="/category/home">خانه و آشپزخانه</router-link>
         <router-link to="/category/fashion">مد و استایل</router-link>
+        <router-link v-if="user.profile?.role === 'admin'" to="/admin/products/new">ادمین محصول</router-link>
       </nav>
     </div>
 
