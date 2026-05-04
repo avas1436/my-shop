@@ -15,6 +15,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.modules.catalog.models.attribute import ProductVariantAttribute
+    from app.modules.catalog.models.inventory import Inventory
     from app.modules.catalog.models.product import Product
 
 
@@ -36,6 +37,12 @@ class ProductVariant(Base):
 
     attribute_values: Mapped[list[ProductVariantAttribute]] = relationship(
         back_populates="variant", cascade="all, delete-orphan"
+    )
+
+    inventory: Mapped[Inventory | None] = relationship(
+        back_populates="variant",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (

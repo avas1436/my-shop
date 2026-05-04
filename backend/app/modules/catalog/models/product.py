@@ -1,4 +1,5 @@
 # app/modules/catalog/models/product.py
+from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
@@ -29,7 +30,6 @@ if TYPE_CHECKING:
     from app.modules.catalog.models.image import ProductImage
     from app.modules.catalog.models.tag import Tag
     from app.modules.catalog.models.variant import ProductVariant
-    from app.modules.inventory.models import Inventory
 
 
 class Product(Base):
@@ -129,9 +129,9 @@ class Product(Base):
         back_populates="product", cascade="all, delete-orphan"
     )
 
-    inventory: Mapped[Inventory | None] = relationship(
-        back_populates="product", uselist=False, cascade="all, delete-orphan"
-    )
+    # inventory: Mapped[Inventory | None] = relationship(
+    #     back_populates="product", uselist=False, cascade="all, delete-orphan"
+    # )
 
     variants: Mapped[list[ProductVariant]] = relationship(
         back_populates="product", cascade="all, delete-orphan"
@@ -197,6 +197,19 @@ class Product(Base):
         if self.discount_price is not None and self.price > 0:
             return float(round((1 - self.discount_price / self.price) * 100, 1))
         return 0.0
+
+    @property
+    def total_available_quantity(self) -> int:
+        return sum(
+            (v.inventory.available_quantity if v.inventory else 0)
+            for v in self.variants
+        )
+
+    @property
+    def is_in_stock(self) -> bool:
+        return any(
+            (v.inventory.is_in_stock if v.inventory else False) for v in self.variants
+        )
 
     def __repr__(self) -> str:
         return f"<Product {self.name} | SKU: {self.sku}>"

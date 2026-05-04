@@ -22,7 +22,11 @@ class Inventory(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), unique=True)
+    variant_id: Mapped[int] = mapped_column(
+        ForeignKey("product_variants.id"),
+        unique=True,
+        nullable=False,
+    )
 
     quantity: Mapped[int] = mapped_column(default=0)
     reserved_quantity: Mapped[int] = mapped_column(default=0)
@@ -39,11 +43,6 @@ class Inventory(Base):
     product: Mapped[Product] = relationship(back_populates="inventory")
 
     __table_args__ = (
-        CheckConstraint(
-            "(product_id IS NOT NULL AND variant_id IS NULL) OR "
-            "(product_id IS NULL AND variant_id IS NOT NULL)",
-            name="ck_inventory_product_or_variant",
-        ),
         CheckConstraint("quantity >= 0", name="ck_inventory_quantity_non_negative"),
         CheckConstraint(
             "reserved_quantity >= 0",
