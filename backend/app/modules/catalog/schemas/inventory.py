@@ -1,31 +1,36 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
-class InventoryBase(BaseModel):
-    quantity: int = Field(default=0, ge=0)
-    reserved_quantity: int = Field(default=0, ge=0)
-    low_stock_alert: int = Field(default=5, ge=0)
+# --------------------------------------------------
+# Inventory Schema
+# --------------------------------------------------
+class InventoryCreate(BaseModel):
+    variant_id: int
+    quantity: int = Field(0, ge=0)
+    reserved_quantity: int = Field(0, ge=0)
+    low_stock_alert: int = Field(5, ge=0)
     allow_backorder: bool = False
 
 
-class InventoryCreate(InventoryBase):
-    product_id: int
-
-
 class InventoryUpdate(BaseModel):
-    quantity: int | None = Field(default=None, ge=0)
-    reserved_quantity: int | None = Field(default=None, ge=0)
-    low_stock_alert: int | None = Field(default=None, ge=0)
+    quantity: int | None = Field(None, ge=0)
+    reserved_quantity: int | None = Field(None, ge=0)
+    low_stock_alert: int | None = Field(None, ge=0)
     allow_backorder: bool | None = None
 
 
-class InventoryRead(InventoryBase):
+class InventoryRead(BaseModel):
     id: int
-    product_id: int
-    updated_at: datetime | None = None
+    variant_id: int
+    quantity: int
+    reserved_quantity: int
+    low_stock_alert: int
+    allow_backorder: bool
+    updated_at: datetime | None
     available_quantity: int
     is_in_stock: bool
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True

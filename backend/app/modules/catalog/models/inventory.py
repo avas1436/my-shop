@@ -14,7 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
-    from app.modules.catalog.models.product import Product
+    from app.modules.catalog.models.variant import ProductVariant
 
 
 class Inventory(Base):
@@ -40,7 +40,7 @@ class Inventory(Base):
         DateTime(timezone=True), onupdate=func.now()
     )
 
-    product: Mapped[Product] = relationship(back_populates="inventory")
+    variant: Mapped[ProductVariant] = relationship(back_populates="inventory")
 
     __table_args__ = (
         CheckConstraint("quantity >= 0", name="ck_inventory_quantity_non_negative"),
