@@ -49,7 +49,7 @@ async def admin_create_draft_product(
 # Soft Delete a Product
 # =========================================================
 @router.delete(
-    "/admin/products/{product_id}",
+    "/admin/products/soft/{product_id}",
     status_code=status.HTTP_200_OK,
     response_model=SuccessMessage,
 )
@@ -71,9 +71,44 @@ async def admin_soft_delete_product(
     ],
 ):
     deleted = await service.soft_delete_product(product_id)
+
     if not deleted:
         raise NotFound(message="product not found")
-    return SuccessMessage(message="Product deleted successfully.")
+
+    return SuccessMessage(message="Product deleted softly.")
+
+
+# =========================================================
+# Hard Delete a Product
+# =========================================================
+@router.delete(
+    "/admin/products/hard/{product_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessMessage,
+)
+async def admin_hard_delete_product(
+    product_id: int,
+    service: Annotated[AdminProductService, Depends(get_admin_product_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    deleted = await service.hard_delete_product(product_id)
+
+    if not deleted:
+        raise NotFound(message="product not found")
+
+    return SuccessMessage(message="Product deleted hardly.")
 
 
 # =========================================================

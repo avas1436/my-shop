@@ -11,6 +11,9 @@ class ProductVariantBase(BaseModel):
 
 class ProductVariantCreate(ProductVariantBase):
     product_id: int
+    color: str | None = None
+    size: str | None = None
+    material: str | None = None
 
 
 class ProductVariantUpdate(BaseModel):

@@ -29,7 +29,7 @@ class ProductVariantRepository(BaseRepository[ProductVariant]):
         if not product:
             return None
 
-        return product.final_price
+        return product.final_price, product.sku
 
     async def list_filtered(
         self,

@@ -1,6 +1,6 @@
 # app/modules/catalog/services/variant.py
 import math
-import uuid
+import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,22 +22,51 @@ class ProductVariantService:
         self.cache = cache
 
     # =========================================================
-    # Make a Random name for SKU
+    # Make a Standard name for SKU
     # =========================================================
-    async def _generate_unique_sku(self) -> str:
-        # نمونه: PRD-20260427-8HEX
-        while True:
-            candidate = f"PRD-{uuid.uuid4().hex[:5].upper()}"
-            if not await self.repo.get_by_sku(candidate):
-                return candidate
+    def _normalize_token(self, value: str, max_len: int = 2) -> str:
+        """یک خروجی دو حرفی با حروف بزرگ میده و اگر مقداری نباشه ان ای میده"""
+        if not value:
+            return "NA"
+
+        value = re.sub(r"[^A-Za-z0-9]", "", value).upper()
+
+        return value[:max_len] if value else "NA"
+
+    async def _generate_variant_sku(
+        self,
+        base_sku: str,
+        color: str | None = None,
+        size: str | None = None,
+        material: str | None = None,
+    ) -> str:
+        """نمونه: PRD-260504-A7K9-RED-L-01"""
+
+        # کد ویژگی‌ها
+        parts = []
+        if color:
+            parts.append(self._normalize_token(color, 3))  # RED
+        if size:
+            parts.append(self._normalize_token(size, 3))  # L / XL
+        if material:
+            parts.append(self._normalize_token(material, 3))  # COT
+
+        attr_part = "-".join(parts) if parts else "VAR"
+
+        return f"{base_sku}-{attr_part}"
 
     async def create_variant(self, data: ProductVariantCreate) -> ProductVariant:
-        product_price = await self.repo.get_product_price(data.product_id)
+        product_price, base_sku = await self.repo.get_product_price(data.product_id)
 
         if not product_price:
             raise NotFound("Product not found.")
 
-        sku = await self._generate_unique_sku()
+        sku = await self._generate_variant_sku(
+            base_sku=base_sku,
+            color=data.color,
+            size=data.size,
+            material=data.material,
+        )
 
         if data.price is None:
             price = product_price

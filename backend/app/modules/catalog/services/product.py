@@ -1,6 +1,7 @@
 # app/modules/catalog/services/product.py
 import re
 import uuid
+from datetime import UTC, datetime
 
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.repository.product import AdminProductRepository
@@ -38,9 +39,13 @@ class AdminProductService:
     # Make a Random name for SKU
     # =========================================================
     async def _generate_unique_sku(self) -> str:
-        # نمونه: PRD-20260427-8HEX
+        # نمونه: PRD-260501-A7K9
+        today = datetime.now(UTC).strftime("%y%m%d")
+
         while True:
-            candidate = f"PRD-{uuid.uuid4().hex[:5].upper()}"
+            rand = uuid.uuid4().hex[:4].upper()
+            candidate = f"PRD-{today}-{rand}"
+
             if not await self.repository.exists_by_sku(candidate):
                 return candidate
 
