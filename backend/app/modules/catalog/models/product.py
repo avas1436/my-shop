@@ -1,4 +1,4 @@
-from __future__ import annotations
+# app/modules/catalog/models/product.py
 
 from datetime import datetime
 from decimal import Decimal

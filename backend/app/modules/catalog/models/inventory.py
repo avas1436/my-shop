@@ -39,6 +39,11 @@ class Inventory(Base):
     product: Mapped[Product] = relationship(back_populates="inventory")
 
     __table_args__ = (
+        CheckConstraint(
+            "(product_id IS NOT NULL AND variant_id IS NULL) OR "
+            "(product_id IS NULL AND variant_id IS NOT NULL)",
+            name="ck_inventory_product_or_variant",
+        ),
         CheckConstraint("quantity >= 0", name="ck_inventory_quantity_non_negative"),
         CheckConstraint(
             "reserved_quantity >= 0",

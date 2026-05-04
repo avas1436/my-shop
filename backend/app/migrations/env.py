@@ -39,7 +39,7 @@ from app.modules.catalog.models.variant import ProductVariant  # noqa: E402, F40
 from app.modules.catalog.models.tag import ProductTag  # noqa: E402, F401, I001
 from app.modules.catalog.models.tag import Tag  # noqa: E402, F401, I001
 from app.modules.comments.models import Comment  # noqa: E402, F401, I001
-from app.modules.inventory.models import Inventory  # noqa: E402, F401, I001
+from app.modules.catalog.models.inventory import Inventory  # noqa: E402, F401, I001
 from app.modules.users.models import User  # noqa: E402, F401, I001
 
 
