@@ -1,8 +1,10 @@
+import math
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
-from app.common.pagination import PageResponse
+from app.common.pagination import PageMeta, PageResponse
 from app.modules.catalog.models.inventory import Inventory
 from app.modules.catalog.repository.inventory import InventoryRepository
 from app.modules.catalog.schemas.inventory import (
@@ -61,11 +63,11 @@ class InventoryService:
             size=size,
         )
 
+        pages = math.ceil(total / size) if total else 1
+
         return PageResponse(
             items=[InventoryRead.model_validate(x).model_dump() for x in items],
-            total=total,
-            page=page,
-            size=size,
+            meta=PageMeta(page=page, size=size, total=total, pages=pages),
         )
 
     async def update_inventory(
