@@ -63,19 +63,6 @@ async def create_attribute(
 
 
 @router.get(
-    "/{attribute_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=AttributeRead,
-)
-async def get_attribute(
-    attribute_id: int,
-    service: Annotated[AttributeService, Depends(get_attribute_service)],
-):
-
-    return await service.get_attribute(attribute_id)
-
-
-@router.get(
     "/list",
     status_code=status.HTTP_200_OK,
     response_model=PageResponse[dict],
@@ -88,7 +75,25 @@ async def list_attributes(
     size: int = 10,
 ):
 
-    return await service.list_attributes(search, attribute_id, page, size)
+    return await service.list_attributes(
+        search=search,
+        attribute_id=attribute_id,
+        page=page,
+        size=size,
+    )
+
+
+@router.get(
+    "/{attribute_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=AttributeRead,
+)
+async def get_attribute(
+    attribute_id: int,
+    service: Annotated[AttributeService, Depends(get_attribute_service)],
+):
+
+    return await service.get_attribute(attribute_id)
 
 
 @router.put(

@@ -73,11 +73,12 @@ class AttributeService:
 
     async def list_attributes(
         self,
-        search: str | None,
-        attribute_id: int | None,
         page: int,
         size: int,
+        search: str | None = None,
+        attribute_id: int | None = None,
     ) -> PageResponse[dict]:
+
         if page < 1 or size < 1 or size > 100:
             raise BadRequest("Invalid pagination values.")
 
@@ -88,7 +89,12 @@ class AttributeService:
             if cached is not None:
                 return PageResponse(**cached)
 
-        items, total = await self.repo.list_filtered(search, attribute_id, page, size)
+        items, total = await self.repo.list_filtered(
+            search=search,
+            obj_id=attribute_id,
+            page=page,
+            size=size,
+        )
 
         pages = math.ceil(total / size) if total else 1
         response_items = [

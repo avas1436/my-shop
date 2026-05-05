@@ -39,14 +39,15 @@ class BaseRepository(Generic[ModelT]):
         page: int,
         size: int,
     ) -> tuple[list[ModelT], int]:
+
         query = select(self.model)
         count_query = select(func.count(self.model.id))
 
-        if search:
+        if search is not None:
             query = query.where(self.model.name.ilike(f"%{search}%"))
             count_query = count_query.where(self.model.name.ilike(f"%{search}%"))
 
-        if obj_id:
+        if obj_id is not None:
             query = query.where(self.model.id == obj_id)
             count_query = count_query.where(self.model.id == obj_id)
 
