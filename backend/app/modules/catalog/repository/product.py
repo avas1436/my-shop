@@ -74,7 +74,6 @@ class AdminProductRepository:
                 # selectinload(Product.variants)
                 # .selectinload(ProductVariant.inventory)
                 # .selectinload(Inventory.variant),
-                # selectinload(Product.comments),
             )
         )
 
