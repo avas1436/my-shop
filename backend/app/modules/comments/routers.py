@@ -2,15 +2,15 @@
 from datetime import timedelta
 from typing import Annotated
 
-from app.modules.comments.dependencies.comment import get_comment_service
-from app.modules.comments.services.comment import CommentService
 from fastapi import APIRouter, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.pagination import PageResponse
 from app.common.responses import SuccessAPIRoute, SuccessMessage
+from app.modules.comments.dependencies import get_comment_service
 from app.modules.comments.schemas import CommentCreate, CommentRead, CommentUpdate
+from app.modules.comments.service import CommentService
 from app.modules.users.models import User
 
 router = APIRouter(route_class=SuccessAPIRoute)
