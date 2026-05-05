@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date, datetime
 
 from sqlalchemy import Boolean, Date, DateTime, Enum, Index, Integer, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import PurposeOTP, UserRole
 from app.core.database import Base
@@ -56,6 +56,12 @@ class User(Base):
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         onupdate=func.now(),
+    )
+
+    comments = relationship(
+        "Comment",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
 
