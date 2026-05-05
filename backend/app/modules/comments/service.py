@@ -6,10 +6,12 @@ import math
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
+from app.common.enums import UserRole
 from app.common.pagination import PageMeta, PageResponse
 from app.errors.errors import (
     BadRequest,
     Conflict,
+    Forbidden,
     InternalServerError,
     NotFound,
     UnprocessableEntity,
@@ -17,6 +19,7 @@ from app.errors.errors import (
 from app.modules.comments.models import Comment
 from app.modules.comments.repository import CommentRepository
 from app.modules.comments.schemas import CommentCreate, CommentRead, CommentUpdate
+from app.modules.users.models import User
 
 
 class CommentService:
@@ -137,13 +140,18 @@ class CommentService:
     # ---------------------------
     # Update
     # ---------------------------
-    async def update_comment(self, comment_id: int, data: CommentUpdate) -> Comment:
+    async def update_comment(
+        self, comment_id: int, data: CommentUpdate, user: User
+    ) -> Comment:
         if comment_id < 1:
             raise BadRequest("Invalid comment id.")
 
         comment = await self.repo.get_by_id(comment_id)
         if not comment:
             raise NotFound("Comment not found.")
+
+        if user.role != UserRole.ADMIN and comment.user_id != user.id:
+            raise Forbidden("Cant change this comment")
 
         payload = data.model_dump(exclude_unset=True)
         if not payload:
@@ -176,13 +184,16 @@ class CommentService:
     # ---------------------------
     # Delete
     # ---------------------------
-    async def delete_comment(self, comment_id: int) -> None:
+    async def delete_comment(self, comment_id: int, user: User) -> None:
         if comment_id < 1:
             raise BadRequest("Invalid comment id.")
 
         comment = await self.repo.get_by_id(comment_id)
         if not comment:
             raise NotFound("Comment not found.")
+
+        if user.role != UserRole.ADMIN and comment.user_id != user.id:
+            raise Forbidden("Cant change this comment")
 
         try:
             await self.repo.delete(comment)

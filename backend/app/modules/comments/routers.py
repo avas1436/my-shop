@@ -66,18 +66,6 @@ async def list_comments(
     )
 
 
-@router.get(
-    "/{comment_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=CommentRead,
-)
-async def get_comment(
-    comment_id: int,
-    service: Annotated[CommentService, Depends(get_comment_service)],
-):
-    return await service.get_comment(comment_id)
-
-
 @router.put(
     "/{comment_id}",
     status_code=status.HTTP_200_OK,
@@ -87,7 +75,7 @@ async def update_comment(
     comment_id: int,
     data: CommentUpdate,
     service: Annotated[CommentService, Depends(get_comment_service)],
-    _: Annotated[
+    user: Annotated[
         User,
         Depends(
             require_access(
@@ -100,7 +88,12 @@ async def update_comment(
         ),
     ],
 ):
-    return await service.update_comment(comment_id, data)
+
+    return await service.update_comment(
+        comment_id=comment_id,
+        data=data,
+        user=user,
+    )
 
 
 @router.delete(
@@ -111,7 +104,7 @@ async def update_comment(
 async def delete_comment(
     comment_id: int,
     service: Annotated[CommentService, Depends(get_comment_service)],
-    _: Annotated[
+    user: Annotated[
         User,
         Depends(
             require_access(
@@ -124,5 +117,6 @@ async def delete_comment(
         ),
     ],
 ):
-    await service.delete_comment(comment_id)
+
+    await service.delete_comment(comment_id=comment_id, user=user)
     return SuccessMessage(message="Comment deleted successfully.")
