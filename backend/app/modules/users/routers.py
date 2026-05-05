@@ -127,14 +127,6 @@ async def login_with_password(
 async def refresh_token(
     data: RefreshTokenRequest,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    _: Annotated[
-        User,
-        Depends(
-            require_access(
-                require_recent_login_within=timedelta(days=15),
-            )
-        ),
-    ],
 ):
 
     return await service.refresh_token_service(refresh_token=data.refresh_token)

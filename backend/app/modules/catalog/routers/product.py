@@ -133,7 +133,7 @@ async def admin_hard_delete_product(
 # =========================================================
 @router.get(
     "/admin/products/{product_id}",
-    response_model=ProductAdminRead,
+    # response_model=ProductAdminRead,
     status_code=status.HTTP_200_OK,
 )
 async def show_product(
@@ -152,8 +152,8 @@ async def show_product(
             ),
         ),
     ],
-) -> ProductAdminRead:
+):
     product = await service.get_product_admin(product_id)
     if not product:
         raise NotFound(message="product not found")
-    return ProductAdminRead.model_validate(product)
+    return product

@@ -6,12 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.common.enums import ProductStatus
-from app.modules.catalog.models.attribute import (
-    ProductAttribute,
-    ProductVariantAttribute,
-)
 from app.modules.catalog.models.product import Product
-from app.modules.catalog.models.variant import ProductVariant
 
 
 class AdminProductRepository:
@@ -58,16 +53,15 @@ class AdminProductRepository:
                 selectinload(Product.categories),
                 selectinload(Product.tags),
                 selectinload(Product.images),
-                selectinload(Product.inventory),
-                # attributes روی خود محصول
-                selectinload(Product.attribute_values).selectinload(
-                    ProductAttribute.attribute
-                ),
-                # variants + attributes روی هر واریانت
-                selectinload(Product.variants)
-                .selectinload(ProductVariant.attribute_values)
-                .selectinload(ProductVariantAttribute.attribute),
-                selectinload(Product.comments),
+                # # attributes روی خود محصول
+                # selectinload(Product.attribute_values).selectinload(
+                #     ProductAttribute.attribute
+                # ),
+                # # variants + attributes روی هر واریانت
+                # selectinload(Product.variants)
+                # .selectinload(ProductVariant.attribute_values)
+                # .selectinload(ProductVariantAttribute.attribute),
+                # # selectinload(Product.comments),
             )
         )
         return result.scalar_one_or_none()
