@@ -1,3 +1,6 @@
+# app/modules/users/models.py
+from __future__ import annotations
+
 from datetime import date, datetime
 
 from sqlalchemy import Boolean, Date, DateTime, Enum, Index, Integer, String, func

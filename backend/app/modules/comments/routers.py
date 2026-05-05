@@ -1,11 +1,13 @@
+# app/modules/comments/router.py
+from __future__ import annotations
+
+from app.api.v1.dependencies import get_db_session
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.dependencies import get_db_session
 from app.modules.comments.repository import CommentRepository
 from app.modules.comments.schemas import CommentCreate, CommentRead
 from app.modules.comments.service import CommentService
-
 
 router = APIRouter()
 
@@ -21,7 +23,9 @@ async def list_comments(
 
 
 @router.post("/", response_model=CommentRead, status_code=status.HTTP_201_CREATED)
-async def create_comment(payload: CommentCreate, db: AsyncSession = Depends(get_db_session)) -> CommentRead:
+async def create_comment(
+    payload: CommentCreate, db: AsyncSession = Depends(get_db_session)
+) -> CommentRead:
     service = CommentService(CommentRepository(db))
     comment = await service.create(payload)
     return CommentRead.model_validate(comment)

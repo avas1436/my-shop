@@ -1,3 +1,6 @@
+# app/modules/comments/service.py
+from __future__ import annotations
+
 from app.modules.comments.models import Comment
 from app.modules.comments.repository import CommentRepository
 from app.modules.comments.schemas import CommentCreate

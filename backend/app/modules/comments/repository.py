@@ -1,3 +1,6 @@
+# app/modules/comments/repository.py
+from __future__ import annotations
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +19,8 @@ class CommentRepository:
 
     async def list_by_product(self, product_id: int) -> list[Comment]:
         result = await self.db.execute(
-            select(Comment).where(Comment.product_id == product_id).order_by(Comment.id.desc())
+            select(Comment)
+            .where(Comment.product_id == product_id)
+            .order_by(Comment.id.desc())
         )
         return list(result.scalars().all())
