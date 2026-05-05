@@ -100,16 +100,22 @@ class CommentService:
     # ---------------------------
     # Create
     # ---------------------------
-    async def create_comment(self, data: CommentCreate) -> Comment:
+    async def create_comment(
+        self, data: CommentCreate, user_id: int, product_id: int
+    ) -> Comment:
         if not data:
             raise BadRequest("Comment data is required.")
 
         try:
-            comment = Comment(**data.model_dump())
+            comment = Comment(
+                **data.model_dump(),
+                user_id=user_id,
+                product_id=product_id,
+            )
             comment = await self.repo.create(comment)
 
-            await self.db.commit()
-            await self.db.refresh(comment)
+            await self.repo.commit()
+            await self.repo.refresh(comment)
 
             if self.cache.is_available():
                 await self.cache.invalidate_lists()
@@ -117,15 +123,15 @@ class CommentService:
             return comment
 
         except Conflict:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise
 
         except UnprocessableEntity:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise
 
         except Exception as exc:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise InternalServerError("Failed to create comment.") from exc
 
     # ---------------------------
@@ -149,8 +155,8 @@ class CommentService:
 
             comment = await self.repo.update(comment)
 
-            await self.db.commit()
-            await self.db.refresh(comment)
+            await self.repo.commit()
+            await self.repo.refresh(comment)
 
             if self.cache.is_available():
                 await self.cache.invalidate_lists()
@@ -158,13 +164,13 @@ class CommentService:
 
             return comment
         except Conflict:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise
         except UnprocessableEntity:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise
         except Exception as exc:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise InternalServerError("Failed to update comment.") from exc
 
     # ---------------------------
@@ -181,11 +187,11 @@ class CommentService:
         try:
             await self.repo.delete(comment)
 
-            await self.db.commit()
+            await self.repo.commit()
 
             if self.cache.is_available():
                 await self.cache.invalidate_lists()
                 await self.cache.invalidate_key("comment", comment_id)
         except Exception as exc:
-            await self.db.rollback()
+            await self.repo.rollback()
             raise InternalServerError("Failed to delete comment.") from exc

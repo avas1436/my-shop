@@ -25,23 +25,25 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=CommentRead,
 )
 async def create_comment(
+    product_id: int,
     data: CommentCreate,
     service: Annotated[CommentService, Depends(get_comment_service)],
-    _: Annotated[
+    user: Annotated[
         User,
         Depends(
             require_access(
                 allowed_roles=[UserRole.ADMIN, UserRole.CUSTOMER],
                 deny_roles=[],
-                require_recent_login_within=timedelta(minutes=30),
-                require_password=True,
-                require_profile_complete=True,
-                profile_required_fields=("first_name", "last_name"),
+                require_recent_login_within=timedelta(days=7),
+                require_password=False,
+                require_profile_complete=False,
             )
         ),
     ],
 ):
-    return await service.create_comment(data)
+    return await service.create_comment(
+        data=data, user_id=user.id, product_id=product_id
+    )
 
 
 @router.get(
@@ -91,10 +93,9 @@ async def update_comment(
             require_access(
                 allowed_roles=[UserRole.ADMIN, UserRole.CUSTOMER],
                 deny_roles=[],
-                require_recent_login_within=timedelta(minutes=30),
-                require_password=True,
-                require_profile_complete=True,
-                profile_required_fields=("first_name", "last_name"),
+                require_recent_login_within=timedelta(days=7),
+                require_password=False,
+                require_profile_complete=False,
             )
         ),
     ],
@@ -116,10 +117,9 @@ async def delete_comment(
             require_access(
                 allowed_roles=[UserRole.ADMIN, UserRole.CUSTOMER],
                 deny_roles=[],
-                require_recent_login_within=timedelta(minutes=30),
-                require_password=True,
-                require_profile_complete=True,
-                profile_required_fields=("first_name", "last_name"),
+                require_recent_login_within=timedelta(days=7),
+                require_password=False,
+                require_profile_complete=False,
             )
         ),
     ],

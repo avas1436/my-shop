@@ -13,8 +13,7 @@ class CommentBase(BaseModel):
 
 
 class CommentCreate(CommentBase):
-    product_id: int
-    user_id: int
+    pass
 
 
 class CommentUpdate(BaseModel):
