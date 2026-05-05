@@ -11,8 +11,8 @@ class ApiUser(HttpUser):
             json={"phone_number": "09359733907", "password": "4430"},
         )
 
-        print("Login status code:", response.status_code)
-        print("Login response:", response.text)
+        # print("Login status code:", response.status_code)
+        # print("Login response:", response.text)
 
         data = response.json()
 
