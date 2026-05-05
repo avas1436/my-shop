@@ -1,31 +1,128 @@
-# app/modules/comments/router.py
-from __future__ import annotations
+# app/modules/comments/routerspy
+from datetime import timedelta
+from typing import Annotated
 
-from app.api.v1.dependencies import get_db_session
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.modules.comments.dependencies.comment import get_comment_service
+from app.modules.comments.services.comment import CommentService
+from fastapi import APIRouter, Depends, status
 
-from app.modules.comments.repository import CommentRepository
-from app.modules.comments.schemas import CommentCreate, CommentRead
-from app.modules.comments.service import CommentService
+from app.common.access_control import require_access
+from app.common.enums import UserRole
+from app.common.pagination import PageResponse
+from app.common.responses import SuccessAPIRoute, SuccessMessage
+from app.modules.comments.schemas import CommentCreate, CommentRead, CommentUpdate
+from app.modules.users.models import User
 
-router = APIRouter()
-
-
-@router.get("/", response_model=list[CommentRead])
-async def list_comments(
-    product_id: int = Query(...),
-    db: AsyncSession = Depends(get_db_session),
-) -> list[CommentRead]:
-    service = CommentService(CommentRepository(db))
-    comments = await service.list_by_product(product_id)
-    return [CommentRead.model_validate(comment) for comment in comments]
+router = APIRouter(route_class=SuccessAPIRoute)
 
 
-@router.post("/", response_model=CommentRead, status_code=status.HTTP_201_CREATED)
+# --------------------------------------------------
+# Comment
+# --------------------------------------------------
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CommentRead,
+)
 async def create_comment(
-    payload: CommentCreate, db: AsyncSession = Depends(get_db_session)
-) -> CommentRead:
-    service = CommentService(CommentRepository(db))
-    comment = await service.create(payload)
-    return CommentRead.model_validate(comment)
+    data: CommentCreate,
+    service: Annotated[CommentService, Depends(get_comment_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN, UserRole.CUSTOMER],
+                deny_roles=[],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name"),
+            )
+        ),
+    ],
+):
+    return await service.create_comment(data)
+
+
+@router.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=PageResponse[dict],
+)
+async def list_comments(
+    service: Annotated[CommentService, Depends(get_comment_service)],
+    user_id: int | None = None,
+    product_id: int | None = None,
+    page: int = 1,
+    size: int = 10,
+):
+    return await service.list_comments(
+        user_id=user_id,
+        product_id=product_id,
+        page=page,
+        size=size,
+    )
+
+
+@router.get(
+    "/{comment_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CommentRead,
+)
+async def get_comment(
+    comment_id: int,
+    service: Annotated[CommentService, Depends(get_comment_service)],
+):
+    return await service.get_comment(comment_id)
+
+
+@router.put(
+    "/{comment_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=CommentRead,
+)
+async def update_comment(
+    comment_id: int,
+    data: CommentUpdate,
+    service: Annotated[CommentService, Depends(get_comment_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN, UserRole.CUSTOMER],
+                deny_roles=[],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name"),
+            )
+        ),
+    ],
+):
+    return await service.update_comment(comment_id, data)
+
+
+@router.delete(
+    "/{comment_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessMessage,
+)
+async def delete_comment(
+    comment_id: int,
+    service: Annotated[CommentService, Depends(get_comment_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN, UserRole.CUSTOMER],
+                deny_roles=[],
+                require_recent_login_within=timedelta(minutes=30),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name"),
+            )
+        ),
+    ],
+):
+    await service.delete_comment(comment_id)
+    return SuccessMessage(message="Comment deleted successfully.")

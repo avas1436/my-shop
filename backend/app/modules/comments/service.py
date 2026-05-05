@@ -32,7 +32,7 @@ class CommentService:
             raise BadRequest("Invalid comment id.")
 
         if self.cache.is_available():
-            cached = await self.cache.get("comment", comment_id)
+            cached = await self.cache.get(comment_id)
             if cached is not None:
                 return cached
 
@@ -43,7 +43,7 @@ class CommentService:
         payload = CommentRead.model_validate(comment).model_dump(mode="json")
 
         if self.cache.is_available():
-            await self.cache.set("comment", comment_id, payload=payload)
+            await self.cache.set(comment_id, payload=payload)
 
         return payload
 
@@ -64,9 +64,7 @@ class CommentService:
             raise BadRequest("Invalid product id.")
 
         if self.cache.is_available():
-            cached = await self.cache.get_list(
-                "list", "comment", user_id, product_id, page, size
-            )
+            cached = await self.cache.get_list("list", user_id, product_id, page, size)
             if cached is not None:
                 return PageResponse(**cached)
 
@@ -90,7 +88,6 @@ class CommentService:
         if self.cache.is_available():
             await self.cache.set_list(
                 "list",
-                "comment",
                 user_id,
                 product_id,
                 page,
