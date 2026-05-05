@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.repository.product import AdminProductRepository
-from app.modules.catalog.schemas.product import DraftProductCreate
+from app.modules.catalog.schemas.product import DraftProductCreate, ProductAdminRead
 
 
 class AdminProductService:
@@ -82,8 +82,14 @@ class AdminProductService:
     # =========================================================
     # Get a Product by ID for Admin show
     # =========================================================
-    async def get_product_admin(self, product_id: int) -> Product | None:
-        return await self.repository.get_by_id(product_id)
+    async def get_product_admin(self, product_id: int) -> ProductAdminRead | None:
+        product = await self.repository.get_by_id(product_id)
+
+        data = ProductAdminRead.model_validate(product).model_dump()
+
+        obj = ProductAdminRead(**data)
+
+        return obj
 
     # =========================================================
     # Hard Delete a product

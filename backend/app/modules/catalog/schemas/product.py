@@ -5,6 +5,15 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from app.common.enums import ProductStatus
+from app.modules.catalog.schemas.attribute import (
+    ProductAttributeRead,
+    ProductVariantAttributeRead,
+)
+from app.modules.catalog.schemas.brand import BrandRead
+from app.modules.catalog.schemas.category import CategoryRead
+from app.modules.catalog.schemas.image import GetImage
+from app.modules.catalog.schemas.inventory import InventoryRead
+from app.modules.catalog.schemas.tag import TagRead
 
 
 # =========================================================
@@ -51,8 +60,12 @@ class ProductAdminRead(BaseModel):
     cost_price: int | None
 
     tax_rate: int
-    final_price: int
     discount_percent: float
+
+    final_price: int
+
+    total_available_quantity: int
+    is_in_stock: bool
 
     currency_code: str
     status: ProductStatus
@@ -70,6 +83,74 @@ class ProductAdminRead(BaseModel):
     updated_at: datetime | None
     published_at: datetime | None
     deleted_at: datetime | None
+
+    brand: BrandRead | None
+
+    categories: list[CategoryRead] | None
+
+    tags: list[TagRead] | None
+
+    images: list[GetImage] | None
+
+    product_attributes: list[ProductAttributeRead] | None = []
+
+    variant_attributes: list[ProductVariantAttributeRead] | None = []
+
+    inventory: list[InventoryRead] | None = []
+
+    class Config:
+        from_attributes = True
+
+
+class ProductAdminshow(BaseModel):
+    id: int
+    name: str
+    slug: str | None
+    sku: str
+    description: str | None
+
+    price: int
+    discount_price: int | None
+    cost_price: int | None
+
+    tax_rate: int
+    discount_percent: float
+
+    final_price: int
+
+    total_available_quantity: int
+    is_in_stock: bool
+
+    currency_code: str
+    status: ProductStatus
+
+    is_featured: bool
+    is_digital: bool
+
+    weight: Decimal | None
+
+    meta_title: str | None
+    meta_description: str | None
+    gtin: str | None
+
+    created_at: datetime
+    updated_at: datetime | None
+    published_at: datetime | None
+    deleted_at: datetime | None
+
+    brand: BrandRead | None
+
+    categories: list[CategoryRead] | None
+
+    tags: list[TagRead] | None
+
+    images: list[GetImage] | None
+
+    product_attributes: list[ProductAttributeRead] | None
+
+    variant_attributes: list[ProductVariantAttributeRead] | None
+
+    inventory: list[InventoryRead] | None
 
     class Config:
         from_attributes = True

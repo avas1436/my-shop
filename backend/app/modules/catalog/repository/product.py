@@ -6,7 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.common.enums import ProductStatus
+from app.modules.catalog.models.attribute import (
+    ProductAttribute,
+    ProductVariantAttribute,
+)
 from app.modules.catalog.models.product import Product
+from app.modules.catalog.models.variant import ProductVariant
 
 
 class AdminProductRepository:
@@ -41,7 +46,7 @@ class AdminProductRepository:
     # Get a Product by ID
     # =========================================================
     async def get_by_id(self, product_id: int) -> Product | None:
-        result = await self.db.execute(
+        stmt = (
             select(Product)
             .where(
                 Product.id == product_id,
@@ -49,22 +54,34 @@ class AdminProductRepository:
                 Product.deleted_at.is_(None),
             )
             .options(
+                # one-to-one / many-to-one
                 selectinload(Product.brand),
+                # many-to-many / one-to-many
                 selectinload(Product.categories),
                 selectinload(Product.tags),
                 selectinload(Product.images),
-                # # attributes روی خود محصول
-                # selectinload(Product.attribute_values).selectinload(
-                #     ProductAttribute.attribute
-                # ),
-                # # variants + attributes روی هر واریانت
+                # attributes روی خود محصول
+                selectinload(Product.attribute_values).selectinload(
+                    ProductAttribute.attribute
+                ),
+                # variants + attributes روی هر واریانت
+                selectinload(Product.variants)
+                .selectinload(ProductVariant.attribute_values)
+                .selectinload(ProductVariantAttribute.attribute),
+                # variants + inventory (برای رفع MissingGreenlet)
+                selectinload(Product.variants).selectinload(ProductVariant.inventory),
+                # variants + inventory یک روش دیگر ولی پرفورمنس کم
                 # selectinload(Product.variants)
-                # .selectinload(ProductVariant.attribute_values)
-                # .selectinload(ProductVariantAttribute.attribute),
-                # # selectinload(Product.comments),
+                # .selectinload(ProductVariant.inventory)
+                # .selectinload(Inventory.variant),
+                # selectinload(Product.comments),
             )
         )
-        return result.scalar_one_or_none()
+
+        result = await self.db.execute(stmt)
+        product = result.scalar_one_or_none()
+
+        return product
 
     # =========================================================
     # Soft Delete a Product

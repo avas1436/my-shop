@@ -9,7 +9,10 @@ from app.common.enums import UserRole
 from app.common.responses import SuccessAPIRoute, SuccessMessage
 from app.errors.errors import NotFound
 from app.modules.catalog.dependencies.product import get_admin_product_service
-from app.modules.catalog.schemas.product import DraftProductCreate, ProductAdminRead
+from app.modules.catalog.schemas.product import (
+    DraftProductCreate,
+    ProductAdminRead,
+)
 from app.modules.catalog.services.product import AdminProductService
 from app.modules.users.models import User
 
@@ -33,7 +36,7 @@ async def admin_create_draft_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=1),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -62,7 +65,7 @@ async def admin_soft_delete_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=1),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -95,7 +98,7 @@ async def admin_hard_delete_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=1),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -133,7 +136,7 @@ async def admin_hard_delete_product(
 # =========================================================
 @router.get(
     "/admin/products/{product_id}",
-    # response_model=ProductAdminRead,
+    response_model=ProductAdminRead,
     status_code=status.HTTP_200_OK,
 )
 async def show_product(
@@ -145,7 +148,7 @@ async def show_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=1),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),

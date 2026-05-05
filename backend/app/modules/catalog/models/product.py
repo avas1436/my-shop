@@ -211,5 +211,17 @@ class Product(Base):
             (v.inventory.is_in_stock if v.inventory else False) for v in self.variants
         )
 
+    @property
+    def product_attributes(self):
+        return self.attribute_values
+
+    @property
+    def variant_attributes(self):
+        return [av for v in self.variants for av in v.attribute_values]
+
+    @property
+    def inventory(self):
+        return [v.inventory for v in self.variants if v.inventory]
+
     def __repr__(self) -> str:
         return f"<Product {self.name} | SKU: {self.sku}>"
