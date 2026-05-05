@@ -1,7 +1,7 @@
 # app/modules/comments/repository.py
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.comments.models import Comment
@@ -19,19 +19,31 @@ class CommentRepository:
         res = await self.db.execute(stmt)
         return res.scalar_one_or_none()
 
-    async def list_by_user_id(self, user_id: str) -> list[Comment]:
-        stmt = select(Comment).where(Comment.user_id == user_id)
-        res = await self.db.execute(stmt)
-        return list(res.scalars().all())
+    async def list_filtered(
+        self,
+        user_id: int | None,
+        product_id: int | None,
+        page: int,
+        size: int,
+    ) -> tuple[list[Comment], int]:
 
-    async def list_by_product_id(self, product_id: str) -> list[Comment]:
-        stmt = (
-            select(Comment)
-            .where(Comment.product_id == product_id)
-            .order_by(Comment.id.desc())
-        )
-        res = await self.db.execute(stmt)
-        return list(res.scalars().all())
+        query = select(Comment)
+        count_query = select(func.count(Comment.id))
+
+        if user_id is not None:
+            query = query.where(Comment.user_id == user_id)
+            count_query = count_query.where(Comment == user_id)
+
+        if product_id is not None:
+            query = query.where(Comment.product_id == product_id)
+            count_query = count_query.where(Comment == product_id)
+
+        query = query.offset((page - 1) * size).limit(size)
+
+        items = (await self.db.execute(query)).scalars().all()
+        total = (await self.db.execute(count_query)).scalar_one()
+
+        return list(items), total
 
     # ---------------------------
     # Create
