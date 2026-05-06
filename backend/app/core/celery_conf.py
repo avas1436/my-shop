@@ -75,3 +75,6 @@ celery_app.conf.update(
     flower_basic_auth=f"{settings.flower_user}:{settings.flower_pass}",
     flower_port=5555,
 )
+
+
+celery_app.autodiscover_tasks(["app.tasks"])
