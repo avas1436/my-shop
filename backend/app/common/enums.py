@@ -1,24 +1,24 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     ADMIN = "admin"
     CUSTOMER = "customer"
 
 
-class PurposeOTP(str, Enum):
+class PurposeOTP(StrEnum):
     LOGIN = "login"
     REGISTER = "register"
     RESET = "reset"
 
 
-class InventoryStatus(str, Enum):
+class InventoryStatus(StrEnum):
     IN_STOCK = "in_stock"
     LOW_STOCK = "low_stock"
     OUT_OF_STOCK = "out_of_stock"
 
 
-class ProductStatus(str, Enum):
+class ProductStatus(StrEnum):
     ACTIVE = "active"
     INACTIVE = "inactive"
     DRAFT = "draft"
