@@ -119,6 +119,7 @@ dependencies = [
     { name = "celery" },
     { name = "fastapi" },
     { name = "fastapi-offline" },
+    { name = "flower" },
     { name = "gunicorn" },
     { name = "kavenegar" },
     { name = "locust" },
@@ -149,6 +150,7 @@ requires-dist = [
     { name = "celery", specifier = ">=5.6.3" },
     { name = "fastapi", specifier = ">=0.135.3" },
     { name = "fastapi-offline", specifier = ">=1.7.6" },
+    { name = "flower", specifier = ">=2.0.1" },
     { name = "gunicorn", specifier = ">=25.3.0" },
     { name = "kavenegar", specifier = ">=1.1.2" },
     { name = "locust", specifier = ">=2.43.4" },
@@ -578,6 +580,22 @@ wheels = [
 ]
 
 [[package]]
+name = "flower"
+version = "2.0.1"
+source = { registry = "https://pypi.devneeds.ir/simple/" }
+dependencies = [
+    { name = "celery" },
+    { name = "humanize" },
+    { name = "prometheus-client" },
+    { name = "pytz" },
+    { name = "tornado" },
+]
+sdist = { url = "https://pypi.devneeds.ir/packages/flower/2.0.1/flower-2.0.1.tar.gz", hash = "sha256:5ab717b979530770c16afb48b50d2a98d23c3e9fe39851dcf6bc4d01845a02a0" }
+wheels = [
+    { url = "https://pypi.devneeds.ir/packages/flower/2.0.1/flower-2.0.1-py2.py3-none-any.whl", hash = "sha256:9db2c621eeefbc844c8dd88be64aef61e84e2deb29b271e02ab2b5b9f01068e2" },
+]
+
+[[package]]
 name = "gevent"
 version = "25.9.1"
 source = { registry = "https://pypi.devneeds.ir/simple/" }
@@ -739,6 +757,15 @@ source = { registry = "https://pypi.devneeds.ir/simple/" }
 sdist = { url = "https://pypi.devneeds.ir/packages/h11/0.16.0/h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1" }
 wheels = [
     { url = "https://pypi.devneeds.ir/packages/h11/0.16.0/h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86" },
+]
+
+[[package]]
+name = "humanize"
+version = "4.15.0"
+source = { registry = "https://pypi.devneeds.ir/simple/" }
+sdist = { url = "https://pypi.devneeds.ir/packages/humanize/4.15.0/humanize-4.15.0.tar.gz", hash = "sha256:1dd098483eb1c7ee8e32eb2e99ad1910baefa4b75c3aff3a82f4d78688993b10" }
+wheels = [
+    { url = "https://pypi.devneeds.ir/packages/humanize/4.15.0/humanize-4.15.0-py3-none-any.whl", hash = "sha256:b1186eb9f5a9749cd9cb8565aee77919dd7c8d076161cf44d70e59e3301e1769" },
 ]
 
 [[package]]
@@ -1333,6 +1360,15 @@ client = [
 ]
 
 [[package]]
+name = "pytz"
+version = "2026.2"
+source = { registry = "https://pypi.devneeds.ir/simple/" }
+sdist = { url = "https://pypi.devneeds.ir/packages/pytz/2026.2/pytz-2026.2.tar.gz", hash = "sha256:0e60b47b29f21574376f218fe21abc009894a2321ea16c6754f3cad6eb7cdd6a" }
+wheels = [
+    { url = "https://pypi.devneeds.ir/packages/pytz/2026.2/pytz-2026.2-py2.py3-none-any.whl", hash = "sha256:04156e608bee23d3792fd45c94ae47fae1036688e75032eea2e3bf0323d1f126" },
+]
+
+[[package]]
 name = "pywin32"
 version = "311"
 source = { registry = "https://pypi.devneeds.ir/simple/" }
@@ -1542,6 +1578,23 @@ dependencies = [
 sdist = { url = "https://pypi.devneeds.ir/packages/starlette/0.52.1/starlette-0.52.1.tar.gz", hash = "sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933" }
 wheels = [
     { url = "https://pypi.devneeds.ir/packages/starlette/0.52.1/starlette-0.52.1-py3-none-any.whl", hash = "sha256:0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74" },
+]
+
+[[package]]
+name = "tornado"
+version = "6.5.5"
+source = { registry = "https://pypi.devneeds.ir/simple/" }
+sdist = { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5.tar.gz", hash = "sha256:192b8f3ea91bd7f1f50c06955416ed76c6b72f96779b962f07f911b91e8d30e9" }
+wheels = [
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-macosx_10_9_universal2.whl", hash = "sha256:487dc9cc380e29f58c7ab88f9e27cdeef04b2140862e5076a66fb6bb68bb1bfa" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-macosx_10_9_x86_64.whl", hash = "sha256:65a7f1d46d4bb41df1ac99f5fcb685fb25c7e61613742d5108b010975a9a6521" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:e74c92e8e65086b338fd56333fb9a68b9f6f2fe7ad532645a290a464bcf46be5" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:435319e9e340276428bbdb4e7fa732c2d399386d1de5686cb331ec8eee754f07" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:3f54aa540bdbfee7b9eb268ead60e7d199de5021facd276819c193c0fb28ea4e" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:36abed1754faeb80fbd6e64db2758091e1320f6bba74a4cf8c09cd18ccce8aca" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-win32.whl", hash = "sha256:dd3eafaaeec1c7f2f8fdcd5f964e8907ad788fe8a5a32c4426fbbdda621223b7" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-win_amd64.whl", hash = "sha256:6443a794ba961a9f619b1ae926a2e900ac20c34483eea67be4ed8f1e58d3ef7b" },
+    { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-win_arm64.whl", hash = "sha256:2c9a876e094109333f888539ddb2de4361743e5d21eece20688e3e351e4990a6" },
 ]
 
 [[package]]
