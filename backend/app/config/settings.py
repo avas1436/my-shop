@@ -88,6 +88,10 @@ class Settings(BaseSettings):
     s3_bucket: str | None = None
     s3_region: str | None = None
 
+    # celery
+    redis_broker_url: str  # صف پیام‌ها
+    redis_backend_url: str  # نگهداری نتیجه تسک ها
+
     # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
     @property
     def refresh_token_ttl(self) -> int:
