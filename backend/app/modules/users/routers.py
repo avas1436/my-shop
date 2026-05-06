@@ -1,12 +1,11 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, Depends, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.responses import SuccessAPIRoute, SuccessMessage
-from app.core.sms_service import send_sms
 from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
 from app.modules.users.schemas import (
@@ -36,18 +35,23 @@ router = APIRouter(route_class=SuccessAPIRoute)
 async def request_otp(
     data: RequestOTP,
     service: Annotated[AuthService, Depends(get_auth_service)],
-    background: BackgroundTasks,
+    # background: BackgroundTasks,
 ):
 
     code = await service.request_otp_service(data=data)
 
     # print(code)
 
-    background.add_task(
-        send_sms,
-        receptor=data.phone_number,
-        code=code,
-    )
+    # background.add_task(
+    #     send_sms,
+    #     receptor=data.phone_number,
+    #     code=code,
+    # )
+
+    # enqueue در celery
+    from app.tasks.sms import send_sms_task
+
+    send_sms_task.delay(receptor=data.phone_number, code=code)
 
     return SuccessMessage(message="OTP sent successfully")
 
