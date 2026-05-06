@@ -133,6 +133,7 @@ dependencies = [
     { name = "redis" },
     { name = "slowapi" },
     { name = "sqlalchemy" },
+    { name = "types-aiofiles" },
     { name = "types-python-jose" },
     { name = "uvicorn" },
 ]
@@ -164,6 +165,7 @@ requires-dist = [
     { name = "redis", specifier = ">=7.4.0" },
     { name = "slowapi", specifier = ">=0.1.9" },
     { name = "sqlalchemy", specifier = ">=2.0.49" },
+    { name = "types-aiofiles", specifier = ">=25.1.0.20260409" },
     { name = "types-python-jose", specifier = ">=3.5.0.20260408" },
     { name = "uvicorn", specifier = ">=0.44.0" },
 ]
@@ -1595,6 +1597,15 @@ wheels = [
     { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-win32.whl", hash = "sha256:dd3eafaaeec1c7f2f8fdcd5f964e8907ad788fe8a5a32c4426fbbdda621223b7" },
     { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-win_amd64.whl", hash = "sha256:6443a794ba961a9f619b1ae926a2e900ac20c34483eea67be4ed8f1e58d3ef7b" },
     { url = "https://pypi.devneeds.ir/packages/tornado/6.5.5/tornado-6.5.5-cp39-abi3-win_arm64.whl", hash = "sha256:2c9a876e094109333f888539ddb2de4361743e5d21eece20688e3e351e4990a6" },
+]
+
+[[package]]
+name = "types-aiofiles"
+version = "25.1.0.20260409"
+source = { registry = "https://pypi.devneeds.ir/simple/" }
+sdist = { url = "https://pypi.devneeds.ir/packages/types-aiofiles/25.1.0.20260409/types_aiofiles-25.1.0.20260409.tar.gz", hash = "sha256:49e67d72bdcf9fe406f5815758a78dc34a1249bb5aa2adba78a80aec0a775435" }
+wheels = [
+    { url = "https://pypi.devneeds.ir/packages/types-aiofiles/25.1.0.20260409/types_aiofiles-25.1.0.20260409-py3-none-any.whl", hash = "sha256:923fedb532c772cc0f62e0ce4282725afa82ca5b41cabd9857f06b55e5eee8de" },
 ]
 
 [[package]]

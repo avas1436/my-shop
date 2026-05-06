@@ -2,7 +2,7 @@
 import os
 
 # import aiofiles
-from aiofiles import open
+from aiofiles import open  # type: ignore
 
 from app.config.settings import get_settings
 
