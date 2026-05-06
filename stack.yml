@@ -149,13 +149,16 @@ services:
   redis:
     image: redis:7-alpine
 
-    command: redis-server --requirepass 13771998
+    command: redis-server
+      --requirepass 13771998
+      --appendonly yes
 
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "13771998", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
+
     restart: unless-stopped
 
     volumes:
@@ -165,6 +168,63 @@ services:
 
     networks:
       - internal
+
+  # ===== Celery Worker =====
+  celery_worker:
+    image: fast-api:latest
+
+    command: >
+      celery -A app.core.celeryـconf:celery_app worker -l info
+
+    depends_on:
+      - redis
+
+    environment:
+      - REDIS_BROKER_URL=redis://:13771998@redis:6379/1
+      - REDIS_BACKEND_URL=redis://:13771998@redis:6379/3
+
+    restart: unless-stopped
+
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+    networks:
+      - internal
+
+  # ===== Flower =====
+  flower:
+    image: fast-api:latest
+
+    command: >
+      celery -A app.core.celeryـconf:celery_app Flower
+      --port=5555
+      --basic_auth=avas:13771998
+
+    depends_on:
+      - redis
+
+    environment:
+      - REDIS_BROKER_URL=redis://:13771998@redis:6379/0
+      - REDIS_BACKEND_URL=redis://:13771998@redis:6379/1
+
+    ports:
+      - "5555:5555"
+
+    restart: unless-stopped
+
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.flower.rule=Host(`flower.example.com`)"
+        - "traefik.http.routers.flower.entrypoints=websecure"
+        - "traefik.http.routers.flower.tls=true"
+        - "traefik.http.services.flower.loadbalancer.server.port=5555"
+        - "traefik.docker.network=traefik-public"
+    networks:
+      - internal
+      - traefik-public
 
 # ===== Network =====
 networks:

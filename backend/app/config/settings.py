@@ -92,6 +92,10 @@ class Settings(BaseSettings):
     redis_broker_url: str  # صف پیام‌ها
     redis_backend_url: str  # نگهداری نتیجه تسک ها
 
+    # flower
+    flower_user: str
+    flower_pass: str
+
     # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
     @property
     def refresh_token_ttl(self) -> int:
