@@ -26,6 +26,7 @@ dependencies = [
     "orjson>=3.11.8",
     "locust>=2.43.4",
     "celery>=5.6.3",
+    "flower",
 ]
 
 [dependency-groups]
