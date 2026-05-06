@@ -1,4 +1,7 @@
-from enum import Enum
+# app/config/settings.py
+from __future__ import annotations
+
+from enum import StrEnum
 from functools import lru_cache
 
 from pydantic import Field
@@ -9,7 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # env_file_name = f".env.{env_state}" if env_state != "dev" else ".env"
 
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     development = "dev"
     production = "prod"
 
