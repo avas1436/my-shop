@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, status
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.responses import SuccessAPIRoute, SuccessMessage
-from app.errors.errors import NotFound
 from app.modules.catalog.dependencies.product import get_admin_product_service
 from app.modules.catalog.schemas.product import (
     DraftProductCreate,
@@ -73,10 +72,7 @@ async def admin_soft_delete_product(
         ),
     ],
 ):
-    deleted = await service.soft_delete_product(product_id)
-
-    if not deleted:
-        raise NotFound(message="product not found")
+    await service.soft_delete_product(product_id)
 
     return SuccessMessage(message="Product deleted softly.")
 
@@ -106,10 +102,7 @@ async def admin_hard_delete_product(
         ),
     ],
 ):
-    deleted = await service.hard_delete_product(product_id)
-
-    if not deleted:
-        raise NotFound(message="product not found")
+    await service.hard_delete_product(product_id)
 
     return SuccessMessage(message="Product deleted hardly.")
 
@@ -157,6 +150,5 @@ async def show_product(
     ],
 ):
     product = await service.get_product_admin(product_id)
-    if not product:
-        raise NotFound(message="product not found")
+
     return product
