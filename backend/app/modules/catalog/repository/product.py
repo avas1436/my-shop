@@ -1,7 +1,7 @@
 # app/modules/catalog/repository/product.py
 from datetime import UTC, datetime
 
-from sqlalchemy import delete, exists, select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -22,20 +22,29 @@ class AdminProductRepository:
     # Check exist with Product Slug
     # ---------------------------
     async def exists_by_slug(self, slug: str) -> bool:
-        result = await self.db.execute(select(exists().where(Product.slug == slug)))
-        return bool(result.scalar())
+        stmt = select(1).where(Product.slug == slug).limit(1)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none() is not None
 
     # ---------------------------
     # Check exist with Product SKU
     # ---------------------------
     async def exists_by_sku(self, sku: str) -> bool:
-        result = await self.db.execute(select(exists().where(Product.sku == sku)))
-        return bool(result.scalar())
+        stmt = select(1).where(Product.sku == sku).limit(1)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none() is not None
 
     # ---------------------------
-    # Get a Product by ID
+    # Get a Product by ID (light)
     # ---------------------------
-    async def get_by_id(self, product_id: int) -> Product | None:
+    async def get_by_id_little(self, id: int) -> Product:
+        # این تابع تنها برای پرایمری کی است
+        return await self.db.get(Product, id)
+
+    # ---------------------------
+    # Get a Product by ID (admin view)
+    # ---------------------------
+    async def get_by_id_for_admin(self, product_id: int) -> Product | None:
         stmt = (
             select(Product)
             .where(
@@ -83,33 +92,35 @@ class AdminProductRepository:
     # ---------------------------
     # Update Product
     # ---------------------------
-    async def update(self, obj: Product) -> Product:
-        self.db.add(obj)
-        return obj
+    async def update_product(self, product: Product, updates: dict) -> Product:
+        for field, value in updates.items():
+            setattr(product, field, value)
+
+        self.db.add(product)
+        # await self.db.commit()
+        # await self.db.refresh(product)
+
+        return product
 
     # ---------------------------
     # Soft Delete a Product
     # ---------------------------
-    async def soft_delete(self, product_id: int) -> bool:
-        result = await self.db.execute(
-            update(Product)
-            .where(Product.id == product_id, Product.deleted_at.is_(None))
-            .values(deleted_at=datetime.now(UTC), status=ProductStatus.INACTIVE)
-            .execution_options(synchronize_session="fetch")
-        )
+    async def soft_delete(self, product: Product) -> Product:
+        now = datetime.now(UTC)
+        payload = {
+            "deleted_at": now,
+            "status": ProductStatus.INACTIVE,
+        }
+        result = self.db.update_product(product=product, updates=payload)
         # await self.db.commit()
 
-        return result.rowcount > 0
+        return result
 
     # ---------------------------
     # Hard Delete a Product
     # ---------------------------
-    async def hard_delete(self, product_id: int) -> bool:
-
-        result = await self.db.execute(delete(Product).where(Product.id == product_id))
-        # await self.db.commit()
-
-        return result.rowcount > 0
+    async def hard_delete(self, obj: Product) -> None:
+        await self.db.delete(obj)
 
     # ---------------------------
     # Unit of Work helpers
