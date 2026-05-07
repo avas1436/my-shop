@@ -2,7 +2,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.common.enums import ProductStatus
 from app.modules.catalog.schemas.attribute import (
@@ -98,5 +98,42 @@ class ProductAdminRead(BaseModel):
 
     inventory: list[InventoryRead] | None = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+# =========================================================
+# Get Product Data for steps
+# =========================================================
+class ProductSimpleRead(BaseModel):
+    id: int
+    name: str
+    slug: str | None
+    sku: str
+    description: str | None
+
+    price: int
+    discount_price: int | None
+    cost_price: int | None
+
+    tax_rate: int
+    final_price: int
+    discount_percent: float
+
+    currency_code: str
+    status: ProductStatus
+
+    is_featured: bool
+    is_digital: bool
+
+    weight: Decimal | None
+
+    meta_title: str | None
+    meta_description: str | None
+    gtin: str | None
+
+    created_at: datetime
+    updated_at: datetime | None
+    published_at: datetime | None
+    deleted_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)

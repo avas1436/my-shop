@@ -11,6 +11,7 @@ from app.modules.catalog.dependencies.product import get_admin_product_service
 from app.modules.catalog.schemas.product import (
     DraftProductCreate,
     ProductAdminRead,
+    ProductSimpleRead,
 )
 from app.modules.catalog.services.product import AdminProductService
 from app.modules.users.models import User
@@ -23,7 +24,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
 # =========================================================
 @router.post(
     "/admin/createdraft",
-    response_model=ProductAdminRead,
+    response_model=ProductSimpleRead,
     status_code=status.HTTP_201_CREATED,
 )
 async def admin_create_draft_product(
@@ -42,9 +43,9 @@ async def admin_create_draft_product(
             ),
         ),
     ],
-) -> ProductAdminRead:
+) -> ProductSimpleRead:
     product = await service.draft_create(payload)
-    return ProductAdminRead.model_validate(product)
+    return ProductSimpleRead.model_validate(product)
 
 
 # =========================================================
