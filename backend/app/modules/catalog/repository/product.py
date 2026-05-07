@@ -111,7 +111,7 @@ class AdminProductRepository:
             "deleted_at": now,
             "status": ProductStatus.INACTIVE,
         }
-        result = self.db.update_product(product=product, updates=payload)
+        result = await self.update_product(product=product, updates=payload)
         # await self.db.commit()
 
         return result
@@ -133,19 +133,3 @@ class AdminProductRepository:
 
     async def refresh(self, data: Product):
         await self.db.refresh(data)
-
-
-# ---------------------------
-# Show all of a Product Data
-# ---------------------------
-# async def list_all(self) -> list[Product]:
-#     result = await self.db.execute(
-#         select(Product)
-#         .options(
-#             selectinload(Product.category),
-#             selectinload(Product.inventory),
-#             selectinload(Product.comments),
-#         )
-#         .order_by(Product.id.desc())
-#     )
-#     return list(result.scalars().all())

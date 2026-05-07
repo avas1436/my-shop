@@ -153,7 +153,7 @@ class AdminProductService:
             ok = await self.repo.soft_delete(product=product)
             await self.repo.commit()
 
-            if ok and self.cache.is_available():
+            if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
                 await self.cache.invalidate_key("product", product_id)
 
