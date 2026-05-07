@@ -152,6 +152,7 @@ class AdminProductService:
         try:
             ok = await self.repo.soft_delete(product=product)
             await self.repo.commit()
+            await self.repo.refresh(product)
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
@@ -166,7 +167,7 @@ class AdminProductService:
     # ---------------------------
     # Hard Delete a product
     # ---------------------------
-    async def hard_delete_product(self, product_id: int) -> Product:
+    async def hard_delete_product(self, product_id: int) -> bool:
         if product_id < 1:
             raise BadRequest("Invalid product id.")
 
@@ -184,7 +185,7 @@ class AdminProductService:
                 await self.cache.invalidate_lists()
                 await self.cache.invalidate_key("product", product_id)
 
-            return product
+            return True
 
         except Exception as exc:
             await self.repo.rollback()

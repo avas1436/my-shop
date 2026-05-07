@@ -54,7 +54,7 @@ async def admin_create_draft_product(
 @router.delete(
     "/admin/products/soft/{product_id}",
     status_code=status.HTTP_200_OK,
-    response_model=SuccessMessage,
+    response_model=ProductSimpleRead,
 )
 async def admin_soft_delete_product(
     product_id: int,
@@ -73,9 +73,9 @@ async def admin_soft_delete_product(
         ),
     ],
 ):
-    await service.soft_delete_product(product_id)
+    product = await service.soft_delete_product(product_id)
 
-    return SuccessMessage(message="Product deleted softly.")
+    return ProductSimpleRead.model_validate(product)
 
 
 # =========================================================
