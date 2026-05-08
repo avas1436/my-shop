@@ -20,6 +20,8 @@ from app.modules.catalog.schemas.product import (
     DraftProductCreate,
     ProductAdminRead,
     ProductAdminUpdate,
+    ProductPublish,
+    ProductSoftDelete,
 )
 
 
@@ -155,13 +157,13 @@ class AdminProductService:
             raise NotFound("Product not found.")
 
         now = datetime.now(UTC)
-        payload = ProductAdminUpdate(
+        payload = ProductSoftDelete(
             deleted_at=now,
             status=ProductStatus.INACTIVE,
         )
 
         try:
-            ok = await self.repo.update_product(product=product, updates=payload)
+            ok = await self.repo.soflt_delete_product(product=product, updates=payload)
 
             await self.repo.commit()
 
@@ -249,3 +251,53 @@ class AdminProductService:
         except Exception as exc:
             await self.repo.rollback()
             raise InternalServerError("Failed to update product.") from exc
+
+    # ---------------------------
+    # Published Product
+    # ---------------------------
+    async def published_product(
+        self,
+        product_id: int,
+    ) -> Product:
+
+        if product_id < 1:
+            raise BadRequest("Invalid product id.")
+
+        product = await self.repo.get_by_id_little(id=product_id)
+
+        if not product:
+            raise NotFound("Product not found.")
+
+        updates = ProductPublish(
+            status=ProductStatus.ACTIVE,
+            published_at=datetime.now(UTC),
+        )
+
+        try:
+            ok = await self.repo.published_product(product=product, updates=updates)
+
+            await self.repo.commit()
+
+            await self.repo.refresh(product)
+
+            if ok is not None and self.cache.is_available():
+                await self.cache.invalidate_lists()
+                await self.cache.invalidate_key("product", product_id)
+
+            return ok
+
+        except IntegrityError as e:
+            await self.repo.rollback()
+            raise Conflict(f"Data Validation Error: {e.orig}") from None
+
+        except Conflict:
+            await self.repo.rollback()
+            raise
+
+        except UnprocessableEntity:
+            await self.repo.rollback()
+            raise
+
+        except Exception as exc:
+            await self.repo.rollback()
+            raise InternalServerError("Failed to publish product.") from exc

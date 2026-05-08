@@ -10,7 +10,11 @@ from app.modules.catalog.models.attribute import (
 )
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.models.variant import ProductVariant
-from app.modules.catalog.schemas.product import ProductAdminUpdate
+from app.modules.catalog.schemas.product import (
+    ProductAdminUpdate,
+    ProductPublish,
+    ProductSoftDelete,
+)
 
 
 class AdminProductRepository:
@@ -93,6 +97,38 @@ class AdminProductRepository:
     # ---------------------------
     async def update_product(
         self, product: Product, updates: ProductAdminUpdate
+    ) -> Product:
+
+        data = updates.model_dump(exclude_unset=True)
+
+        for field, value in data.items():
+            setattr(product, field, value)
+
+        self.db.add(product)
+
+        return product
+
+    # ---------------------------
+    # Soft Delete Product
+    # ---------------------------
+    async def soflt_delete_product(
+        self, product: Product, updates: ProductSoftDelete
+    ) -> Product:
+
+        data = updates.model_dump(exclude_unset=True)
+
+        for field, value in data.items():
+            setattr(product, field, value)
+
+        self.db.add(product)
+
+        return product
+
+    # ---------------------------
+    # Published Product
+    # ---------------------------
+    async def published_product(
+        self, product: Product, updates: ProductPublish
     ) -> Product:
 
         data = updates.model_dump(exclude_unset=True)

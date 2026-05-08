@@ -141,6 +141,22 @@ class ProductSimpleRead(BaseModel):
 
 
 # =========================================================
+# Soft Delete Product
+# =========================================================
+class ProductSoftDelete(BaseModel):
+    status: ProductStatus
+    deleted_at: datetime
+
+
+# =========================================================
+# Soft Delete Product
+# =========================================================
+class ProductPublish(BaseModel):
+    status: ProductStatus
+    published_at: datetime
+
+
+# =========================================================
 # Update Product Data
 # =========================================================
 class ProductAdminUpdate(BaseModel):
@@ -156,7 +172,7 @@ class ProductAdminUpdate(BaseModel):
     tax_rate: int | None = None
 
     currency_code: str | None = None
-    status: ProductStatus | None = ProductStatus.ARCHIVED
+    status: ProductStatus | None = None
 
     is_featured: bool | None = None
     is_digital: bool | None = None
@@ -169,9 +185,6 @@ class ProductAdminUpdate(BaseModel):
     meta_title: str | None = None
     meta_description: str | None = None
     gtin: str | None = None
-
-    published_at: datetime | None = None
-    deleted_at: datetime | None = None
 
     @field_validator("price", "discount_price", "cost_price", "tax_rate")
     @classmethod
@@ -206,9 +219,7 @@ class ProductAdminUpdate(BaseModel):
         if self.price is not None and self.discount_price is not None:
             if self.discount_price > self.price:
                 raise ValueError("discount_price cannot exceed price")
-        if self.published_at and self.deleted_at:
-            if self.published_at > self.deleted_at:
-                raise ValueError("published_at must be <= deleted_at")
+
         if self.is_digital:
             if any([self.weight, self.width, self.height, self.depth]):
                 raise ValueError("digital product should not have dimensions")
