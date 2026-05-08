@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from sqlalchemy.exc import IntegrityError
 
 from app.cache.cache import RedisCache
+from app.common.enums import ProductStatus
 from app.errors.errors import (
     BadRequest,
     Conflict,
@@ -15,7 +16,11 @@ from app.errors.errors import (
 )
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.repository.product import AdminProductRepository
-from app.modules.catalog.schemas.product import DraftProductCreate, ProductAdminRead
+from app.modules.catalog.schemas.product import (
+    DraftProductCreate,
+    ProductAdminRead,
+    ProductAdminUpdate,
+)
 
 
 class AdminProductService:
@@ -149,9 +154,17 @@ class AdminProductService:
         if not product:
             raise NotFound("Product not found.")
 
+        now = datetime.now(UTC)
+        payload = ProductAdminUpdate(
+            deleted_at=now,
+            status=ProductStatus.INACTIVE,
+        )
+
         try:
-            ok = await self.repo.soft_delete(product=product)
+            ok = await self.update_product(product=product, updates=payload)
+
             await self.repo.commit()
+
             await self.repo.refresh(product)
 
             if ok is not None and self.cache.is_available():

@@ -137,3 +137,37 @@ class ProductSimpleRead(BaseModel):
     deleted_at: datetime | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# =========================================================
+# Update Product Data
+# =========================================================
+class ProductAdminUpdate(BaseModel):
+    name: str | None = None
+    slug: str | None = None
+    sku: str | None = None
+    description: str | None = None
+
+    price: int | None = None
+    discount_price: int | None = None
+    cost_price: int | None = None
+
+    tax_rate: int | None = None
+
+    currency_code: str | None = None
+    status: ProductStatus | None = None
+
+    is_featured: bool | None = None
+    is_digital: bool | None = None
+
+    weight: Decimal | None = None
+    width: Decimal | None = None
+    height: Decimal | None = None
+    depth: Decimal | None = None
+
+    meta_title: str | None = None
+    meta_description: str | None = None
+    gtin: str | None = None
+
+    published_at: datetime | None = None
+    deleted_at: datetime | None = None

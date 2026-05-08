@@ -1,17 +1,16 @@
 # app/modules/catalog/repository/product.py
-from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.common.enums import ProductStatus
 from app.modules.catalog.models.attribute import (
     ProductAttribute,
     ProductVariantAttribute,
 )
 from app.modules.catalog.models.product import Product
 from app.modules.catalog.models.variant import ProductVariant
+from app.modules.catalog.schemas.product import ProductAdminUpdate
 
 
 class AdminProductRepository:
@@ -92,29 +91,18 @@ class AdminProductRepository:
     # ---------------------------
     # Update Product
     # ---------------------------
-    async def update_product(self, product: Product, updates: dict) -> Product:
-        for field, value in updates.items():
+    async def update_product(
+        self, product: Product, updates: ProductAdminUpdate
+    ) -> Product:
+
+        data = updates.model_dump(exclude_unset=True)
+
+        for field, value in data.items():
             setattr(product, field, value)
 
         self.db.add(product)
-        # await self.db.commit()
-        # await self.db.refresh(product)
 
         return product
-
-    # ---------------------------
-    # Soft Delete a Product
-    # ---------------------------
-    async def soft_delete(self, product: Product) -> Product:
-        now = datetime.now(UTC)
-        payload = {
-            "deleted_at": now,
-            "status": ProductStatus.INACTIVE,
-        }
-        result = await self.update_product(product=product, updates=payload)
-        # await self.db.commit()
-
-        return result
 
     # ---------------------------
     # Hard Delete a Product
