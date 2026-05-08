@@ -203,3 +203,49 @@ class AdminProductService:
         except Exception as exc:
             await self.repo.rollback()
             raise InternalServerError("Failed to delete product.") from exc
+
+    # ---------------------------
+    # Update Product
+    # ---------------------------
+    async def Update_product(
+        self,
+        product_id: int,
+        updates: ProductAdminUpdate,
+    ) -> Product:
+
+        if product_id < 1:
+            raise BadRequest("Invalid product id.")
+
+        product = await self.repo.get_by_id_little(id=product_id)
+
+        if not product:
+            raise NotFound("Product not found.")
+
+        try:
+            ok = await self.repo.update_product(product=product, updates=updates)
+
+            await self.repo.commit()
+
+            await self.repo.refresh(product)
+
+            if ok is not None and self.cache.is_available():
+                await self.cache.invalidate_lists()
+                await self.cache.invalidate_key("product", product_id)
+
+            return ok
+
+        except IntegrityError as e:
+            await self.repo.rollback()
+            raise Conflict(f"Data Validation Error: {e.orig}") from None
+
+        except Conflict:
+            await self.repo.rollback()
+            raise
+
+        except UnprocessableEntity:
+            await self.repo.rollback()
+            raise
+
+        except Exception as exc:
+            await self.repo.rollback()
+            raise InternalServerError("Failed to update product.") from exc

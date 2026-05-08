@@ -1,8 +1,9 @@
 # app/modules/catalog/schemas/product.py
+import re
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.common.enums import ProductStatus
 from app.modules.catalog.schemas.attribute import (
@@ -171,3 +172,44 @@ class ProductAdminUpdate(BaseModel):
 
     published_at: datetime | None = None
     deleted_at: datetime | None = None
+
+    @field_validator("price", "discount_price", "cost_price", "tax_rate")
+    @classmethod
+    def non_negative_ints(cls, v):
+        if v is not None and v < 0:
+            raise ValueError("must be >= 0")
+        return v
+
+    @field_validator("tax_rate")
+    @classmethod
+    def tax_rate_range(cls, v):
+        if v is not None and not (500 <= v <= 10000):
+            raise ValueError("tax_rate must be between 500 and 10000")
+        return v
+
+    @field_validator("weight", "width", "height", "depth")
+    @classmethod
+    def positive_decimals(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("must be > 0")
+        return v
+
+    @field_validator("currency_code")
+    @classmethod
+    def currency_code_format(cls, v):
+        if v is not None and not re.fullmatch(r"[A-Z]{3}", v):
+            raise ValueError("invalid currency code")
+        return v
+
+    @model_validator(mode="after")
+    def cross_field_checks(self):
+        if self.price is not None and self.discount_price is not None:
+            if self.discount_price > self.price:
+                raise ValueError("discount_price cannot exceed price")
+        if self.published_at and self.deleted_at:
+            if self.published_at > self.deleted_at:
+                raise ValueError("published_at must be <= deleted_at")
+        if self.is_digital:
+            if any([self.weight, self.width, self.height, self.depth]):
+                raise ValueError("digital product should not have dimensions")
+        return self
