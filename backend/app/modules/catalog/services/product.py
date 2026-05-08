@@ -266,10 +266,10 @@ class AdminProductService:
         product = await self.repo.get_by_id_little(id=product_id)
 
         if not product:
-            raise UnprocessableEntity("Product is inactive or deleted.")
+            raise NotFound("Product not found.")
 
         if product.status == ProductStatus.INACTIVE or product.deleted_at is not None:
-            raise
+            raise UnprocessableEntity("Product is inactive or deleted.")
 
         updates = ProductPublish(
             status=ProductStatus.ACTIVE,
