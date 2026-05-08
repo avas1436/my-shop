@@ -20,7 +20,13 @@ export const adminProductWorkflowApi = {
     return api.postData('/v1/products/admin/createdraft', payload)
   },
   getDraft(productId) {
-    return api.getData(`/v1/products/admin/products/${productId}`)
+    return api.getData(`/v1/products/admin/products/${productId}/full`)
+  },
+  updateProduct(productId, payload) {
+    return api.patchData(`/v1/products/admin/products/${productId}`, payload)
+  },
+  publishProduct(productId) {
+    return api.postData(`/v1/products/admin/products/${productId}/publish`, {})
   },
   listBrands(params = {}) {
     return api.getData(`/v1/brands${buildQuery({ page: 1, size: 100, ...params })}`)
@@ -96,5 +102,11 @@ export const adminProductWorkflowApi = {
     formData.append('sort_order', String(payload.sort_order ?? 0))
 
     return api.postFormData(`/v1/images/admin/products/${productId}`, formData)
+  },
+  updateImage(imageId, payload) {
+    return api.patchData(`/v1/images/admin/images/${imageId}`, payload)
+  },
+  deleteImage(imageId) {
+    return api.deleteData(`/v1/images/admin/images/${imageId}`)
   },
 }

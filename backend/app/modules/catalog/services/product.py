@@ -116,6 +116,7 @@ class AdminProductService:
                 meta_title=payload.meta_title,
                 meta_description=payload.meta_description,
                 gtin=payload.gtin,
+                brand_id=payload.brand_id,
             )
 
             product = await self.repo.create(product)

@@ -39,7 +39,7 @@ class DraftProductCreate(BaseModel):
     meta_description: str | None = Field(None, max_length=500)
     gtin: str | None = Field(None, max_length=20)
 
-    brand_id: int = Field(..., gt=0)
+    brand_id: int | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     def check_discount(self):
@@ -77,6 +77,9 @@ class ProductAdminRead(BaseModel):
     is_digital: bool
 
     weight: Decimal | None
+    width: Decimal | None
+    height: Decimal | None
+    depth: Decimal | None
 
     meta_title: str | None
     meta_description: str | None
@@ -129,6 +132,9 @@ class ProductSimpleRead(BaseModel):
     is_digital: bool
 
     weight: Decimal | None
+    width: Decimal | None
+    height: Decimal | None
+    depth: Decimal | None
 
     meta_title: str | None
     meta_description: str | None
@@ -187,6 +193,7 @@ class ProductAdminUpdate(BaseModel):
     meta_title: str | None = None
     meta_description: str | None = None
     gtin: str | None = None
+    brand_id: int | None = None
 
     @field_validator("price", "discount_price", "cost_price", "tax_rate")
     @classmethod
@@ -198,8 +205,15 @@ class ProductAdminUpdate(BaseModel):
     @field_validator("tax_rate")
     @classmethod
     def tax_rate_range(cls, v):
-        if v is not None and not (500 <= v <= 10000):
-            raise ValueError("tax_rate must be between 500 and 10000")
+        if v is not None and not (0 <= v <= 10000):
+            raise ValueError("tax_rate must be between 0 and 10000")
+        return v
+
+    @field_validator("brand_id")
+    @classmethod
+    def positive_brand_id(cls, v):
+        if v is not None and v < 1:
+            raise ValueError("brand_id must be greater than 0")
         return v
 
     @field_validator("weight", "width", "height", "depth")

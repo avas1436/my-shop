@@ -97,7 +97,7 @@ async def get_image(
 # Update a Product Image
 # =========================================================
 @router.patch(
-    "/admin/products/{product_id}",
+    "/admin/images/{image_id}",
     status_code=status.HTTP_200_OK,
     response_model=GetImage,
 )
@@ -126,7 +126,7 @@ async def update_image(
 # Delete a Image
 # =========================================================
 @router.delete(
-    "/admin/products/{product_id}",
+    "/admin/images/{image_id}",
     status_code=status.HTTP_200_OK,
     response_model=SuccessMessage,
 )
