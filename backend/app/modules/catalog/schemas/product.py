@@ -156,7 +156,7 @@ class ProductAdminUpdate(BaseModel):
     tax_rate: int | None = None
 
     currency_code: str | None = None
-    status: ProductStatus | None = None
+    status: ProductStatus | None = ProductStatus.ARCHIVED
 
     is_featured: bool | None = None
     is_digital: bool | None = None

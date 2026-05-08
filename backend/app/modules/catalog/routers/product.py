@@ -11,6 +11,7 @@ from app.modules.catalog.dependencies.product import get_admin_product_service
 from app.modules.catalog.schemas.product import (
     DraftProductCreate,
     ProductAdminRead,
+    ProductAdminUpdate,
     ProductSimpleRead,
 )
 from app.modules.catalog.services.product import AdminProductService
@@ -153,3 +154,34 @@ async def show_product(
     product = await service.get_product_admin(product_id)
 
     return product
+
+
+# =========================================================
+# Update Product
+# =========================================================
+@router.patch(
+    "/admin/products/{product_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ProductSimpleRead,
+)
+async def admin_patch_product(
+    product_id: int,
+    updates: ProductAdminUpdate,
+    service: Annotated[AdminProductService, Depends(get_admin_product_service)],
+    _: Annotated[
+        User,
+        Depends(
+            require_access(
+                allowed_roles=[UserRole.ADMIN],
+                deny_roles=[UserRole.CUSTOMER],
+                require_recent_login_within=timedelta(days=1),
+                require_password=True,
+                require_profile_complete=True,
+                profile_required_fields=("first_name", "last_name", "birth_date"),
+            ),
+        ),
+    ],
+):
+    product = await service.update_product(product_id=product_id, updates=updates)
+
+    return ProductSimpleRead.model_validate(product)

@@ -207,7 +207,7 @@ class AdminProductService:
     # ---------------------------
     # Update Product
     # ---------------------------
-    async def Update_product(
+    async def update_product(
         self,
         product_id: int,
         updates: ProductAdminUpdate,
