@@ -39,6 +39,8 @@ class DraftProductCreate(BaseModel):
     meta_description: str | None = Field(None, max_length=500)
     gtin: str | None = Field(None, max_length=20)
 
+    brand_id: int = Field(..., gt=0)
+
     @model_validator(mode="after")
     def check_discount(self):
         if self.discount_price is not None and self.discount_price >= self.price:
