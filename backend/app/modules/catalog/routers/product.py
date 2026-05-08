@@ -191,7 +191,7 @@ async def admin_patch_product(
 # Update Product
 # =========================================================
 @router.post(
-    "/admin/products/{product_id}",
+    "/admin/products/{product_id}/publish",
     status_code=status.HTTP_200_OK,
     response_model=ProductSimpleRead,
 )
