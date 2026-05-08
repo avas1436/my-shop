@@ -126,9 +126,9 @@ class AdminProductService:
 
             return product
 
-        except IntegrityError:
+        except IntegrityError as e:
             await self.repo.rollback()
-            raise Conflict("Slug or SKU already exists.") from None
+            raise Conflict(f"Data Validation Error: {e.orig}") from None
 
         except Conflict:
             await self.repo.rollback()
@@ -161,7 +161,7 @@ class AdminProductService:
         )
 
         try:
-            ok = await self.update_product(product=product, updates=payload)
+            ok = await self.repo.update_product(product=product, updates=payload)
 
             await self.repo.commit()
 
@@ -175,7 +175,7 @@ class AdminProductService:
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to delete product.") from exc
+            raise InternalServerError(f"Failed to delete product. {exc}") from exc
 
     # ---------------------------
     # Hard Delete a product
