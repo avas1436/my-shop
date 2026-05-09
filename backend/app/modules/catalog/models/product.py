@@ -169,6 +169,10 @@ class Product(Base):
             unique=True,
             postgresql_where=text("slug is not null"),
         ),
+        Index("idx_product_name", "name"),  # برای جستجوی نام
+        Index("idx_product_status", "status"),  # فیلتر بر اساس وضعیت
+        Index("idx_product_created", "created_at"),  # مرتب‌سازی تاریخ
+        Index("idx_product_price", "price"),  # مرتب‌سازی قیمت
     )
 
     def calculate_final_price(self, base_price: int | None = None) -> int:
