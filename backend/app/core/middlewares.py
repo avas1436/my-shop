@@ -42,4 +42,4 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
         return response
 
     # Prometheus Metrics
-    Instrumentator().instrument(app).expose(app)
+    Instrumentator().instrument(app)  # .expose(app)
