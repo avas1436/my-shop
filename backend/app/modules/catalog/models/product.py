@@ -196,6 +196,11 @@ class Product(Base):
     def final_price(self) -> int:
         return self.calculate_final_price()
 
+    # محاسبه قیمت با مالیات
+    @property
+    def price_with_tax(self) -> int:
+        return int(self.final_price * (1 + self.tax_rate / 10000))
+
     @property
     def discount_percent(self) -> float:
         if self.discount_price is not None and self.price > 0:

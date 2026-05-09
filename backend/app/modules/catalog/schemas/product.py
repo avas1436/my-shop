@@ -66,6 +66,7 @@ class ProductAdminRead(BaseModel):
     discount_percent: float
 
     final_price: int
+    price_with_tax: int
 
     total_available_quantity: int
     is_in_stock: bool
@@ -123,6 +124,7 @@ class ProductSimpleRead(BaseModel):
 
     tax_rate: int
     final_price: int
+    price_with_tax: int
     discount_percent: float
 
     currency_code: str
