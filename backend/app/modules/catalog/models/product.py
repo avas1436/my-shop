@@ -232,5 +232,12 @@ class Product(Base):
     def inventory(self):
         return [v.inventory for v in self.variants if v.inventory]
 
+    # پراپرتی آدرس محصول
+    # @property
+    # def url(self) -> str | None:
+    #     if self.slug:
+    #         return f"/products/{self.slug}"
+    #     return f"/products/{self.id}"
+
     def __repr__(self) -> str:
         return f"<Product {self.name} | SKU: {self.sku}>"
