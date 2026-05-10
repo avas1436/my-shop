@@ -15,6 +15,7 @@ from app.modules.catalog.schemas.category import CategoryRead
 from app.modules.catalog.schemas.image import GetImage
 from app.modules.catalog.schemas.inventory import InventoryRead
 from app.modules.catalog.schemas.tag import TagRead
+from app.modules.comments.schemas import CommentRead
 
 
 # =========================================================
@@ -98,6 +99,8 @@ class ProductAdminRead(BaseModel):
     tags: list[TagRead] | None
 
     images: list[GetImage] | None
+
+    comments: list[CommentRead] | None
 
     product_attributes: list[ProductAttributeRead] | None = []
 
