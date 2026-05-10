@@ -78,7 +78,6 @@ class AdminProductRepository:
             selectinload(Product.categories),
             selectinload(Product.tags),
             selectinload(Product.images),
-            selectinload(Product.comments),
             # ویژگی‌های خود محصول
             selectinload(Product.attribute_values).joinedload(
                 ProductAttribute.attribute
