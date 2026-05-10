@@ -79,7 +79,10 @@ class AdminProductService:
             if cached is not None:
                 return cached
 
-        product = await self.repo.get_by_id_for_admin(product_id)
+        product = await self.repo.get_full_product(
+            product_id=product_id,
+            include_deleted=True,
+        )
 
         if not product:
             raise NotFound("Product not found.")

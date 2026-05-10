@@ -2,7 +2,7 @@
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.modules.catalog.models.attribute import (
     ProductAttribute,
@@ -47,40 +47,54 @@ class AdminProductRepository:
     # ---------------------------
     # Get a Product by ID (admin view)
     # ---------------------------
-    async def get_by_id_for_admin(self, product_id: int) -> Product | None:
-        stmt = (
-            select(Product)
-            .where(
-                Product.id == product_id,
-                # با وجود این قسمت حذف شده ها نمایش داده نمی شوند
-                Product.deleted_at.is_(None),
+    async def get_full_product(
+        self,
+        product_id: int | None = None,
+        slug: str | None = None,
+        include_deleted: bool = False,
+    ) -> Product | None:
+
+        stmt = select(Product)
+
+        if product_id is not None and slug is not None:
+            raise ValueError(
+                "Provide either product_id or slug, not both",
             )
-            .options(
-                # one-to-one / many-to-one
-                selectinload(Product.brand),
-                # many-to-many / one-to-many
-                selectinload(Product.categories),
-                selectinload(Product.tags),
-                selectinload(Product.images),
-                # attributes روی خود محصول
-                selectinload(Product.attribute_values).selectinload(
-                    ProductAttribute.attribute
+        elif product_id is not None:
+            stmt = stmt.where(Product.id == product_id)
+        elif slug is not None:
+            stmt = stmt.where(Product.slug == slug)
+        else:
+            return None
+
+        # فیلتر کردن رکوردهای حذف شده در صورت نیاز
+        if not include_deleted:
+            stmt = stmt.where(Product.deleted_at.is_(None))
+
+        stmt = stmt.options(
+            # برای رابطه To-one از جوین استفاده میکنیم
+            joinedload(Product.brand),
+            # استفاده از selectinload برای روابط To-Many
+            selectinload(Product.categories),
+            selectinload(Product.tags),
+            selectinload(Product.images),
+            # ویژگی‌های خود محصول
+            selectinload(Product.attribute_values).joinedload(
+                ProductAttribute.attribute
+            ),
+            # ادغام لودینگ‌های مربوط به Variants
+            selectinload(Product.variants).options(
+                # لود کردن inventory برای هر واریانت (اگر One-to-One است از joinedload استفاده کنید)
+                joinedload(ProductVariant.inventory),
+                # لود کردن ویژگی‌های هر واریانت
+                selectinload(ProductVariant.attribute_values).joinedload(
+                    ProductVariantAttribute.attribute
                 ),
-                # variants + attributes روی هر واریانت
-                selectinload(Product.variants)
-                .selectinload(ProductVariant.attribute_values)
-                .selectinload(ProductVariantAttribute.attribute),
-                # variants + inventory (برای رفع MissingGreenlet)
-                selectinload(Product.variants).selectinload(ProductVariant.inventory),
-                # variants + inventory یک روش دیگر ولی پرفورمنس کم
-                # selectinload(Product.variants)
-                # .selectinload(ProductVariant.inventory)
-                # .selectinload(Inventory.variant),
-            )
+            ),
         )
 
         result = await self.db.execute(stmt)
-        product = result.scalar_one_or_none()
+        product = result.unique().scalar_one_or_none()
 
         return product
 
