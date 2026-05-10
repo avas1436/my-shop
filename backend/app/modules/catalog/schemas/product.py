@@ -159,7 +159,7 @@ class ProductSoftDelete(BaseModel):
 
 
 # =========================================================
-# Soft Delete Product
+# Publish Product
 # =========================================================
 class ProductPublish(BaseModel):
     status: ProductStatus
