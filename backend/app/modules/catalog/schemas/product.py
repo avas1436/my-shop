@@ -15,7 +15,6 @@ from app.modules.catalog.schemas.category import CategoryRead
 from app.modules.catalog.schemas.image import GetImage
 from app.modules.catalog.schemas.inventory import InventoryRead
 from app.modules.catalog.schemas.tag import TagRead
-from app.modules.comments.schemas import CommentRead
 
 
 # =========================================================
@@ -55,13 +54,13 @@ class DraftProductCreate(BaseModel):
 class ProductAdminRead(BaseModel):
     id: int
     name: str
-    slug: str | None
+    slug: str | None = None
     sku: str
-    description: str | None
+    description: str | None = None
 
     price: int
-    discount_price: int | None
-    cost_price: int | None
+    discount_price: int | None = None
+    cost_price: int | None = None
 
     tax_rate: int
     discount_percent: float
@@ -78,35 +77,33 @@ class ProductAdminRead(BaseModel):
     is_featured: bool
     is_digital: bool
 
-    weight: Decimal | None
-    width: Decimal | None
-    height: Decimal | None
-    depth: Decimal | None
+    weight: Decimal | None = None
+    width: Decimal | None = None
+    height: Decimal | None = None
+    depth: Decimal | None = None
 
-    meta_title: str | None
-    meta_description: str | None
-    gtin: str | None
+    meta_title: str | None = None
+    meta_description: str | None = None
+    gtin: str | None = None
 
     created_at: datetime
-    updated_at: datetime | None
-    published_at: datetime | None
-    deleted_at: datetime | None
+    updated_at: datetime | None = None
+    published_at: datetime | None = None
+    deleted_at: datetime | None = None
 
-    brand: BrandRead | None
+    brand: BrandRead | None = None
 
-    categories: list[CategoryRead] | None
+    categories: list[CategoryRead] = Field(default_factory=list)
 
-    tags: list[TagRead] | None
+    tags: list[TagRead] = Field(default_factory=list)
 
-    images: list[GetImage] | None
+    images: list[GetImage] = Field(default_factory=list)
 
-    comments: list[CommentRead] | None
+    product_attributes: list[ProductAttributeRead] = Field(default_factory=list)
 
-    product_attributes: list[ProductAttributeRead] | None = []
+    variant_attributes: list[ProductVariantAttributeRead] = Field(default_factory=list)
 
-    variant_attributes: list[ProductVariantAttributeRead] | None = []
-
-    inventory: list[InventoryRead] | None = []
+    inventory: list[InventoryRead] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
