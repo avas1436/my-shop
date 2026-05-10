@@ -1,5 +1,5 @@
 # app/modules/catalog/schemas/image.py
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, computed_field
 
 from app.core.storage.generate_url import build_media_url
 
@@ -12,8 +12,9 @@ class GetImage(BaseModel):
     is_primary: bool
     sort_order: int
 
-    @field_serializer("url")
-    def build_url(self, _):
+    @computed_field
+    @property
+    def real_url(self) -> str:
         return build_media_url(self.url)
 
     class Config:
