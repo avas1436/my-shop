@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.v1.admin import router as admin_observability
 from app.common.responses import SuccessAPIRoute
 from app.modules.catalog.routers.attribute import router as attribute_router
 from app.modules.catalog.routers.brand import router as brand_router
@@ -26,3 +27,6 @@ api_router.include_router(attribute_router, prefix="/attributes", tags=["attribu
 api_router.include_router(variant_router, prefix="/variants", tags=["variant"])
 api_router.include_router(inventory_router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(comments_router, prefix="/comments", tags=["comments"])
+api_router.include_router(
+    admin_observability, prefix="/admin/infra", tags=["Admin Infra"]
+)

@@ -9,7 +9,7 @@ from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.modules.users.models import User
 
-router = APIRouter(prefix="/admin/infra", tags=["Admin Infra"])
+router = APIRouter()
 
 
 AdminOnly = Annotated[
