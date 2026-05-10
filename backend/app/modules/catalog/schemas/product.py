@@ -6,10 +6,6 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.common.enums import ProductStatus
-from app.modules.catalog.schemas.attribute import (
-    ProductAttributeRead,
-    ProductVariantAttributeRead,
-)
 from app.modules.catalog.schemas.brand import BrandRead
 from app.modules.catalog.schemas.category import CategoryRead
 from app.modules.catalog.schemas.image import GetImage
@@ -46,6 +42,17 @@ class DraftProductCreate(BaseModel):
         if self.discount_price is not None and self.discount_price >= self.price:
             raise ValueError("discount_price must be less than price")
         return self
+
+
+# =========================================================
+# Get attribute, product attribute and product variant attribute
+# =========================================================
+class AttributeItem(BaseModel):
+    attribute_id: int
+    name: str | None
+    value: str
+    scope: str
+    variant_id: int | None = None
 
 
 # =========================================================
@@ -99,11 +106,13 @@ class ProductAdminRead(BaseModel):
 
     images: list[GetImage] = Field(default_factory=list)
 
-    product_attributes: list[ProductAttributeRead] = Field(default_factory=list)
+    # product_attributes: list[ProductAttributeRead] = Field(default_factory=list)
 
-    variant_attributes: list[ProductVariantAttributeRead] = Field(default_factory=list)
+    # variant_attributes: list[ProductVariantAttributeRead] = Field(default_factory=list)
 
     inventory: list[InventoryRead] = Field(default_factory=list)
+
+    attribute: list[AttributeItem] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
