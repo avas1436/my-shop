@@ -15,9 +15,11 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    case,
     func,
     text,
 )
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import ProductStatus
@@ -217,11 +219,24 @@ class Product(Base):
     def price_with_tax(self) -> int:
         return int(self.final_price * (1 + self.tax_rate / 10000))
 
-    @property
+    @hybrid_property
     def discount_percent(self) -> float:
         if self.discount_price is not None and self.price > 0:
             return float(round((1 - self.discount_price / self.price) * 100, 1))
         return 0.0
+
+    @discount_percent.expression
+    def discount_percent_expr(cls):
+        return case(
+            (
+                (cls.discount_price.is_not(None)) & (cls.price > 0),
+                func.round(
+                    (1 - (cls.discount_price / cls.price)) * 100,
+                    1,
+                ),
+            ),
+            else_=0.0,
+        )
 
     @property
     def total_available_quantity(self) -> int:
