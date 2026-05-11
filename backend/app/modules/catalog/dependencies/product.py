@@ -9,8 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.cache.cache import RedisCache
 from app.cache.redis_dependency import get_cache
 from app.core.database import get_db
-from app.modules.catalog.repository.product import AdminProductRepository
-from app.modules.catalog.services.product import AdminProductService
+from app.modules.catalog.repository.product import (
+    AdminProductRepository,
+    UserProductRepository,
+)
+from app.modules.catalog.services.product import AdminProductService, UserProductService
 
 
 # --------------------------------------------------
@@ -23,3 +26,15 @@ def get_admin_product_service(
 
     repo = AdminProductRepository(db)
     return AdminProductService(repo=repo, cache=cache)
+
+
+# --------------------------------------------------
+# User Product Dependency
+# --------------------------------------------------
+def get_user_product_service(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    cache: Annotated[RedisCache, Depends(get_cache(namespace="product"))],
+) -> UserProductService:
+
+    repo = UserProductRepository(db)
+    return UserProductService(repo=repo, cache=cache)
