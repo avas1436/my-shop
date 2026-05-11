@@ -23,3 +23,10 @@ class ProductStatus(StrEnum):
     INACTIVE = "inactive"
     DRAFT = "draft"
     ARCHIVED = "archived"
+
+
+class ProductSortEnum(StrEnum):
+    NEWEST = "newest"
+    PRICE_ASC = "price_asc"
+    PRICE_DESC = "price_desc"
+    DISCOUNT_DESC = "discount_desc"
