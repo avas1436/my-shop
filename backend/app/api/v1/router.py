@@ -8,6 +8,7 @@ from app.modules.catalog.routers.category import router as categories_router
 from app.modules.catalog.routers.image import router as images_router
 from app.modules.catalog.routers.inventory import router as inventory_router
 from app.modules.catalog.routers.product import router as products_router
+from app.modules.catalog.routers.show_product import router as user_show_product
 from app.modules.catalog.routers.tag import router as tag_router
 from app.modules.catalog.routers.variant import router as variant_router
 from app.modules.comments.routers import router as comments_router
@@ -27,6 +28,9 @@ api_router.include_router(attribute_router, prefix="/attributes", tags=["attribu
 api_router.include_router(variant_router, prefix="/variants", tags=["variant"])
 api_router.include_router(inventory_router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(comments_router, prefix="/comments", tags=["comments"])
+api_router.include_router(
+    user_show_product, prefix="/products", tags=["user show product"]
+)
 api_router.include_router(
     admin_observability, prefix="/admin/infra", tags=["Admin Infra"]
 )

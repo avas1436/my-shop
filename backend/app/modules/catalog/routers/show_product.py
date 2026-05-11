@@ -1,7 +1,6 @@
 # app/modules/catalog/routers/show_product.py
 from typing import Annotated
 
-from app.modules.catalog.services.product_user import UserProductService
 from fastapi import APIRouter, Depends, Query, status
 
 from app.common.enums import ProductSortEnum
@@ -12,6 +11,7 @@ from app.modules.catalog.schemas.product import (
     ProductFullUserRead,
     ProductUserLightRead,
 )
+from app.modules.catalog.services.product import UserProductService
 
 router = APIRouter(route_class=SuccessAPIRoute)
 
@@ -20,7 +20,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
 # 1) Homepage - Featured Products
 # =========================================================
 @router.get(
-    "/products/home",
+    "/home",
     response_model=list[ProductUserLightRead],
     status_code=status.HTTP_200_OK,
 )
@@ -35,7 +35,7 @@ async def homepage_featured_products(
 # 2) Search Products (paginated)
 # =========================================================
 @router.get(
-    "/products/search",
+    "/search",
     response_model=PageResponse[dict],
     status_code=status.HTTP_200_OK,
 )
@@ -77,7 +77,7 @@ async def search_products(
 # 3) Full Product by ID
 # =========================================================
 @router.get(
-    "/products/{product_id}",
+    "/{product_id}",
     response_model=ProductFullUserRead,
     status_code=status.HTTP_200_OK,
 )
@@ -92,7 +92,7 @@ async def get_product_by_id(
 # 4) Full Product by Slug
 # =========================================================
 @router.get(
-    "/products/slug/{slug}",
+    "/slug/{slug}",
     response_model=ProductFullUserRead,
     status_code=status.HTTP_200_OK,
 )
