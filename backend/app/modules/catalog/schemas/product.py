@@ -10,6 +10,7 @@ from app.modules.catalog.schemas.brand import BrandRead
 from app.modules.catalog.schemas.category import CategoryRead
 from app.modules.catalog.schemas.image import GetImage
 from app.modules.catalog.schemas.tag import TagRead
+from app.modules.comments.schemas import CommentRead
 
 
 # =========================================================
@@ -270,3 +271,109 @@ class ProductAdminUpdate(BaseModel):
             if any([self.weight, self.width, self.height, self.depth]):
                 raise ValueError("digital product should not have dimensions")
         return self
+
+
+# =========================================================
+# Get Product Data for User
+# =========================================================
+class ProductFullUserRead(BaseModel):
+    id: int
+    name: str
+    slug: str | None = None
+    # sku: str
+    description: str | None = None
+
+    price: int
+    discount_price: int | None = None
+    # cost_price: int | None = None
+
+    tax_rate: int
+    discount_percent: float
+
+    final_price: int
+    price_with_tax: int
+
+    # total_available_quantity: int
+    is_in_stock: bool
+
+    currency_code: str
+    status: ProductStatus
+
+    is_featured: bool
+    is_digital: bool
+
+    weight: Decimal | None = None
+    # width: Decimal | None = None
+    # height: Decimal | None = None
+    # depth: Decimal | None = None
+
+    meta_title: str | None = None
+    meta_description: str | None = None
+    gtin: str | None = None
+
+    # created_at: datetime
+    # updated_at: datetime | None = None
+    # published_at: datetime | None = None
+    # deleted_at: datetime | None = None
+
+    brand: BrandRead | None = None
+
+    categories: list[CategoryRead] = Field(default_factory=list)
+
+    tags: list[TagRead] = Field(default_factory=list)
+
+    images: list[GetImage] = Field(default_factory=list)
+
+    # product_attributes: list[ProductAttributeRead] = Field(default_factory=list)
+
+    # variant_attributes: list[ProductVariantAttributeRead] = Field(default_factory=list)
+
+    inventory: list[InventoryItem] = Field(default_factory=list)
+
+    attributes: list[AttributeItem] = Field(default_factory=list)
+
+    comments: list[CommentRead] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# =========================================================
+# Get Product Data for steps
+# =========================================================
+class ProductUserLightRead(BaseModel):
+    id: int
+    name: str
+    # slug: str | None
+    # sku: str
+    # description: str | None
+
+    price: int
+    discount_price: int | None
+    # cost_price: int | None
+
+    tax_rate: int
+    final_price: int
+    price_with_tax: int
+    discount_percent: float
+
+    currency_code: str
+    status: ProductStatus
+
+    is_featured: bool
+    # is_digital: bool
+
+    # weight: Decimal | None
+    # width: Decimal | None
+    # height: Decimal | None
+    # depth: Decimal | None
+
+    # meta_title: str | None
+    # meta_description: str | None
+    # gtin: str | None
+
+    # created_at: datetime
+    # updated_at: datetime | None
+    published_at: datetime | None
+    # deleted_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)
