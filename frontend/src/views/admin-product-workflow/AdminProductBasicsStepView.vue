@@ -104,7 +104,6 @@
       <div class="workflow-actions workflow-field--full">
         <BaseButton type="button" variant="ghost" @click="goToDraft">بازگشت به draft</BaseButton>
         <BaseButton type="submit" :disabled="composer.loading.updateProduct">ذخیره اطلاعات پایه</BaseButton>
-        <BaseButton type="button" variant="secondary" @click="goToNext">مرحله بعد</BaseButton>
       </div>
     </form>
   </div>
@@ -138,6 +137,11 @@ const form = reactive({
   meta_description: '',
   gtin: '',
 })
+
+function toPositiveOptionalFloat(value) {
+  const parsed = toOptionalFloat(value)
+  return parsed && parsed > 0 ? parsed : null
+}
 
 watch(
   () => composer.draftProduct,
@@ -178,10 +182,10 @@ async function saveBasics() {
       currency_code: (form.currency_code || 'IRR').toUpperCase(),
       is_featured: Boolean(form.is_featured),
       is_digital: Boolean(form.is_digital),
-      weight: toOptionalFloat(form.weight),
-      width: toOptionalFloat(form.width),
-      height: toOptionalFloat(form.height),
-      depth: toOptionalFloat(form.depth),
+      weight: toPositiveOptionalFloat(form.weight),
+      width: toPositiveOptionalFloat(form.width),
+      height: toPositiveOptionalFloat(form.height),
+      depth: toPositiveOptionalFloat(form.depth),
       meta_title: form.meta_title || null,
       meta_description: form.meta_description || null,
       gtin: form.gtin || null,
@@ -193,16 +197,5 @@ async function saveBasics() {
 
 function goToDraft() {
   router.push({ name: 'admin-product-draft' })
-}
-
-function goToNext() {
-  if (!composer.draftId) {
-    return
-  }
-
-  router.push({
-    name: 'admin-product-organization',
-    params: { productId: String(composer.draftId) },
-  })
 }
 </script>

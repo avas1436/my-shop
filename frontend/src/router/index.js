@@ -15,6 +15,21 @@ const router = createRouter({
       path: '/admin/products/new',
       name: 'admin-product-composer',
       component: () => import('@/views/AdminProductComposerView.vue'),
+      redirect: { name: 'admin-product-draft' },
+      children: [
+        {
+          path: 'draft',
+          name: 'admin-product-draft',
+          component: () => import('@/views/admin-product-workflow/AdminProductDraftStepView.vue'),
+          meta: { workflowStep: 'draft' },
+        },
+        {
+          path: ':productId/basics',
+          name: 'admin-product-basics',
+          component: () => import('@/views/admin-product-workflow/AdminProductBasicsStepView.vue'),
+          meta: { workflowStep: 'basics', requiresDraft: true },
+        },
+      ],
     },
     { path: '/about', name: 'about', component: () => import('@/views/AboutView.vue') },
   ],

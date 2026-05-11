@@ -172,8 +172,9 @@ export async function refreshAuthSession() {
       skipAuthRefresh: true,
     })
       .then((payload) => {
-        persistTokens(payload)
-        return payload
+        const tokens = extractApiData(payload)
+        persistTokens(tokens)
+        return tokens
       })
       .catch((error) => {
         clearStoredTokens()

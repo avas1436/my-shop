@@ -222,7 +222,7 @@ export const useUserStore = defineStore('user', {
       this.clearFeedback()
 
       try {
-        await api.post(
+        await api.postData(
           '/v1/users/otp/request',
           {
             phone_number: this.otpForm.phone_number,
@@ -245,7 +245,7 @@ export const useUserStore = defineStore('user', {
       this.clearFeedback()
 
       try {
-        const response = await api.post(
+        const response = await api.postData(
           '/v1/users/otp/verify',
           {
             phone_number: this.otpForm.phone_number,
@@ -280,7 +280,7 @@ export const useUserStore = defineStore('user', {
       this.clearFeedback()
 
       try {
-        const response = await api.post(
+        const response = await api.postData(
           '/v1/users/login/password',
           {
             phone_number: this.loginForm.phone_number,
@@ -308,7 +308,7 @@ export const useUserStore = defineStore('user', {
       this.clearFeedback()
 
       try {
-        await api.post('/v1/users/register/complete', {
+        await api.postData('/v1/users/register/complete', {
           first_name: this.registerForm.first_name,
           last_name: this.registerForm.last_name,
           birth_date: this.registerForm.birth_date || null,
@@ -321,7 +321,7 @@ export const useUserStore = defineStore('user', {
       }
 
       try {
-        const response = await api.post(
+        const response = await api.postData(
           '/v1/users/login/password',
           {
             phone_number: phoneNumber,
@@ -363,7 +363,7 @@ export const useUserStore = defineStore('user', {
       }
 
       try {
-        const profile = await api.get('/v1/users/me')
+        const profile = await api.getData('/v1/users/me')
         this.syncTokensFromStorage()
         this.profile = profile
         return profile
@@ -387,11 +387,10 @@ export const useUserStore = defineStore('user', {
 
       if (revoke && refreshToken) {
         try {
-          await api.post(
+          await api.postData(
             '/v1/users/logout',
             { refresh_token: refreshToken },
             {
-              skipAuth: true,
               skipAuthRefresh: true,
             },
           )

@@ -14,41 +14,6 @@ export const ADMIN_PRODUCT_WORKFLOW_STEPS = [
     routeName: 'admin-product-basics',
     requiresDraft: true,
   },
-  {
-    key: 'organization',
-    label: 'برند و دسته‌بندی',
-    description: 'برند، تگ‌ها و دسته‌ها را متصل کن.',
-    routeName: 'admin-product-organization',
-    requiresDraft: true,
-  },
-  {
-    key: 'attributes',
-    label: 'اتریبیوت‌ها',
-    description: 'ویژگی‌های محصول را ثبت کن.',
-    routeName: 'admin-product-attributes',
-    requiresDraft: true,
-  },
-  {
-    key: 'variants',
-    label: 'واریانت و موجودی',
-    description: 'واریانت‌ها، انبار و attributeهای وابسته را اضافه کن.',
-    routeName: 'admin-product-variants',
-    requiresDraft: true,
-  },
-  {
-    key: 'media',
-    label: 'رسانه',
-    description: 'تصاویر محصول را مدیریت کن.',
-    routeName: 'admin-product-media',
-    requiresDraft: true,
-  },
-  {
-    key: 'review',
-    label: 'بازبینی و انتشار',
-    description: 'وضعیت نهایی را چک کن و محصول را publish کن.',
-    routeName: 'admin-product-review',
-    requiresDraft: true,
-  },
 ]
 
 export function getWorkflowStep(stepKey) {
