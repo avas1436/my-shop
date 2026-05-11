@@ -342,7 +342,7 @@ class UserProductRepository:
                     (Product.discount_price.is_not(None), Product.discount_price),
                     else_=Product.price,
                 )
-                <= min_price
+                <= max_price
             )
 
         # ---- flags ----
@@ -401,6 +401,14 @@ class UserProductRepository:
 
         stmt = stmt.distinct()
 
+        # ---- count ----
+        count_query = select(func.count(func.distinct(Product.id))).select_from(
+            stmt.subquery()
+        )
+
+        total = (await self.db.execute(count_query)).scalar_one()
+
+        # ---- paging + load ----
         stmt = (
             stmt.options(
                 selectinload(Product.images),
@@ -410,5 +418,5 @@ class UserProductRepository:
             .limit(limit)
         )
 
-        result = await self.db.execute(stmt)
-        return result.scalars().all()
+        items = (await self.db.execute(stmt)).scalars().all()
+        return list(items), total

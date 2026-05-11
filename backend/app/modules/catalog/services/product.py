@@ -1,4 +1,5 @@
 # app/modules/catalog/services/product.py
+import math
 import re
 import uuid
 from datetime import UTC, datetime
@@ -7,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.cache.cache import RedisCache
 from app.common.enums import ProductStatus
+from app.common.pagination import PageMeta, PageResponse
 from app.errors.errors import (
     BadRequest,
     Conflict,
@@ -20,11 +22,17 @@ from app.modules.catalog.schemas.product import (
     DraftProductCreate,
     ProductAdminRead,
     ProductAdminUpdate,
+    ProductFullUserRead,
     ProductPublish,
     ProductSoftDelete,
+    ProductSortEnum,
+    ProductUserLightRead,
 )
 
 
+# =========================================================
+# Product Service for Admin
+# =========================================================
 class AdminProductService:
     def __init__(self, repo: AdminProductRepository, cache: RedisCache):
         self.repo = repo
@@ -308,3 +316,204 @@ class AdminProductService:
         except Exception as exc:
             await self.repo.rollback()
             raise InternalServerError("Failed to publish product.") from exc
+
+
+# =========================================================
+# Product Service for User
+# =========================================================
+class UserProductService:
+    def __init__(self, repo, cache: RedisCache):
+        self.repo = repo
+        self.cache = cache
+
+    # ---------------------------------
+    # Get Full Product (detail page)
+    # ---------------------------------
+    async def get_product_detail(
+        self, product_id: int | None = None, slug: str | None = None
+    ) -> ProductFullUserRead:
+
+        if not product_id and not slug:
+            raise BadRequest("product_id or slug is required")
+
+        if product_id is not None:
+            cache_key = f"product:{product_id}"
+        elif slug is not None:
+            cache_key = f"product:{slug}"
+
+        if self.cache.is_available():
+            cached = await self.cache.get(cache_key)
+
+            if cached is not None:
+                return ProductFullUserRead(**cached)
+
+        product = await self.repo.get_full_product(
+            product_id=product_id,
+            slug=slug,
+        )
+
+        if not product:
+            raise NotFound("Product not found.")
+
+        payload = ProductFullUserRead.model_validate(product).model_dump(mode="json")
+
+        if self.cache.is_available():
+            await self.cache.set(cache_key, payload=payload, ttl=500)
+
+        return ProductFullUserRead(**payload)
+
+    # ---------------------------------
+    # List products (Light) - paginated
+    # ---------------------------------
+    async def search_products(
+        self,
+        *,
+        q: str | None = None,
+        brand_slugs: list[str] | None = None,
+        category_slugs: list[str] | None = None,
+        tag_slugs: list[str] | None = None,
+        attribute_filters: dict[str, list[str]] | None = None,
+        min_price: int | None = None,
+        max_price: int | None = None,
+        is_in_stock: bool | None = None,
+        has_discount: bool | None = None,
+        is_featured: bool | None = None,
+        is_digital: bool | None = None,
+        sort: ProductSortEnum | None = None,
+        page: int = 1,
+        size: int = 20,
+    ) -> PageResponse[dict]:
+
+        if page < 1 or size < 1 or size > 100:
+            raise BadRequest("Invalid pagination values.")
+
+        if self.cache.is_available():
+            cached = await self.cache.get_list(
+                "list",
+                "product_search",
+                q,
+                brand_slugs,
+                category_slugs,
+                tag_slugs,
+                attribute_filters,
+                min_price,
+                max_price,
+                is_in_stock,
+                has_discount,
+                is_featured,
+                is_digital,
+                sort.value if sort else None,
+                page,
+                size,
+            )
+            if cached is not None:
+                return PageResponse(**cached)
+
+        # توجه: repo باید total برگرداند
+        items, total = await self.repo.list_light_advanced(
+            q=q,
+            brand_slugs=brand_slugs,
+            category_slugs=category_slugs,
+            tag_slugs=tag_slugs,
+            attribute_filters=attribute_filters,
+            min_price=min_price,
+            max_price=max_price,
+            is_in_stock=is_in_stock,
+            has_discount=has_discount,
+            is_featured=is_featured,
+            is_digital=is_digital,
+            sort=sort,
+            page=page,
+            size=size,
+        )
+
+        pages = math.ceil(total / size) if total else 1
+
+        response_items = [
+            ProductUserLightRead.model_validate(p).model_dump(mode="json")
+            for p in items
+        ]
+
+        resp = PageResponse(
+            items=response_items,
+            meta=PageMeta(page=page, size=size, total=total, pages=pages),
+        )
+
+        if self.cache.is_available():
+            await self.cache.set_list(
+                "list",
+                "product_search",
+                q,
+                brand_slugs,
+                category_slugs,
+                tag_slugs,
+                attribute_filters,
+                min_price,
+                max_price,
+                is_in_stock,
+                has_discount,
+                is_featured,
+                is_digital,
+                sort.value if sort else None,
+                page,
+                size,
+                payload=resp.model_dump(mode="json"),
+            )
+
+        return resp
+
+    # ---------------------------
+    # Home Page
+    # ---------------------------
+    async def get_homepage(
+        self,
+        *,
+        limit: int = 12,
+    ) -> list[ProductUserLightRead]:
+
+        # بر اساس شرایط شما: ACTIVE, deleted_at=None, is_featured=True
+        # و مرتب‌سازی ترکیبی: بیشترین تخفیف + جدیدترین
+        items = await self.repo.get_homepage_featured(
+            limit=limit,
+            order_by_discount=True,  # اگر در repo پیاده شده
+            order_by_newest=True,  # اگر در repo پیاده شده
+        )
+
+        if self.cache.is_available():
+            cached = await self.cache.get_list("homepage")
+            if cached is not None:
+                return PageResponse(**cached)
+
+        page = 1
+        size = 15
+
+        # توجه: repo باید total برگرداند
+        items, total = await self.repo.list_light_advanced(
+            is_in_stock=True,
+            has_discount=True,
+            is_featured=True,
+            sort=ProductStatus.ACTIVE,
+            page=page,
+            size=size,
+        )
+
+        pages = math.ceil(total / size) if total else 1
+
+        response_items = [
+            ProductUserLightRead.model_validate(p).model_dump(mode="json")
+            for p in items
+        ]
+
+        resp = PageResponse(
+            items=response_items,
+            meta=PageMeta(page=page, size=size, total=total, pages=pages),
+        )
+
+        if self.cache.is_available():
+            await self.cache.set_list(
+                "homepage",
+                payload=resp.model_dump(mode="json"),
+                ttl=1500,
+            )
+
+        return resp
