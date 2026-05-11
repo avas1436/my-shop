@@ -173,7 +173,23 @@ class Product(Base):
         Index("idx_product_status", "status"),  # فیلتر بر اساس وضعیت
         Index("idx_product_created", "created_at"),  # مرتب‌سازی تاریخ
         Index("idx_product_price", "price"),  # مرتب‌سازی قیمت
+        Index("idx_product_brand_id", "brand_id"),  # سرچ برند
+        Index("idx_product_published_at", "published_at"),  # جستجوی زمان انتشار
+        Index(
+            "idx_product_featured_active",
+            "published_at",
+            postgresql_where=text(
+                "is_featured = true AND status = 'ACTIVE' AND deleted_at IS NULL"
+            ),  # فیلتر های پرتکرار برای لیست کاربران
+        ),
+        Index(
+            "idx_product_status_deleted_created", "status", "deleted_at", "created_at"
+        ),  # سرچ های مورد نیاز برای جستجوی صفحه اصلی
     )
+
+    # فیلترهای پرتکرار (لیست عمومی)
+
+    # صفحه اصلی: featured فقط محصولات فعال و حذف نشده
 
     def calculate_final_price(self, base_price: int | None = None) -> int:
         """
