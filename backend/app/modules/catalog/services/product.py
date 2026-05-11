@@ -409,9 +409,10 @@ class UserProductService:
             if cached is not None:
                 return PageResponse(**cached)
 
-        # توجه: repo باید total برگرداند
+        offset = (page - 1) * size
+
         items, total = await self.repo.list_light_advanced(
-            q=q,
+            text=q,
             brand_slugs=brand_slugs,
             category_slugs=category_slugs,
             tag_slugs=tag_slugs,
@@ -422,9 +423,9 @@ class UserProductService:
             has_discount=has_discount,
             is_featured=is_featured,
             is_digital=is_digital,
-            sort=sort,
-            page=page,
-            size=size,
+            sort=sort or ProductSortEnum.NEWEST,
+            offset=offset,
+            limit=size,
         )
 
         pages = math.ceil(total / size) if total else 1
@@ -471,49 +472,27 @@ class UserProductService:
         limit: int = 12,
     ) -> list[ProductUserLightRead]:
 
-        # بر اساس شرایط شما: ACTIVE, deleted_at=None, is_featured=True
-        # و مرتب‌سازی ترکیبی: بیشترین تخفیف + جدیدترین
-        items = await self.repo.get_homepage_featured(
-            limit=limit,
-            order_by_discount=True,  # اگر در repo پیاده شده
-            order_by_newest=True,  # اگر در repo پیاده شده
-        )
-
         if self.cache.is_available():
             cached = await self.cache.get_list("homepage")
             if cached is not None:
-                return PageResponse(**cached)
+                return [ProductUserLightRead(**i) for i in cached]
 
-        page = 1
-        size = 15
-
-        # توجه: repo باید total برگرداند
-        items, total = await self.repo.list_light_advanced(
-            is_in_stock=True,
-            has_discount=True,
-            is_featured=True,
-            sort=ProductStatus.ACTIVE,
-            page=page,
-            size=size,
+        items = await self.repo.get_homepage_featured(
+            limit=limit,
+            order_by_discount=True,
+            order_by_newest=True,
         )
-
-        pages = math.ceil(total / size) if total else 1
 
         response_items = [
             ProductUserLightRead.model_validate(p).model_dump(mode="json")
             for p in items
         ]
 
-        resp = PageResponse(
-            items=response_items,
-            meta=PageMeta(page=page, size=size, total=total, pages=pages),
-        )
-
         if self.cache.is_available():
             await self.cache.set_list(
                 "homepage",
-                payload=resp.model_dump(mode="json"),
+                payload=response_items,
                 ttl=1500,
             )
 
-        return resp
+        return [ProductUserLightRead(**i) for i in response_items]

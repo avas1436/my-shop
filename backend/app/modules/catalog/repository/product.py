@@ -402,9 +402,7 @@ class UserProductRepository:
         stmt = stmt.distinct()
 
         # ---- count ----
-        count_query = select(func.count(func.distinct(Product.id))).select_from(
-            stmt.subquery()
-        )
+        count_query = select(func.count()).select_from(stmt.subquery())
 
         total = (await self.db.execute(count_query)).scalar_one()
 
@@ -420,3 +418,29 @@ class UserProductRepository:
 
         items = (await self.db.execute(stmt)).scalars().all()
         return list(items), total
+
+    async def get_homepage_featured(
+        self,
+        *,
+        limit: int = 12,
+        order_by_discount: bool = True,
+        order_by_newest: bool = True,
+    ) -> list[Product]:
+        stmt = select(Product).where(
+            Product.deleted_at.is_(None),
+            Product.published_at.is_not(None),
+            Product.is_featured.is_(True),
+        )
+
+        if order_by_discount:
+            stmt = stmt.order_by(Product.discount_percent.desc())
+        if order_by_newest:
+            stmt = stmt.order_by(Product.published_at.desc())
+
+        stmt = stmt.limit(limit).options(
+            selectinload(Product.images),
+            joinedload(Product.brand),
+        )
+
+        items = (await self.db.execute(stmt)).scalars().all()
+        return list(items)
