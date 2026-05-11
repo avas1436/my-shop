@@ -51,4 +51,7 @@ class ProductTag(Base):
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), primary_key=True)
     tag_id: Mapped[int] = mapped_column(ForeignKey("tags.id"), primary_key=True)
 
-    __table_args__ = (UniqueConstraint("product_id", "tag_id", name="uq_product_tag"),)
+    __table_args__ = (
+        UniqueConstraint("product_id", "tag_id", name="uq_product_tag"),
+        Index("idx_product_tag_tag_id", "tag_id"),
+    )

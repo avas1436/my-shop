@@ -72,4 +72,5 @@ class ProductCategory(Base):
 
     __table_args__ = (
         UniqueConstraint("product_id", "category_id", name="uq_product_category"),
+        Index("idx_product_category_category_id", "category_id"),
     )

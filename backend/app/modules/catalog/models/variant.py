@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
+    Index,
     Integer,
     String,
 )
@@ -49,6 +50,10 @@ class ProductVariant(Base):
         CheckConstraint(
             "price IS NULL OR price >= 0", name="ck_variant_price_non_negative"
         ),
+        CheckConstraint(
+            "price IS NULL OR price >= 0", name="ck_variant_price_non_negative"
+        ),
+        Index("idx_variant_product_id", "product_id"),
     )
 
     @property

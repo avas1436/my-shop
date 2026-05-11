@@ -63,6 +63,7 @@ class ProductAttribute(Base):
 
     __table_args__ = (
         UniqueConstraint("product_id", "attribute_id", name="uq_product_attribute"),
+        Index("idx_product_attribute_attr_value", "attribute_id", "value"),
     )
 
 
