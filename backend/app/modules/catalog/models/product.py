@@ -220,13 +220,13 @@ class Product(Base):
         return int(self.final_price * (1 + self.tax_rate / 10000))
 
     @hybrid_property
-    def discount_percent(self) -> float:
+    def discount_percent(self) -> float:  # type: ignore[reportRedeclaration]
         if self.discount_price is not None and self.price > 0:
             return float(round((1 - self.discount_price / self.price) * 100, 1))
         return 0.0
 
     @discount_percent.expression
-    def discount_percent_expr(cls):
+    def discount_percent(cls):
         return case(
             (
                 (cls.discount_price.is_not(None)) & (cls.price > 0),
