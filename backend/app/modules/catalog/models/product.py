@@ -230,11 +230,26 @@ class Product(Base):
 
     @property
     def inventory(self):
+        # مپ کردن attributeها بر اساس variant_id
+        attrs_map = {}
+        for v in self.variants:
+            attrs_map[v.id] = [
+                {
+                    "attribute_id": va.attribute_id,
+                    "name": va.attribute.name if va.attribute else None,
+                    "value": va.value,
+                    "scope": "variant",
+                    "variant_id": v.id,
+                }
+                for va in v.attribute_values
+            ]
+
         items = []
         for v in self.variants:
             inv = v.inventory
             if not inv:
                 continue
+
             items.append(
                 {
                     "id": inv.id,
@@ -250,6 +265,7 @@ class Product(Base):
                     "updated_at": inv.updated_at,
                     "available_quantity": inv.available_quantity,
                     "is_in_stock": inv.is_in_stock,
+                    "attributes": attrs_map.get(v.id, []),  # ✅ الحاق
                 }
             )
         return items
@@ -271,17 +287,17 @@ class Product(Base):
                 "scope": "product",
             }
             for pa in self.attribute_values
-        ] + [
-            {
-                "attribute_id": va.attribute_id,
-                "name": va.attribute.name if va.attribute else None,
-                "value": va.value,
-                "scope": "variant",
-                "variant_id": va.variant_id,
-            }
-            for v in self.variants
-            for va in v.attribute_values
-        ]
+        ]  # + [
+        #     {
+        #         "attribute_id": va.attribute_id,
+        #         "name": va.attribute.name if va.attribute else None,
+        #         "value": va.value,
+        #         "scope": "variant",
+        #         "variant_id": va.variant_id,
+        #     }
+        #     for v in self.variants
+        #     for va in v.attribute_values
+        # ]
 
     def __repr__(self) -> str:
         return f"<Product {self.name} | SKU: {self.sku}>"

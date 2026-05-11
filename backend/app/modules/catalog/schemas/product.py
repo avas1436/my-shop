@@ -71,6 +71,7 @@ class InventoryItem(BaseModel):
     updated_at: datetime | None
     available_quantity: int
     is_in_stock: bool
+    attributes: list[AttributeItem]
 
 
 # =========================================================
