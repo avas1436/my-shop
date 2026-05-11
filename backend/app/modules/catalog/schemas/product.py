@@ -9,7 +9,6 @@ from app.common.enums import ProductStatus
 from app.modules.catalog.schemas.brand import BrandRead
 from app.modules.catalog.schemas.category import CategoryRead
 from app.modules.catalog.schemas.image import GetImage
-from app.modules.catalog.schemas.inventory import InventoryRead
 from app.modules.catalog.schemas.tag import TagRead
 
 
@@ -53,6 +52,25 @@ class AttributeItem(BaseModel):
     value: str
     scope: str
     variant_id: int | None = None
+
+
+# =========================================================
+# Get full variant data
+# =========================================================
+class InventoryItem(BaseModel):
+    id: int
+    sku: str
+    price: int
+    final_price: int
+    is_active: bool
+    variant_id: int
+    quantity: int
+    reserved_quantity: int
+    low_stock_alert: int
+    allow_backorder: bool
+    updated_at: datetime | None
+    available_quantity: int
+    is_in_stock: bool
 
 
 # =========================================================
@@ -110,7 +128,7 @@ class ProductAdminRead(BaseModel):
 
     # variant_attributes: list[ProductVariantAttributeRead] = Field(default_factory=list)
 
-    inventory: list[InventoryRead] = Field(default_factory=list)
+    inventory: list[InventoryItem] = Field(default_factory=list)
 
     attributes: list[AttributeItem] = Field(default_factory=list)
 

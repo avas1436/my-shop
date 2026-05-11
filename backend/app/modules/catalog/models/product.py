@@ -230,7 +230,29 @@ class Product(Base):
 
     @property
     def inventory(self):
-        return [v.inventory for v in self.variants if v.inventory]
+        items = []
+        for v in self.variants:
+            inv = v.inventory
+            if not inv:
+                continue
+            items.append(
+                {
+                    "id": inv.id,
+                    "variant_id": v.id,
+                    "sku": v.sku,
+                    "price": v.price,
+                    "final_price": v.final_price,
+                    "is_active": v.is_active,
+                    "quantity": inv.quantity,
+                    "reserved_quantity": inv.reserved_quantity,
+                    "low_stock_alert": inv.low_stock_alert,
+                    "allow_backorder": inv.allow_backorder,
+                    "updated_at": inv.updated_at,
+                    "available_quantity": inv.available_quantity,
+                    "is_in_stock": inv.is_in_stock,
+                }
+            )
+        return items
 
     # پراپرتی آدرس محصول
     # @property
