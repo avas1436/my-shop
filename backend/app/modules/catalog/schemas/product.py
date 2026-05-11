@@ -112,7 +112,7 @@ class ProductAdminRead(BaseModel):
 
     inventory: list[InventoryRead] = Field(default_factory=list)
 
-    attribute: list[AttributeItem] = Field(default_factory=list)
+    attributes: list[AttributeItem] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 

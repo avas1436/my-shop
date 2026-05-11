@@ -240,7 +240,7 @@ class Product(Base):
     #     return f"/products/{self.id}"
 
     @property
-    def attribute(self):
+    def attributes(self):
         return [
             {
                 "attribute_id": pa.attribute_id,
