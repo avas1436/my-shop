@@ -5,7 +5,7 @@ from app.modules.catalog.services.product_user import UserProductService
 from fastapi import APIRouter, Depends, Query, status
 
 from app.common.enums import ProductSortEnum
-from app.common.pagination import PageResponse  # اگر همین کلاس را دارید
+from app.common.pagination import PageResponse
 from app.common.responses import SuccessAPIRoute
 from app.modules.catalog.dependencies.product import get_user_product_service
 from app.modules.catalog.schemas.product import (

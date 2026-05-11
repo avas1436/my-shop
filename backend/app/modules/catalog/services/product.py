@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy.exc import IntegrityError
 
 from app.cache.cache import RedisCache
-from app.common.enums import ProductStatus
+from app.common.enums import ProductSortEnum, ProductStatus
 from app.common.pagination import PageMeta, PageResponse
 from app.errors.errors import (
     BadRequest,
@@ -25,7 +25,6 @@ from app.modules.catalog.schemas.product import (
     ProductFullUserRead,
     ProductPublish,
     ProductSoftDelete,
-    ProductSortEnum,
     ProductUserLightRead,
 )
 
