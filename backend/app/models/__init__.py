@@ -1,3 +1,6 @@
+# cart
+from app.modules.cart.models import Cart, CartItem
+
 # catalog
 from app.modules.catalog.models.attribute import (
     Attribute,
