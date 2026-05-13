@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     DateTime,
@@ -16,6 +17,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.common.enums import CartStatus
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.modules.catalog.models.variant import ProductVariant
 
 
 # ---------------------------
@@ -84,7 +88,7 @@ class CartItem(Base):
         nullable=False,
     )
     variant_id: Mapped[int] = mapped_column(
-        ForeignKey("product_variants.id"),
+        ForeignKey("product_variants.id", ondelete="CASCADE"),
         nullable=False,
     )
 
@@ -97,6 +101,8 @@ class CartItem(Base):
         "Cart",
         back_populates="items",
     )
+
+    variant: Mapped[ProductVariant] = relationship("ProductVariant")
 
     __table_args__ = (
         UniqueConstraint(
