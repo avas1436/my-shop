@@ -24,6 +24,15 @@ npm run dev
 npm run build
 ```
 
+### PWA quick test
+
+```sh
+npm run build
+npm run preview
+```
+
+Then open the preview URL, verify install prompt in browser DevTools > Application, and run a Lighthouse PWA audit.
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh

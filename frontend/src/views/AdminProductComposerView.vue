@@ -122,14 +122,14 @@
 import { computed, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/base/BaseButton.vue'
-import { useAdminProductComposerStore } from '@/stores/adminProductComposer'
+import { useAdminProductComposerStore } from '@/stores/adminProductComposerStore'
 import {
   ADMIN_PRODUCT_WORKFLOW_STEPS,
   getRememberedDraftProductId,
   getWorkflowStep,
   getWorkflowStepIndex,
   toOptionalInteger,
-} from '@/utils/adminProductWorkflow'
+} from '@/utils/adminProductWorkflowUtils'
 
 const route = useRoute()
 const router = useRouter()

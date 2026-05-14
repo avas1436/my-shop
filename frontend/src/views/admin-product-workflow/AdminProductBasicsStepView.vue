@@ -113,8 +113,8 @@
 import { reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/base/BaseButton.vue'
-import { useAdminProductComposerStore } from '@/stores/adminProductComposer'
-import { toOptionalFloat, toOptionalInteger, toRequiredInteger } from '@/utils/adminProductWorkflow'
+import { useAdminProductComposerStore } from '@/stores/adminProductComposerStore'
+import { toOptionalFloat, toOptionalInteger, toRequiredInteger } from '@/utils/adminProductWorkflowUtils'
 
 const router = useRouter()
 const composer = useAdminProductComposerStore()

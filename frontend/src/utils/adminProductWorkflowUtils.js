@@ -24,6 +24,21 @@ export function getWorkflowStepIndex(stepKey) {
   return ADMIN_PRODUCT_WORKFLOW_STEPS.findIndex((step) => step.key === stepKey)
 }
 
+export function buildQueryString(params = {}) {
+  const searchParams = new URLSearchParams()
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return
+    }
+
+    searchParams.set(key, String(value))
+  })
+
+  const query = searchParams.toString()
+  return query ? `?${query}` : ''
+}
+
 export function toOptionalInteger(value) {
   if (value === '' || value === null || value === undefined) {
     return null

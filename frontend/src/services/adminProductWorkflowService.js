@@ -1,21 +1,7 @@
 import { api } from './api'
+import { buildQueryString } from '@/utils/adminProductWorkflowUtils'
 
-function buildQuery(params = {}) {
-  const searchParams = new URLSearchParams()
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') {
-      return
-    }
-
-    searchParams.set(key, String(value))
-  })
-
-  const query = searchParams.toString()
-  return query ? `?${query}` : ''
-}
-
-export const adminProductWorkflowApi = {
+export const adminProductWorkflowService = {
   createDraft(payload) {
     return api.postData('/v1/products/admin/createdraft', payload)
   },
@@ -29,13 +15,13 @@ export const adminProductWorkflowApi = {
     return api.postData(`/v1/products/admin/products/${productId}/publish`, {})
   },
   listBrands(params = {}) {
-    return api.getData(`/v1/brands${buildQuery({ page: 1, size: 100, ...params })}`)
+    return api.getData(`/v1/brands${buildQueryString({ page: 1, size: 100, ...params })}`)
   },
   createBrand(payload) {
     return api.postData('/v1/brands/', payload)
   },
   listTags(params = {}) {
-    return api.getData(`/v1/tags/admin${buildQuery({ page: 1, size: 100, ...params })}`)
+    return api.getData(`/v1/tags/admin${buildQueryString({ page: 1, size: 100, ...params })}`)
   },
   createTag(payload) {
     return api.postData('/v1/tags/admin', payload)
@@ -44,7 +30,7 @@ export const adminProductWorkflowApi = {
     return api.putData(`/v1/tags/${productId}/tags/sync`, { tag_ids: tagIds })
   },
   listCategories(params = {}) {
-    return api.getData(`/v1/categories${buildQuery({ page: 1, size: 100, ...params })}`)
+    return api.getData(`/v1/categories${buildQueryString({ page: 1, size: 100, ...params })}`)
   },
   createCategory(payload) {
     return api.postData('/v1/categories/', payload)
@@ -55,35 +41,35 @@ export const adminProductWorkflowApi = {
     })
   },
   listAttributes(params = {}) {
-    return api.getData(`/v1/attributes/list${buildQuery({ page: 1, size: 100, ...params })}`)
+    return api.getData(`/v1/attributes/list${buildQueryString({ page: 1, size: 100, ...params })}`)
   },
   createAttribute(payload) {
     return api.postData('/v1/attributes/', payload)
   },
   listProductAttributes(productId) {
     return api.getData(
-      `/v1/attributes/list/product/list${buildQuery({ product_id: productId, page: 1, size: 100 })}`,
+      `/v1/attributes/list/product/list${buildQueryString({ product_id: productId, page: 1, size: 100 })}`,
     )
   },
   createProductAttribute(payload) {
     return api.postData('/v1/attributes/product', payload)
   },
   listVariants(productId) {
-    return api.getData(`/v1/variants/list${buildQuery({ product_id: productId, page: 1, size: 100 })}`)
+    return api.getData(`/v1/variants/list${buildQueryString({ product_id: productId, page: 1, size: 100 })}`)
   },
   createVariant(payload) {
     return api.postData('/v1/variants/', payload)
   },
   listVariantAttributes(variantId) {
     return api.getData(
-      `/v1/attributes/list/product/variant${buildQuery({ variant_id: variantId, page: 1, size: 100 })}`,
+      `/v1/attributes/list/product/variant${buildQueryString({ variant_id: variantId, page: 1, size: 100 })}`,
     )
   },
   createVariantAttribute(payload) {
     return api.postData('/v1/attributes/product/variant', payload)
   },
   listInventory(variantId) {
-    return api.getData(`/v1/inventory/list${buildQuery({ variant_id: variantId, page: 1, size: 100 })}`)
+    return api.getData(`/v1/inventory/list${buildQueryString({ variant_id: variantId, page: 1, size: 100 })}`)
   },
   createInventory(payload) {
     return api.postData('/v1/inventory/', payload)

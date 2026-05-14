@@ -1,6 +1,9 @@
 import { defineStore } from 'pinia'
-import { adminProductWorkflowApi } from '@/services/adminProductWorkflow'
-import { getRememberedDraftProductId, rememberDraftProductId } from '@/utils/adminProductWorkflow'
+import { adminProductWorkflowService } from '@/services/adminProductWorkflowService'
+import {
+  getRememberedDraftProductId,
+  rememberDraftProductId,
+} from '@/utils/adminProductWorkflowUtils'
 
 function getDefaultLoadingState() {
   return {
@@ -88,10 +91,10 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.attributes = true
 
       const results = await Promise.allSettled([
-        adminProductWorkflowApi.listBrands(),
-        adminProductWorkflowApi.listTags(),
-        adminProductWorkflowApi.listCategories(),
-        adminProductWorkflowApi.listAttributes(),
+        adminProductWorkflowService.listBrands(),
+        adminProductWorkflowService.listTags(),
+        adminProductWorkflowService.listCategories(),
+        adminProductWorkflowService.listAttributes(),
       ])
 
       const [brandsResult, tagsResult, categoriesResult, attributesResult] = results
@@ -136,7 +139,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.product = true
 
       try {
-        const product = await adminProductWorkflowApi.getDraft(productId)
+        const product = await adminProductWorkflowService.getDraft(productId)
         this.setDraftProduct(product)
         await Promise.all([this.loadProductAttributes(), this.loadVariants(), this.loadImages()])
       } finally {
@@ -148,7 +151,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
         return null
       }
 
-      const product = await adminProductWorkflowApi.getDraft(this.draftId)
+      const product = await adminProductWorkflowService.getDraft(this.draftId)
       this.setDraftProduct(product)
       return product
     },
@@ -157,7 +160,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const product = await adminProductWorkflowApi.createDraft(payload)
+        const product = await adminProductWorkflowService.createDraft(payload)
         this.setDraftProduct(product)
         this.resetDetailCollections()
         await this.hydrateWorkflow(product.id, { force: true })
@@ -179,7 +182,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.updateProduct(this.draftId, payload)
+        await adminProductWorkflowService.updateProduct(this.draftId, payload)
         await this.refreshDraftProduct()
         this.setFeedback(successMessage, '')
         return this.draftProduct
@@ -199,7 +202,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.publishProduct(this.draftId)
+        await adminProductWorkflowService.publishProduct(this.draftId)
         await this.refreshDraftProduct()
         this.setFeedback('محصول با موفقیت منتشر شد.', '')
         return this.draftProduct
@@ -215,8 +218,8 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.createBrand(payload)
-        const response = await adminProductWorkflowApi.listBrands()
+        await adminProductWorkflowService.createBrand(payload)
+        const response = await adminProductWorkflowService.listBrands()
         this.brands = pageItems(response)
         this.setFeedback('برند جدید ساخته شد.', '')
       } catch (error) {
@@ -231,8 +234,8 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.createTag(payload)
-        const response = await adminProductWorkflowApi.listTags()
+        await adminProductWorkflowService.createTag(payload)
+        const response = await adminProductWorkflowService.listTags()
         this.tags = pageItems(response)
         this.setFeedback('تگ جدید ساخته شد.', '')
       } catch (error) {
@@ -251,7 +254,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const response = await adminProductWorkflowApi.syncProductTags(this.draftId, tagIds)
+        const response = await adminProductWorkflowService.syncProductTags(this.draftId, tagIds)
         this.selectedTagIds = response.current || []
         await this.refreshDraftProduct()
         this.setFeedback('تگ‌های محصول ذخیره شدند.', '')
@@ -268,8 +271,8 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.createCategory(payload)
-        const response = await adminProductWorkflowApi.listCategories()
+        await adminProductWorkflowService.createCategory(payload)
+        const response = await adminProductWorkflowService.listCategories()
         this.categories = pageItems(response)
         this.setFeedback('دسته جدید ساخته شد.', '')
       } catch (error) {
@@ -288,7 +291,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const response = await adminProductWorkflowApi.syncProductCategories(this.draftId, categoryIds)
+        const response = await adminProductWorkflowService.syncProductCategories(this.draftId, categoryIds)
         this.selectedCategoryIds = response.current || []
         await this.refreshDraftProduct()
         this.setFeedback('دسته‌های محصول ذخیره شدند.', '')
@@ -305,8 +308,8 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.createAttribute(payload)
-        const response = await adminProductWorkflowApi.listAttributes()
+        await adminProductWorkflowService.createAttribute(payload)
+        const response = await adminProductWorkflowService.listAttributes()
         this.attributes = pageItems(response)
         this.setFeedback('اتریبیوت جدید ساخته شد.', '')
       } catch (error) {
@@ -325,7 +328,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.productAttributes = true
 
       try {
-        const response = await adminProductWorkflowApi.listProductAttributes(this.draftId)
+        const response = await adminProductWorkflowService.listProductAttributes(this.draftId)
         this.productAttributes = pageItems(response)
       } finally {
         this.loading.productAttributes = false
@@ -340,7 +343,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const response = await adminProductWorkflowApi.createProductAttribute(payload)
+        const response = await adminProductWorkflowService.createProductAttribute(payload)
         await Promise.all([this.loadProductAttributes(), this.refreshDraftProduct()])
         this.setFeedback('ویژگی محصول ثبت شد.', '')
         return response
@@ -361,7 +364,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.variants = true
 
       try {
-        const response = await adminProductWorkflowApi.listVariants(this.draftId)
+        const response = await adminProductWorkflowService.listVariants(this.draftId)
         this.variants = pageItems(response)
 
         if (!this.variants.some((variant) => variant.id === this.activeVariantId)) {
@@ -387,7 +390,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const variant = await adminProductWorkflowApi.createVariant(payload)
+        const variant = await adminProductWorkflowService.createVariant(payload)
         await this.loadVariants()
         this.activeVariantId = variant.id
         await Promise.all([this.loadInventory(), this.loadVariantAttributes(), this.refreshDraftProduct()])
@@ -413,7 +416,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.variantAttributes = true
 
       try {
-        const response = await adminProductWorkflowApi.listVariantAttributes(this.activeVariantId)
+        const response = await adminProductWorkflowService.listVariantAttributes(this.activeVariantId)
         this.variantAttributes = pageItems(response)
       } finally {
         this.loading.variantAttributes = false
@@ -428,7 +431,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const response = await adminProductWorkflowApi.createVariantAttribute(payload)
+        const response = await adminProductWorkflowService.createVariantAttribute(payload)
         await Promise.all([this.loadVariantAttributes(), this.refreshDraftProduct()])
         this.setFeedback('ویژگی واریانت ثبت شد.', '')
         return response
@@ -448,7 +451,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.inventory = true
 
       try {
-        const response = await adminProductWorkflowApi.listInventory(this.activeVariantId)
+        const response = await adminProductWorkflowService.listInventory(this.activeVariantId)
         this.inventoryRecord = pageItems(response)[0] || null
       } finally {
         this.loading.inventory = false
@@ -464,10 +467,10 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
 
       try {
         if (this.inventoryRecord?.id) {
-          this.inventoryRecord = await adminProductWorkflowApi.updateInventory(this.inventoryRecord.id, payload)
+          this.inventoryRecord = await adminProductWorkflowService.updateInventory(this.inventoryRecord.id, payload)
           this.setFeedback('موجودی واریانت به‌روزرسانی شد.', '')
         } else {
-          this.inventoryRecord = await adminProductWorkflowApi.createInventory({
+          this.inventoryRecord = await adminProductWorkflowService.createInventory({
             ...payload,
             variant_id: this.activeVariantId,
           })
@@ -492,7 +495,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.loading.images = true
 
       try {
-        this.images = await adminProductWorkflowApi.listImages(this.draftId)
+        this.images = await adminProductWorkflowService.listImages(this.draftId)
       } finally {
         this.loading.images = false
       }
@@ -506,7 +509,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const response = await adminProductWorkflowApi.uploadImage(this.draftId, payload)
+        const response = await adminProductWorkflowService.uploadImage(this.draftId, payload)
         await Promise.all([this.loadImages(), this.refreshDraftProduct()])
         this.setFeedback('تصویر محصول آپلود شد.', '')
         return response
@@ -522,7 +525,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        const response = await adminProductWorkflowApi.updateImage(imageId, payload)
+        const response = await adminProductWorkflowService.updateImage(imageId, payload)
         await Promise.all([this.loadImages(), this.refreshDraftProduct()])
         this.setFeedback('اطلاعات تصویر ذخیره شد.', '')
         return response
@@ -538,7 +541,7 @@ export const useAdminProductComposerStore = defineStore('admin-product-composer'
       this.clearFeedback()
 
       try {
-        await adminProductWorkflowApi.deleteImage(imageId)
+        await adminProductWorkflowService.deleteImage(imageId)
         await Promise.all([this.loadImages(), this.refreshDraftProduct()])
         this.setFeedback('تصویر حذف شد.', '')
       } catch (error) {
