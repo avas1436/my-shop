@@ -4,11 +4,9 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
-from app.core.redis import get_redis
 from app.errors.errors import BadRequest
 from app.modules.cart.models import Cart
 from app.modules.cart.repository import CartRepo
-from app.modules.cart.schemas import CartItemIn, CartOut
 
 
 class CartService:
@@ -16,48 +14,69 @@ class CartService:
         self.repo = CartRepo(db)
         self.cache = cache
 
-    # ---------------------------
-    # Get from Redis
-    # ---------------------------
-    async def get_cart_redis(self, user_id: int) -> list[Cart]:
+    async def _get_or_create_active_cart(self, user_id: int) -> Cart:
+        cart = await self.repo.get_active_cart(user_id=user_id)
+        if cart:
+            return cart
 
-        redis = await get_redis()
-        raw = await redis.get("cart", user_id)
+        cart = await self.repo.create_cart(user_id=user_id)
+        await self.db.commit()
+        await self.db.refresh(cart)
 
-        if not raw:
-            return None
+        return cart
 
-        payload = CartOut.model_validate(raw).model_dump(mode="json")
-
-        return payload
-
-    # ---------------------------
-    # Set in Redis
-    # ---------------------------
-    async def set_cart_redis(
+    async def finalize_to_db_async(
         self,
         user_id: int,
-        payload: CartItemIn,
+        items: dict[int, int],  # [variant_id: qty]
     ):
-        if self.cache.is_available():
-            await self.cache.set(
-                "cart",
-                user_id,
-                payload.variant_id,
-                payload=payload,
-            )
 
-    async def clear_cart_redis(self, user_id: int):
-        if self.cache.is_available():
-            await self.cache.invalidate_key("cart", user_id)
-
-    async def remove_variant_from_redis(self, user_id: int, variant_id: int):
-        if self.cache.is_available():
-            await self.cache.invalidate_key("cart", user_id, variant_id)
-
-    async def finalize_to_db_async(self, user_id: int):
         if user_id < 1:
             raise BadRequest("Invalid user id.")
+
+        if not items:
+            raise BadRequest("Cart items cannot be empty.")
+
+        # حذف مواردی که آیدی یا تعداد کمتر از 1 دارند
+        valid_item: dict[int, int] = {
+            vid: qty for vid, qty in items.items() if vid > 0 and qty > 0
+        }
+
+        # list of VIDs
+        list_vid = list(vid for vid in valid_item.keys())
+
+        # گرفتن قیمت‌های معتبر
+        variants_map = await self.repo.get_variants_map(list_vid)
+
+        if len(variants_map) != len(list_vid):
+            missing = set(list_vid) - set(variants_map.keys())
+            raise BadRequest(f"Invalid or inactive variant ids: {sorted(missing)}")
+
+        cart = await self._get_or_create_active_cart(user_id=user_id)
+
+        # آیتم‌ها داخل cart_items
+        await self.repo.upsert_items(cart, variants_map)
+
+        # محاسبه total_qty و total_amount
+        total_qty = 0
+        total_amount = 0
+
+        for row in variants_map:
+            v = variants_map[row["variant_id"]]
+            qty = row["qty"]
+            unit_price = v.final_price  # قیمت نهایی (با منطق product/variant)
+            total_qty += qty
+            total_amount += unit_price * qty
+
+        await self.repo.set_cart_totals(
+            cart=cart,
+            total_amount=total_amount,
+            total_qty=total_qty,
+        )
+
+        return cart
+
+    async def get_cart(self, user_id: int):
 
         if self.cache.is_available():
             cart = await self.cache.get("cart", user_id)
@@ -66,12 +85,7 @@ class CartService:
 
         cart = self.repo.get_active_cart(user_id=user_id)
 
-        if cart is not None:
-            return cart
-
-        cart = await self.repo.create_cart(user_id=user_id)
-
-        self.db.commit()
-        self.db.refresh(cart)
+        if self.cache.is_available():
+            cart = await self.cache.set("cart", user_id, payload=cart)
 
         return cart

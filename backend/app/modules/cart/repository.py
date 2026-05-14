@@ -19,10 +19,7 @@ class CartRepo:
     async def get_active_cart(self, user_id: int) -> Cart | None:
         stmt = (
             select(Cart)
-            .where(
-                Cart.user_id == user_id,
-                Cart.status == CartStatus.ACTIVE,
-            )
+            .where(Cart.user_id == user_id, Cart.status == CartStatus.ACTIVE)
             .options(
                 # Cart -> items (CartItem)
                 selectinload(Cart.items)
@@ -40,7 +37,6 @@ class CartRepo:
                 ),
             )
         )
-
         result = await self.db.execute(stmt)
         return result.unique().scalar_one_or_none()
 
@@ -50,27 +46,33 @@ class CartRepo:
 
         return cart
 
-    async def upsert_items(self, cart: Cart, items: list[dict]):
-        # items => [{"variant_id": x, "qty": y}, ...]
-        existing = {i.variant_id: i for i in cart.items}
+    async def get_variants_map(
+        self, variant_ids: list[int]
+    ) -> dict[int, ProductVariant]:
 
-        for item in items:
-            if item["variant_id"] in existing:
-                existing[item["variant_id"]].qty = item["qty"]
-            else:
-                self.db.add(
-                    CartItem(
-                        cart_id=cart.id, variant_id=item["variant_id"], qty=item["qty"]
-                    )
-                )
+        if not variant_ids:
+            return {}
 
-        self.db.commit()
-        self.db.refresh(cart)
-        return cart
+        stmt = (
+            select(ProductVariant)
+            .where(
+                ProductVariant.id.in_(variant_ids), ProductVariant.is_active.is_(True)
+            )
+            .options(selectinload(ProductVariant.product))
+        )
 
-    async def clear_cart(self, cart: Cart):
-        cart.items.clear()
-        self.db.commit()
+        res = await self.db.execute(stmt)
+        variants = res.scalars().all()
+
+        return {v.id: v for v in variants}
+
+    async def upsert_items(self, cart: Cart, items: dict[int, int]) -> None:
+        """
+        items: {variant_id: qty,}
+        """
+
+        for vid, qty in items.items():
+            self.db.add(CartItem(cart_id=cart.id, variant_id=vid, qty=qty))
 
     # ---------------------------
     # Unit of Work helpers
