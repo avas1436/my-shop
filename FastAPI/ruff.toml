@@ -1,0 +1,28 @@
+# ruff.toml
+
+line-length = 88
+indent-width = 4
+target-version = "py311"
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+
+[lint]
+select = [
+    "F",   # errors
+    "E",   # pycodestyle
+    "I",   # import sorting
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "W",   # warnings
+]
+ignore = [
+    "E501",  # خط طولانی (چون formatter خودش خط رو می‌شکنه)
+]
+
+[lint.isort]
+combine-as-imports = true
+force-single-line = false

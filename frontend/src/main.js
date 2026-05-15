@@ -1,4 +1,5 @@
 import './assets/styles/main.css'
+import './assets/styles/admin-product-workflow.css'
 import './assets/font/font.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'

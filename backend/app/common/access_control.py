@@ -1,0 +1,143 @@
+# app/common/access_control.py
+from __future__ import annotations
+
+from collections.abc import Callable, Iterable, Sequence
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
+
+from fastapi import Depends, Request
+
+from app.common.enums import UserRole
+from app.core.authentication import get_current_user
+from app.errors.errors import Forbidden
+from app.modules.users.models import User
+
+# -----------------------------
+# Type aliases
+# -----------------------------
+UserCheck = Callable[[User, Request], None]  # custom check function
+
+
+def _utcnow() -> datetime:
+    return datetime.now(UTC)
+
+
+def _forbidden(message: str, code: str) -> None:
+    raise Forbidden(message=message, code=code)
+
+
+def require_access(
+    allowed_roles: Iterable[UserRole] = [UserRole.ADMIN, UserRole.CUSTOMER],
+    *,
+    # پایه
+    require_active: bool = True,
+    require_not_deleted: bool = True,
+    require_phone_verified: bool = True,
+    # (1) ورود اخیر
+    require_recent_login_within: timedelta | None = None,
+    # (2) داشتن رمز عبور
+    require_password: bool = False,
+    # (3) تکمیل پروفایل
+    require_profile_complete: bool = False,
+    profile_required_fields: Sequence[str] = ("first_name", "last_name"),
+    # (5) deny roles
+    deny_roles: Iterable[UserRole] | None = None,
+):
+    """
+    Advanced authz dependency factory for FastAPI routes.
+    """
+    allowed_roles = set(allowed_roles)
+    deny_roles = set(deny_roles or [])
+
+    async def role_checker(
+        current_user: Annotated[User, Depends(get_current_user)],
+    ) -> User:
+        now = _utcnow()
+
+        # پایه: حذف/فعال/تایید موبایل
+        if (
+            require_not_deleted
+            and getattr(current_user, "deleted_at", None) is not None
+        ):
+            _forbidden("User account is deleted", "USER_DELETED")
+
+        if require_active and not bool(getattr(current_user, "is_active", False)):
+            _forbidden("User account is inactive", "ACCOUNT_INACTIVE")
+
+        if require_phone_verified and not bool(
+            getattr(current_user, "is_phone_verified", False)
+        ):
+            _forbidden("Phone number not verified", "PHONE_NOT_VERIFIED")
+
+        # (5) deny roles اول بررسی شود
+        if getattr(current_user, "role", None) in deny_roles:
+            _forbidden("Role is explicitly denied", "ROLE_DENIED")
+
+        # نقش مجاز
+        if getattr(current_user, "role", None) not in allowed_roles:
+            _forbidden("Insufficient permissions", "ACCESS_DENIED")
+
+        # (1) ورود اخیر
+        if require_recent_login_within is not None:
+            last_login = getattr(current_user, "last_login", None)
+
+            if last_login is None:
+                _forbidden("Recent login required", "RECENT_LOGIN_REQUIRED")
+
+            assert isinstance(last_login, datetime)
+
+            # normalize tz
+            if last_login.tzinfo is None:
+                last_login = last_login.replace(tzinfo=UTC)
+
+            if now - last_login > require_recent_login_within:
+                _forbidden("Session too old, re-authenticate", "SESSION_TOO_OLD")
+
+        # (2) داشتن رمز
+        if require_password:
+            hp = getattr(current_user, "hashed_password", None)
+            if not hp or not str(hp).strip():
+                _forbidden("Password is required for this action", "PASSWORD_REQUIRED")
+
+        # (3) پروفایل کامل
+        if require_profile_complete:
+            missing = []
+            for field in profile_required_fields:
+                val = getattr(current_user, field, None)
+                if val is None or (isinstance(val, str) and not val.strip()):
+                    missing.append(field)
+            if missing:
+                _forbidden(
+                    f"Profile incomplete: missing {', '.join(missing)}",
+                    "PROFILE_INCOMPLETE",
+                )
+
+        return current_user
+
+    return role_checker
+
+
+# -----------------------------
+# How To Use
+# -----------------------------
+
+# # پایه
+# require_roles([UserRole.ADMIN])
+
+# # این سه مورد پیش فرض فعالند
+# require_active = True
+# require_not_deleted = True
+# require_phone_verified = True
+
+# # عملیات حساس؛ اگر login قدیمی بود، re-login لازم شود.
+# require_recent_login_within = timedelta(minutes=15)
+
+# # کاربرانی که فقط با او تی پی وارد می‌شوند را برای عملیات خاص محدود کنید.
+# require_password = True
+
+# #  اجبار به تکمیل پروفایل
+# require_profile_complete = True
+# profile_required_fields = ("first_name", "last_name", "birth_date")
+
+# # حتی اگر در allow بود، deny همیشه غالب باشد.
+# deny_roles = [UserRole.BANNED]

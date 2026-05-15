@@ -78,8 +78,6 @@ dmypy.json
 Thumbs.db
 
 
-# Docker
-.dockerignore
 
 
 # Alembic (migrations)
@@ -139,4 +137,14 @@ pnpm-debug.log*
 # Editor configs
 *.tsbuildinfo
 *.eslintcache
+<<<<<<< HEAD
 frontend/docs/.~lock.راهنمای-معماری-فرانت-و-اتصال-بک‌اند.docx#
+||||||| 7e20b35
+=======
+
+
+# ========================
+# Project
+# ========================
+secrets/
+>>>>>>> develop

@@ -26,7 +26,9 @@
         </form>
 
         <div class="header-actions">
-          <router-link to="/profile" class="header-action header-action--link">حساب کاربری</router-link>
+          <router-link to="/profile" class="header-action header-action--link">
+            {{ profileLabel }}
+          </router-link>
           <button class="header-action" type="button" @click="toggleMiniCart">
             <span>سبد خرید</span>
             <strong>{{ cart.count }}</strong>
@@ -42,8 +44,13 @@
         <router-link to="/category/audio">صوتی و پوشیدنی</router-link>
         <router-link to="/category/home">خانه و آشپزخانه</router-link>
         <router-link to="/category/fashion">مد و استایل</router-link>
+<<<<<<< HEAD
         <router-link to="/support">پشتیبانی</router-link>
         <router-link to="/admin">پنل ادمین</router-link>
+||||||| 7e20b35
+=======
+        <router-link v-if="user.profile?.role === 'admin'" to="/admin/products/new">ادمین محصول</router-link>
+>>>>>>> develop
       </nav>
     </div>
 
@@ -57,7 +64,12 @@ import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAdminStore } from '@/stores/adminStore'
 import { useCartStore } from '@/stores/cartStore'
+<<<<<<< HEAD
 import { useUIStore } from '@/stores/uiStore'
+||||||| 7e20b35
+=======
+import { useUserStore } from '@/stores/userStore'
+>>>>>>> develop
 import BaseInput from '../base/BaseInput.vue'
 import MiniCart from './MiniCart.vue'
 import MobileNav from './MobileNav.vue'
@@ -69,9 +81,17 @@ defineOptions({
 const admin = useAdminStore()
 const ui = useUIStore()
 const cart = useCartStore()
+const user = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const searchQuery = ref(route.query.q || ui.searchQuery)
+const profileLabel = computed(() => {
+  if (!user.isAuthenticated) {
+    return 'حساب کاربری'
+  }
+
+  return user.profile?.first_name ? `سلام ${user.profile.first_name}` : 'حساب من'
+})
 
 const toggleMiniCart = () => ui.toggleMiniCart()
 const toggleMobile = () => ui.toggleMobileMenu()

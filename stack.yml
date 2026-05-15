@@ -1,0 +1,246 @@
+version: "3.9"
+
+services:
+  # ===== Traefik =====
+  traefik:
+    image: traefik:latest
+
+    command:
+      - "--api=true"
+      - "--api.dashboard=true"
+      - --log.level=DEBUG
+
+      # Swarm Provider
+      - "--providers.swarm=true"
+      - "--providers.swarm.exposedbydefault=false"
+      - "--providers.swarm.network=traefik-public"
+
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+    labels:
+      - traefik.enable=true
+    restart: unless-stopped
+
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+    networks:
+      - traefik-public
+
+  # ===== Frontend =====
+  frontend:
+    # build:
+    #   context: ./frontend
+
+    image: vue:latest
+
+    deploy:
+      replicas: 3
+      update_config:
+        order: start-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=Host(`example.com`)"
+        - "traefik.http.routers.frontend.tls=true"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+    networks:
+      - traefik-public
+      - web
+
+  # ===== Backend =====
+  backend:
+    # build:
+    #   context: ./backend
+
+    image: fast-api:latest
+
+    deploy:
+      replicas: 2
+      update_config:
+        order: start-first
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.backend.rule=Host(`api.example.com`)"
+        - "traefik.http.routers.backend.entrypoints=web,websecure"
+        - "traefik.http.routers.backend.tls=true"
+        - "traefik.http.services.backend.loadbalancer.server.port=8000"
+        - "traefik.docker.network=traefik-public"
+        - "traefik.http.services.backend.loadbalancer.passhostheader=true"
+
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      # test: ["CMD-SHELL", "wget -q http://localhost:8000/health || exit 1"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+    # environment:
+    # PostgreSQL
+    # DATABASE_URL: postgresql+asyncpg://avas:13771998@postgres:5432/shop
+    # Redis
+    # REDIS_URL: redis://:13771998@redis:6379/0
+
+    networks:
+      - traefik-public
+      - web
+      - internal
+
+  # ===== PostgreSQL =====
+  postgres:
+    image: postgres:16-alpine
+
+    # environment:
+    # POSTGRES_USER: avas
+    # POSTGRES_PASSWORD: 13771998
+    # POSTGRES_DB: shop
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+    deploy:
+      replicas: 1
+
+    networks:
+      - internal
+
+  # ===== Redis =====
+  redis:
+    image: redis:7-alpine
+
+    command: redis-server
+      --requirepass 13771998
+      --appendonly yes
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "13771998", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+    restart: unless-stopped
+
+    volumes:
+      - redisdata:/data
+    deploy:
+      replicas: 1
+
+    networks:
+      - internal
+
+  # ===== Celery Worker =====
+  celery_worker:
+    image: fast-api:latest
+
+    command: >
+      celery -A app.core.celeryـconf:celery_app worker -l info
+
+    depends_on:
+      - redis
+
+    environment:
+      - REDIS_BROKER_URL=redis://:13771998@redis:6379/1
+      - REDIS_BACKEND_URL=redis://:13771998@redis:6379/3
+
+    restart: unless-stopped
+
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+    networks:
+      - internal
+
+  # ===== Flower =====
+  flower:
+    image: fast-api:latest
+
+    command: >
+      celery -A app.core.celeryـconf:celery_app Flower
+      --port=5555
+      --basic_auth=avas:13771998
+
+    depends_on:
+      - redis
+
+    environment:
+      - REDIS_BROKER_URL=redis://:13771998@redis:6379/0
+      - REDIS_BACKEND_URL=redis://:13771998@redis:6379/1
+
+    ports:
+      - "5555:5555"
+
+    restart: unless-stopped
+
+    deploy:
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.flower.rule=Host(`flower.example.com`)"
+        - "traefik.http.routers.flower.entrypoints=websecure"
+        - "traefik.http.routers.flower.tls=true"
+        - "traefik.http.services.flower.loadbalancer.server.port=5555"
+        - "traefik.docker.network=traefik-public"
+    networks:
+      - internal
+      - traefik-public
+
+# ===== Network =====
+networks:
+  # شبکه اصلی ترافیک
+  traefik-public:
+    external: true
+
+  # شبکه فرانت
+  web:
+    external: true
+
+  # شبکه داخلی دیتابیس
+  internal:
+    external: true
+
+# ===== Volume =====
+volumes:
+  pgdata:
+  redisdata:
