@@ -15,6 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
+    from app.modules.cart.models import CartItem
     from app.modules.catalog.models.attribute import ProductVariantAttribute
     from app.modules.catalog.models.inventory import Inventory
     from app.modules.catalog.models.product import Product
@@ -43,6 +44,13 @@ class ProductVariant(Base):
     inventory: Mapped[Inventory | None] = relationship(
         back_populates="variant",
         uselist=False,
+        cascade="all, delete-orphan",
+    )
+
+    cart_items: Mapped[list[CartItem]] = relationship(
+        "CartItem",
+        back_populates="variant",
+        passive_deletes=True,
         cascade="all, delete-orphan",
     )
 

@@ -30,3 +30,9 @@ class ProductSortEnum(StrEnum):
     PRICE_ASC = "price_asc"
     PRICE_DESC = "price_desc"
     DISCOUNT_DESC = "discount_desc"
+
+
+class CartStatus(StrEnum):
+    ACTIVE = "active"  # فعال در حال تغییر
+    ABANDONED = "abandoned"  # رها شده
+    CONVERTED = "converted"  # تبدیل شده به سفارش

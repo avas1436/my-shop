@@ -41,6 +41,7 @@ from app.modules.catalog.models.tag import Tag  # noqa: E402, F401, I001
 from app.modules.comments.models import Comment  # noqa: E402, F401, I001
 from app.modules.catalog.models.inventory import Inventory  # noqa: E402, F401, I001
 from app.modules.users.models import User  # noqa: E402, F401, I001
+from app.modules.cart.models import Cart, CartItem  # noqa: E402, F401, I001
 
 
 def run_migrations_offline() -> None:
