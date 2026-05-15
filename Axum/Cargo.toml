@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 axum = { version = "0.8.9", registry = "devneeds" }
 serde = { version = "1.0.228", registry = "devneeds" }
+serde_json = { version = "1.0.149", registry = "devneeds" }
 tokio = { version = "1.52.3", registry = "devneeds" }
