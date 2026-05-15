@@ -1,8 +1,6 @@
 # ========================
-# Backend
+# FastAPI
 # ========================
-
-
 # Python
 __pycache__/
 *.py[cod]
@@ -134,17 +132,50 @@ pnpm-debug.log*
 .env.local
 .env.*.local
 
+
+
 # Editor configs
 *.tsbuildinfo
 *.eslintcache
-<<<<<<< HEAD
 frontend/docs/.~lock.راهنمای-معماری-فرانت-و-اتصال-بک‌اند.docx#
-||||||| 7e20b35
-=======
 
 
-# ========================
-# Project
-# ========================
-secrets/
->>>>>>> develop
+# =============================
+# Cargo / Rust
+# =============================
+**/target/
+**/debug/
+**/*.rs.bk
+
+# include cargo lock
+!Axum/Cargo.lock
+
+# MSVC debug symbols
+*.pdb
+
+# Config
+**/config/local.yaml
+**/config/*.local.yaml
+**/config/production.yaml
+
+# Logs
+**/logs/
+**/*.log
+
+# Redis
+dump.rdb
+appendonly.aof
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+*.profraw
+*.profdata
+
+# Temp
+**/tmp/
+**/temp/
+**/*.tmp
