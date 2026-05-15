@@ -5,6 +5,10 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.9", registry = "devneeds" }
+dotenvy = { version = "0.15.7", registry = "devneeds" }
 serde = { version = "1.0.228", registry = "devneeds" }
 serde_json = { version = "1.0.149", registry = "devneeds" }
+sqlx = { version = "0.8.6", registry = "devneeds" }
 tokio = { version = "1.52.3", registry = "devneeds" }
+tracing = { version = "0.1.44", registry = "devneeds" }
+tracing-subscriber = { version = "0.3.23", registry = "devneeds" }
