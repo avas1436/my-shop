@@ -1,13 +1,24 @@
 // src/cache/redis.rs
-use deadpool_redis::{Config, Pool, Runtime};
+use deadpool_redis::{Config, CreatePoolError, Pool, Runtime};
+use std::time::Duration;
 
 pub fn init_redis_pool(
     url: &str,
     max_connections: usize,
-) -> Result<Pool, deadpool_redis::CreatePoolError> {
-    let mut cfg = Config::from_url(url);
+    timeout_secs: u64,
+) -> Result<Pool, Box<dyn std::error::Error>> {
+    let cfg = Config::from_url(url);
 
-    cfg.pool.max_size = max_connections;
+    // تنظیم pool با builder pattern
+    let pool = cfg
+        .builder()?
+        .max_size(max_connections)
+        .wait_timeout(Some(Duration::from_secs(5)))
+        .create_timeout(Some(Duration::from_secs(timeout_secs)))
+        .recycle_timeout(Some(Duration::from_secs(timeout_secs)))
+        .runtime(Runtime::Tokio1)
+        .build()
+        .map_err(CreatePoolError::Build)?;
 
-    cfg.create_pool(Some(Runtime::Tokio1))
+    Ok(pool)
 }

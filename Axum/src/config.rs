@@ -1,4 +1,4 @@
-// src/config.rs 
+// src/config.rs
 use std::env;
 
 #[derive(Clone, Debug)]
@@ -22,7 +22,7 @@ impl Settings {
         Self {
             database_url: env::var("DATABASE_URL").unwrap(),
 
-            # در این قسمت اگر مقدار در فایل محیطی صحیح باشد این مقدار هم صحیح میشود در غیر این صورت همیشه غلط است
+            //  در این قسمت اگر مقدار در فایل محیطی صحیح باشد این مقدار هم صحیح میشود در غیر این صورت همیشه غلط است
             sql_echo: env::var("SQL_ECHO").unwrap_or("false".into()) == "true",
 
             db_pool_size: env::var("DB_POOL_SIZE")
