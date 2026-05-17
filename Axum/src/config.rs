@@ -4,7 +4,7 @@ use std::env;
 #[derive(Clone, Debug)]
 pub struct Settings {
     pub database_url: String,
-    pub sql_echo: bool,
+    // pub sql_echo: bool,
     pub db_pool_size: u32,
     pub db_max_overflow: u32,
     pub db_pool_timeout: u64,
@@ -23,7 +23,7 @@ impl Settings {
             database_url: env::var("DATABASE_URL").unwrap(),
 
             //  در این قسمت اگر مقدار در فایل محیطی صحیح باشد این مقدار هم صحیح میشود در غیر این صورت همیشه غلط است
-            sql_echo: env::var("SQL_ECHO").unwrap_or("false".into()) == "true",
+            // sql_echo: env::var("SQL_ECHO").unwrap_or("false".into()) == "true",
 
             db_pool_size: env::var("DB_POOL_SIZE")
                 .unwrap_or("5".into())

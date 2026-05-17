@@ -1,23 +1,20 @@
-pub mod cache {
-    pub mod redis;
-}
-pub mod config;
-pub mod db {
-    pub mod postgres;
-}
-pub mod router;
-pub mod state {
-    pub mod app_state;
-}
-pub mod docs {
-    pub mod openapi;
-}
-pub mod handlers {
-    pub mod products;
-}
-pub mod services {
-    pub mod product_service;
-}
+// src/main.rs
+mod cache;
+mod config;
+mod db;
+mod docs;
+mod dto;
+mod errors;
+mod handlers;
+mod middleware;
+mod models;
+mod observability;
+mod repository;
+mod response;
+mod router;
+mod services;
+mod state;
+mod utils;
 use config::Settings;
 use state::app_state::AppState;
 use std::net::SocketAddr;
@@ -25,7 +22,7 @@ use std::net::SocketAddr;
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
-    tracing_subscriber::fmt::init();
+    observability::tracing::init();
 
     let cfg = Settings::from_env();
 
@@ -40,16 +37,21 @@ async fn main() {
     .await
     .expect("Failed to create database pool");
 
-    let redis = cache::redis::init_redis_pool(
+    let redis_pool = cache::redis::init_redis_pool(
         &cfg.redis_url,
         cfg.redis_max_connections,
         cfg.redis_socket_timeout,
     )
     .expect("Failed to create Redis pool");
 
+    let redis = cache::redis::RedisClient::new(redis_pool);
+
+    let product_repo = repository::product::ProductRepository::new(db.clone());
+
     let state = AppState {
         db,
         redis,
+        product_repo,
         session_prefix: cfg.session_prefix.clone(),
     };
 

@@ -4,21 +4,24 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = { version = "0.8.9", registry = "devneeds" }
+axum = { version = "0.8.9", features = ["macros"] , registry = "devneeds" }
 
 dotenvy = { version = "0.15.7", registry = "devneeds" }
-serde = { version = "1.0.228", registry = "devneeds" }
+serde = { version = "1.0.228", features = ["derive"] , registry = "devneeds" }
 serde_json = { version = "1.0.149", registry = "devneeds" }
 tokio = { version = "1.52.3", features = ["full"], registry = "devneeds" }
 tracing = { version = "0.1.44", registry = "devneeds" }
-tracing-subscriber = { version = "0.3.23", registry = "devneeds" }
+tracing-subscriber = { version = "0.3.23", features = ["fmt", "env-filter"] , registry = "devneeds" }
 
 # Postgres
-sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres"], registry = "devneeds"}
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres" , "macros","chrono", "bigdecimal"], registry = "devneeds"}
 
 # Redis
-deadpool-redis = { version = "0.23.0", registry = "devneeds" }
+deadpool-redis = { version = "0.23.0", features = ["rt_tokio_1"] , registry = "devneeds" }
 
 # Swagger
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum", "vendored"] ,registry = "devneeds" }
 utoipa = { version = "5.5.0", registry = "devneeds", features = ["axum_extras"] }
+bigdecimal = { version = "0.4.10", registry = "devneeds", features = ["serde"] }
+chrono = { version = "0.4.44", features = ["serde", "clock"] , registry = "devneeds" }
+thiserror = { version = "2.0.18", registry = "devneeds" }
