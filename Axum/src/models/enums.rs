@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(type_name = "inventorystatus", rename_all = "snake_case")]
+#[sqlx(type_name = "inventorystatus", rename_all = "UPPERCASE")]
 pub enum InventoryStatus {
     InStock,
     LowStock,
@@ -10,7 +10,7 @@ pub enum InventoryStatus {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(type_name = "productstatus", rename_all = "lowercase")]
+#[sqlx(type_name = "productstatus", rename_all = "UPPERCASE")]
 pub enum ProductStatus {
     Active,
     Inactive,

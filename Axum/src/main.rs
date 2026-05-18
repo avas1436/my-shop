@@ -46,12 +46,11 @@ async fn main() {
 
     let redis = cache::redis::RedisClient::new(redis_pool);
 
-    let product_repo = repository::product::ProductRepository::new(db.clone());
+    // let product_repo = repository::product::ProductRepository::new(db.clone());
 
     let state = AppState {
         db,
         redis,
-        product_repo,
         session_prefix: cfg.session_prefix.clone(),
     };
 
