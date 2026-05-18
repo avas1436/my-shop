@@ -1,3 +1,4 @@
+<!-- src/views/ProfileView.vue -->
 <template>
   <div class="page-shell">
     <section v-if="!user.isAuthenticated" class="auth-layout">

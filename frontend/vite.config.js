@@ -1,17 +1,40 @@
+// vite.config.js
+
+// ساده سازی مسیر پوشه ها با شروع از @
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+// پلاگین وایت
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+
+// TypeScript / IntelliSense
+import { defineConfig } from 'vite'
+
+// Progressive Web App
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vite.dev/config/
+// برای فعال کردن سریع تر و بهتر نسخه توسعه و پروداکشن
+import vueDevTools from 'vite-plugin-vue-devtools'
+
+// نمایش حجم نهایی اپ
+// stats.html
+import { visualizer } from 'rollup-plugin-visualizer'
+
+// است ساختار کلی تنظیمات است
+// export default defineConfig({
+//   plugins: [ ],
+//   resolve: { }
+// })
+
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    visualizer({
+      gzipSize: true,
+      brotliSize: true,
+    }),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'autoUpdate', // آپدیت بدون مزاحمت برای کاربر
       injectRegister: 'auto',
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -32,6 +55,13 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // App Shell برای SPA
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/v1\//, // API
+          /^\/assets\//, // فایل‌های استاتیک
+          /^\/sw\.js$/, // سرویس‌ورکر
+        ],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'image',
@@ -60,13 +90,20 @@ export default defineConfig({
               },
             },
           },
+          {
+            urlPattern: ({ request }) =>
+              request.destination === 'style' || request.destination === 'font',
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'assets-cache' },
+          },
         ],
+        // navigateFallback: '/offline.html', نمایش یک صفحه برای مواقع آفلاین بودن
       },
     }),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
 })

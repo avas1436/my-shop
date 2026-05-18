@@ -1,3 +1,4 @@
+// src/router/index.js
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import StorefrontLayout from '@/layouts/StorefrontLayout.vue'
 import { createRouter, createWebHistory } from 'vue-router'

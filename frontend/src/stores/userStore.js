@@ -1,3 +1,4 @@
+// src/stores/userStore.js
 import { defineStore } from 'pinia'
 
 const AUTH_MODE_PASSWORD = 'password'

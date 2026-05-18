@@ -1,8 +1,9 @@
-import './assets/styles/main.css'
-import './assets/styles/admin-product-workflow.css'
-import './assets/font/font.css'
-import { createApp } from 'vue'
+// src/main.js
 import { createPinia } from 'pinia'
+import { createApp } from 'vue'
+import './assets/font/font.css'
+import './assets/styles/admin-product-workflow.css'
+import './assets/styles/main.css'
 
 import App from './App.vue'
 import router from './router'
