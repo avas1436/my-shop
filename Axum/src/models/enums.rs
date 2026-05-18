@@ -1,7 +1,8 @@
 // src/models/enums.rs 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "inventorystatus", rename_all = "UPPERCASE")]
 pub enum InventoryStatus {
     InStock,
@@ -9,7 +10,7 @@ pub enum InventoryStatus {
     OutOfStock,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "productstatus", rename_all = "UPPERCASE")]
 pub enum ProductStatus {
     Active,

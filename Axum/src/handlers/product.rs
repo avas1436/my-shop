@@ -1,7 +1,7 @@
 // src/handlers/product.rs
 use crate::{
     errors::errors::AppError, response::api_response::ApiResponse, services::product,
-    state::app_state::AppState,
+    state::app_state::AppState, dto::product::ProductDetailDto
 };
 use axum::{extract::Path, extract::State, http::StatusCode};
 
@@ -21,7 +21,7 @@ pub async fn get_products() -> Result<ApiResponse<()>, AppError> {
     get,
     path = "/product/{id}",
     responses(
-        (status = 200, description = "Product Detail")
+        (status = 200, description = "Product Detail", body = ProductDetailDto)
     )
 )]
 pub async fn get_product_detail(
