@@ -5,8 +5,8 @@
         <span class="auth-badge">حساب کاربری</span>
         <h1 class="section-title">ورود با رمز عبور و ثبت نام مرحله ای</h1>
         <p class="section-subtitle">
-          برای کاربران جدید ابتدا شماره موبایل تایید می شود، سپس اطلاعات حساب شامل نام،
-          تاریخ تولد و رمز عبور ثبت خواهد شد.
+          برای کاربران جدید ابتدا شماره موبایل تایید می شود، سپس اطلاعات حساب شامل نام، تاریخ تولد و
+          رمز عبور ثبت خواهد شد.
         </p>
 
         <div class="auth-highlights">
@@ -41,7 +41,11 @@
           </button>
         </div>
 
-        <form v-if="user.authMode === 'password'" class="auth-form" @submit.prevent="submitPasswordLogin">
+        <form
+          v-if="user.authMode === 'password'"
+          class="auth-form"
+          @submit.prevent="submitPasswordLogin"
+        >
           <BaseInput
             v-model="loginPhone"
             label="شماره موبایل"
@@ -95,7 +99,8 @@
           />
 
           <p class="auth-hint">
-            این مرحله فقط برای ساخت حساب جدید است و پس از تایید شماره، فرم تکمیل اطلاعات نمایش داده می شود.
+            این مرحله فقط برای ساخت حساب جدید است و پس از تایید شماره، فرم تکمیل اطلاعات نمایش داده
+            می شود.
           </p>
 
           <p v-if="user.authMessage" class="auth-feedback auth-feedback--success">
@@ -152,7 +157,12 @@
         <form class="complete-form" @submit.prevent="submitCompleteRegister">
           <div class="form-grid">
             <BaseInput v-model="firstName" label="نام" placeholder="نام" required />
-            <BaseInput v-model="lastName" label="نام خانوادگی" placeholder="نام خانوادگی" required />
+            <BaseInput
+              v-model="lastName"
+              label="نام خانوادگی"
+              placeholder="نام خانوادگی"
+              required
+            />
             <BaseInput v-model="birthDate" label="تاریخ تولد" type="date" required />
             <BaseInput
               v-model="registerPassword"
@@ -247,18 +257,11 @@
               <strong>{{ formatDate(user.profile.birth_date) }}</strong>
             </article>
             <article>
-<<<<<<< HEAD
               <span class="muted">امتیاز باشگاه مشتریان</span>
               <strong>{{ formatNumber(user.profile.loyaltyPoints) }}</strong>
-||||||| 7e20b35
-              <span class="muted">آدرس پیش‌فرض</span>
-              <strong>{{ user.addresses[0]?.title }}</strong>
-=======
               <span class="muted">سن</span>
               <strong>{{ user.profile.age ?? '-' }}</strong>
->>>>>>> develop
             </article>
-<<<<<<< HEAD
           </div>
         </section>
 
@@ -272,25 +275,6 @@
               </div>
               <span class="pill">{{ order.status }}</span>
               <strong>{{ formatPrice(order.total) }}</strong>
-||||||| 7e20b35
-          </div>
-        </section>
-
-        <section class="page-panel profile-card">
-          <h2 class="section-title">سفارش‌های اخیر</h2>
-          <div class="profile-orders">
-            <article v-for="order in user.orders" :key="order.id" class="profile-order">
-              <div>
-                <strong>{{ order.id }}</strong>
-                <p class="muted">{{ order.date }}</p>
-              </div>
-              <span class="pill">{{ order.status }}</span>
-              <strong>{{ formatPrice(order.total) }}</strong>
-=======
-            <article>
-              <span class="muted">نقش</span>
-              <strong>{{ formatRole(user.profile.role) }}</strong>
->>>>>>> develop
             </article>
             <article>
               <span class="muted">وضعیت حساب</span>
@@ -312,29 +296,16 @@
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { computed } from 'vue'
-import { useAdminStore } from '@/stores/adminStore'
-||||||| 7e20b35
-=======
-import { computed, onMounted } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
->>>>>>> develop
+import { useAdminStore } from '@/stores/adminStore'
 import { useUserStore } from '@/stores/userStore'
-<<<<<<< HEAD
 import { formatNumber, formatPrice } from '@/utils/format'
-||||||| 7e20b35
-import { formatPrice } from '@/utils/format'
-=======
->>>>>>> develop
+import { computed, onMounted } from 'vue'
 
 const user = useUserStore()
-<<<<<<< HEAD
 const admin = useAdminStore()
 const userOrders = computed(() => admin.ordersByCustomer(user.profile.customerId))
-||||||| 7e20b35
-=======
 
 onMounted(() => {
   user.restoreSession()
@@ -488,7 +459,6 @@ function goBackToPhone() {
 async function refreshProfile() {
   await user.fetchProfile()
 }
->>>>>>> develop
 </script>
 
 <style scoped>
@@ -507,8 +477,7 @@ async function refreshProfile() {
 
 .auth-panel--accent {
   background:
-    linear-gradient(135deg, rgba(91, 61, 245, 0.94), rgba(255, 122, 89, 0.92)),
-    var(--surface);
+    linear-gradient(135deg, rgba(91, 61, 245, 0.94), rgba(255, 122, 89, 0.92)), var(--surface);
   color: #fff;
 }
 
@@ -702,19 +671,15 @@ async function refreshProfile() {
   .form-grid {
     grid-template-columns: 1fr;
   }
-<<<<<<< HEAD
 
   .profile-order {
     flex-direction: column;
     align-items: start;
   }
-||||||| 7e20b35
-=======
 
   .section-head--spread {
     flex-direction: column;
     align-items: stretch;
   }
->>>>>>> develop
 }
 </style>

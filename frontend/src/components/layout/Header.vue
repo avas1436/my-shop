@@ -44,13 +44,11 @@
         <router-link to="/category/audio">صوتی و پوشیدنی</router-link>
         <router-link to="/category/home">خانه و آشپزخانه</router-link>
         <router-link to="/category/fashion">مد و استایل</router-link>
-<<<<<<< HEAD
         <router-link to="/support">پشتیبانی</router-link>
         <router-link to="/admin">پنل ادمین</router-link>
-||||||| 7e20b35
-=======
-        <router-link v-if="user.profile?.role === 'admin'" to="/admin/products/new">ادمین محصول</router-link>
->>>>>>> develop
+        <router-link v-if="user.profile?.role === 'admin'" to="/admin/products/new"
+          >ادمین محصول</router-link
+        >
       </nav>
     </div>
 
@@ -60,16 +58,12 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { useAdminStore } from '@/stores/adminStore'
 import { useCartStore } from '@/stores/cartStore'
-<<<<<<< HEAD
 import { useUIStore } from '@/stores/uiStore'
-||||||| 7e20b35
-=======
 import { useUserStore } from '@/stores/userStore'
->>>>>>> develop
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import BaseInput from '../base/BaseInput.vue'
 import MiniCart from './MiniCart.vue'
 import MobileNav from './MobileNav.vue'
@@ -174,7 +168,7 @@ watch(
   color: var(--text-muted);
   display: -webkit-box;
   overflow: hidden;
-  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 

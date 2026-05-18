@@ -79,7 +79,10 @@ function getErrorMessage(payload) {
   }
 
   if (Array.isArray(payload.detail)) {
-    return payload.detail.map((item) => item.msg).filter(Boolean).join(' - ')
+    return payload.detail
+      .map((item) => item.msg)
+      .filter(Boolean)
+      .join(' - ')
   }
 
   return payload.message || 'در ارتباط با سرور مشکلی پیش آمد.'
@@ -125,22 +128,11 @@ async function request(path, options = {}) {
   )
 
   const response = await fetch(`${baseURL}${path}`, {
-<<<<<<< HEAD
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
     },
     ...options,
-||||||| 7e20b35
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
-=======
-    ...fetchOptions,
-    headers,
->>>>>>> develop
   })
 
   const payload = await response.json().catch(() => null)
