@@ -1,5 +1,8 @@
+#![cfg(feature = "openapi")]
 // src/docs/openapi.rs 
 use utoipa::OpenApi;
+
+
 
 #[derive(OpenApi)]
 #[openapi(

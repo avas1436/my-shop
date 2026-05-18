@@ -5,25 +5,25 @@ use crate::{
 };
 use axum::{extract::Path, extract::State, http::StatusCode};
 
-#[utoipa::path(
+#[cfg_attr(feature = "openapi", utoipa::path(
     get,
     path = "/products",
     responses(
         (status = 200, description = "List of products")
     )
-)]
+))]
 pub async fn get_products() -> Result<ApiResponse<()>, AppError> {
     Ok(ApiResponse::success(StatusCode::OK, (), "/products".to_string()))
 }
 
 
-#[utoipa::path(
+#[cfg_attr(feature = "openapi", utoipa::path(
     get,
     path = "/product/{id}",
     responses(
         (status = 200, description = "Product Detail", body = ProductDetailDto)
     )
-)]
+))]
 pub async fn get_product_detail(
     Path(id): Path<i32>,
     State(state): State<AppState>,

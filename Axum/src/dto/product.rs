@@ -4,9 +4,12 @@ use crate::models::product::Product;
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
-use utoipa::ToSchema;
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)] 
+#[cfg(feature = "openapi")]
+use utoipa::{ToSchema, schema};
+
+#[derive(Debug, Serialize, Deserialize)] 
+#[cfg_attr(feature = "openapi", derive(ToSchema))]
 pub struct ProductDetailDto {
     pub id: i32,
     pub sku: String,
@@ -21,23 +24,23 @@ pub struct ProductDetailDto {
     pub status: ProductStatus,
     pub is_featured: bool,
     pub is_digital: bool,
-    #[schema(value_type = String)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String))]
     pub weight: Option<BigDecimal>,
-    #[schema(value_type = String)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String))]
     pub width: Option<BigDecimal>,
-    #[schema(value_type = String)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String))]
     pub height: Option<BigDecimal>,
-    #[schema(value_type = String)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String))]
     pub depth: Option<BigDecimal>,
     pub meta_title: Option<String>,
     pub meta_description: Option<String>,
     pub gtin: Option<String>,
     pub brand_id: Option<i32>,
-    #[schema(value_type = String, format = DateTime)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String, format = "date-time"))]
     pub created_at: DateTime<Utc>,
-    #[schema(value_type = String, format = DateTime)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String, format = "date-time"))]
     pub updated_at: Option<DateTime<Utc>>,
-    #[schema(value_type = String, format = DateTime)]
+    #[cfg_attr(feature = "openapi", schema(value_type = String, format = "date-time"))]
     pub published_at: Option<DateTime<Utc>>,
 }
 
