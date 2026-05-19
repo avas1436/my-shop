@@ -15,6 +15,12 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
+// خطاهای سراسری
+app.config.errorHandler = (err, instance, info) => {
+  console.error('Vue Error:', err, info)
+}
+
+// مدیریت UI بعد از هر route
 const ui = useUIStore(pinia)
 router.afterEach(() => {
   ui.closeMiniCart()

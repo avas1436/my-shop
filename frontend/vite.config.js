@@ -94,7 +94,11 @@ export default defineConfig({
             urlPattern: ({ request }) =>
               request.destination === 'style' || request.destination === 'font',
             handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'assets-cache' },
+            options: {
+              cacheName: 'assets-cache',
+              maxEntries: 20,
+              maxAgeSeconds: 60 * 60 * 24 * 20,
+            },
           },
         ],
         // navigateFallback: '/offline.html', نمایش یک صفحه برای مواقع آفلاین بودن
