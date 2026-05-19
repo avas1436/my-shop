@@ -71,6 +71,7 @@ function getPhoneNumber(state) {
 
 export const useUserStore = defineStore('user', {
   state: () => ({
+    // ---- داده‌های فعلی شما ----
     profile: {
       customerId: 1,
       name: 'آوا رضایی',
@@ -94,6 +95,14 @@ export const useUserStore = defineStore('user', {
         details: 'تهران، ونک، خیابان خدامی، برج آفتاب، طبقه ۵',
       },
     ],
+
+    // ---- وضعیت احراز هویت ----
+    accessToken: localStorage.getItem('accessToken') || null,
+    refreshToken: localStorage.getItem('refreshToken') || null,
+    isAuthenticated: false,
+    isAuthReady: false,
+    authLoading: false,
+    authError: '',
   }),
 
   getters: {
@@ -101,18 +110,36 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-    addAddress(address) {
-      this.addresses.push({
-        id: Date.now(),
-        city: address.city || 'تهران',
-        ...address,
-      })
-    },
-    updateProfile(patch) {
-      this.profile = {
-        ...this.profile,
-        ...patch,
+    async initializeAuth() {
+      this.authLoading = true
+      this.authError = ''
+
+      try {
+        // اگر توکن داشتیم، کاربر را لاگین فرض می‌کنیم
+        if (this.accessToken || this.refreshToken) {
+          this.isAuthenticated = true
+
+          //  API :
+          // const { data } = await api.get('/v1/users/me')
+          // this.profile = data
+        } else {
+          this.isAuthenticated = false
+        }
+      } catch (err) {
+        this.isAuthenticated = false
+        this.authError = 'خطا در احراز هویت'
+      } finally {
+        this.authLoading = false
+        this.isAuthReady = true
       }
+    },
+
+    logout() {
+      this.isAuthenticated = false
+      this.accessToken = null
+      this.refreshToken = null
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
     },
   },
 })
