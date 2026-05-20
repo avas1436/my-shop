@@ -95,9 +95,14 @@ const routes = [
     meta: { guestOnly: true }, // فقط کاربرانی که لاگین نکرده‌اند
     children: [
       {
-        path: 'login',
-        name: ROUTES.LOGIN,
-        component: () => import('@/views/auth/LoginView.vue'),
+        path: 'login-password',
+        name: ROUTES.LOGIN_PASSWORD,
+        component: () => import('@/views/auth/LoginPasswordView.vue'),
+      },
+      {
+        path: 'login-otp',
+        name: ROUTES.LOGIN_OTP,
+        component: () => import('@/views/auth/LoginOtpView.vue'),
       },
       {
         path: 'register',

@@ -14,7 +14,8 @@ export const ROUTES = {
   ABOUT: 'about',
 
   // Auth
-  LOGIN: 'login',
+  LOGIN_PASSWORD: 'login-password',
+  LOGIN_OTP: 'login-otp',
   REGISTER: 'register',
 
   // Admin
