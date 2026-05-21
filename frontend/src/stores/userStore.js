@@ -14,6 +14,14 @@ function getDefaultLoginForm() {
   }
 }
 
+function getloginOtpForm() {
+  return {
+    phone_number: '',
+    code: '',
+    purpose: 'login',
+  }
+}
+
 function getDefaultOtpForm() {
   return {
     phone_number: '',
