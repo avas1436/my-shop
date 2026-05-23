@@ -1,3 +1,4 @@
+<!-- src/layouts/StorefrontLayout.vue -->
 <template>
   <div class="app-shell">
     <Header />
@@ -11,9 +12,9 @@
 </template>
 
 <script setup>
-import { RouterView } from 'vue-router'
-import Footer from '@/components/layout/Footer.vue'
-import Header from '@/components/layout/Header.vue'
+import Footer from '@/components/layout/Footer.vue';
+import Header from '@/components/layout/Header.vue';
+import { RouterView } from 'vue-router';
 </script>
 
 <style scoped>

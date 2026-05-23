@@ -13,9 +13,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onErrorCaptured, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useUserStore } from './stores/userStore'
+
+onErrorCaptured((err, instance, info) => {
+  console.error('خطا در کامپوننت:', err)
+  console.log('اطلاعات خطا:', info)
+  return false // برای جلوگیری از انتشار خطا به بالا
+})
 
 const user = useUserStore()
 const isAuthReady = computed(() => user.isAuthReady)

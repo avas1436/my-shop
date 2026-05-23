@@ -1,94 +1,12 @@
 // src/stores/userStore.js
+import { authService } from '@/services/authService'
+import { clearStoredTokens, getStoredTokens } from '@/utils/token'
 import { defineStore } from 'pinia'
-
-const AUTH_MODE_PASSWORD = 'password'
-const OTP_STEP_PHONE = 'phone'
-const OTP_STEP_CODE = 'code'
-
-let authListenersAttached = false
-
-function getDefaultLoginForm() {
-  return {
-    phone_number: '',
-    password: '',
-  }
-}
-
-function getloginOtpForm() {
-  return {
-    phone_number: '',
-    code: '',
-    purpose: 'login',
-  }
-}
-
-function getDefaultOtpForm() {
-  return {
-    phone_number: '',
-    code: '',
-    purpose: 'register',
-  }
-}
-
-function getDefaultRegisterForm() {
-  return {
-    first_name: '',
-    last_name: '',
-    birth_date: '',
-    password: '',
-    password_confirm: '',
-  }
-}
-
-function decodeTokenPayload(token) {
-  if (!token) {
-    return null
-  }
-
-  try {
-    const [, payload] = token.split('.')
-    if (!payload) {
-      return null
-    }
-
-    const normalized = payload
-      .replace(/-/g, '+')
-      .replace(/_/g, '/')
-      .padEnd(Math.ceil(payload.length / 4) * 4, '=')
-
-    const decodeBase64 = typeof window !== 'undefined' ? window.atob : globalThis.atob
-    return JSON.parse(decodeBase64(normalized))
-  } catch {
-    return null
-  }
-}
-
-function getCurrentPayload(state) {
-  return decodeTokenPayload(state.accessToken) || decodeTokenPayload(state.refreshToken)
-}
-
-function getPhoneNumber(state) {
-  return (
-    state.profile?.phone_number ||
-    getCurrentPayload(state)?.sub ||
-    state.otpForm.phone_number ||
-    state.loginForm.phone_number ||
-    ''
-  )
-}
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     // ---- داده‌های فعلی شما ----
-    profile: {
-      customerId: 1,
-      name: 'آوا رضایی',
-      email: 'ava@example.com',
-      phone: '۰۹۱۲ ۱۲۳ ۴۵۶۷',
-      membership: 'طلایی',
-      wallet: 1450000,
-      loyaltyPoints: 1280,
-    },
+    profile: null,
     addresses: [
       {
         id: 1,
@@ -105,8 +23,9 @@ export const useUserStore = defineStore('user', {
     ],
 
     // ---- وضعیت احراز هویت ----
-    accessToken: localStorage.getItem('accessToken') || null,
-    refreshToken: localStorage.getItem('refreshToken') || null,
+    accessToken: getStoredTokens().accessToken || null,
+    refreshToken: getStoredTokens().refreshToken || null,
+
     isAuthenticated: false,
     isAuthReady: false,
     authLoading: false,
@@ -115,39 +34,73 @@ export const useUserStore = defineStore('user', {
 
   getters: {
     primaryAddress: (state) => state.addresses[0] || null,
+
+    userRole: (state) => state.profile?.role || 'guest',
   },
 
   actions: {
+    // فراخوانی در زمان لود اولیه اپلیکیشن (مثلاً در App.vue یا روتر)
     async initializeAuth() {
       this.authLoading = true
       this.authError = ''
 
-      try {
-        // اگر توکن داشتیم، کاربر را لاگین فرض می‌کنیم
-        if (this.accessToken || this.refreshToken) {
-          this.isAuthenticated = true
+      const tokens = getStoredTokens()
+      this.accessToken = tokens.accessToken
+      this.refreshToken = tokens.refreshToken
 
-          //  API :
-          // const { data } = await api.get('/v1/users/me')
-          // this.profile = data
+      try {
+        if (this.accessToken || this.refreshToken) {
+          // دریافت اطلاعات واقعی کاربر از API
+          const response = await authService.getMe()
+          this.profile = response.data
+          this.isAuthenticated = true
         } else {
           this.isAuthenticated = false
+          this.profile = null
         }
       } catch (err) {
+        console.error('Auth init failed:', err)
         this.isAuthenticated = false
+        this.profile = null
         this.authError = 'خطا در احراز هویت'
+        // اگر توکن‌ها منقضی شده باشند و رفرش هم ناموفق باشد، توکن‌ها باید پاک شوند
+        clearStoredTokens()
       } finally {
         this.authLoading = false
         this.isAuthReady = true
       }
     },
 
-    logout() {
-      this.isAuthenticated = false
-      this.accessToken = null
-      this.refreshToken = null
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
+    // اکشن برای لاگ‌اوت
+    async logout() {
+      try {
+        // فراخوانی API برای باطل کردن رفرش توکن در سمت سرور
+        if (this.refreshToken) {
+          await authService.logout({ refresh_token: this.refreshToken })
+        }
+      } catch (err) {
+        console.error('Logout API failed:', err)
+      } finally {
+        // پاک کردن استیت استور
+        this.isAuthenticated = false
+        this.profile = null
+        this.addresses = []
+        this.accessToken = null
+        this.refreshToken = null
+
+        // پاک کردن توکن‌ها از استوریج
+        clearStoredTokens()
+      }
+    },
+
+    // یک اکشن کمکی برای به‌روزرسانی استیت بعد از لاگین/ثبت‌نام موفق
+    setAuthSuccess(profileData, tokens) {
+      this.profile = profileData
+      this.isAuthenticated = true
+      if (tokens) {
+        this.accessToken = tokens.accessToken
+        this.refreshToken = tokens.refreshToken
+      }
     },
   },
 })

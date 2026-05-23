@@ -90,8 +90,8 @@ const routes = [
   // ==========================================
   {
     path: '/auth',
-    component: () => import('@/layouts/AuthLayout.vue'), // لی‌آوت مخصوص لاگین/ثبت نام
-    redirect: { name: ROUTES.LOGIN }, // ریدایرکت پیش‌فرض بخش auth
+    component: () => import('@/views/ProfileView.vue'), // لی‌آوت مخصوص لاگین/ثبت نام
+    // redirect: { name: ROUTES.LOGIN }, // ریدایرکت پیش‌فرض بخش auth
     meta: { guestOnly: true }, // فقط کاربرانی که لاگین نکرده‌اند
     children: [
       {
@@ -174,28 +174,28 @@ const router = createRouter({
 // ==========================================
 // Navigation Guards
 // ==========================================
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   // TODO: وضعیت لاگین کاربر و نقش او را از Store بگیرید
   const isAuthenticated = false
   const userRole = 'customer' // 'admin' یا
 
   // ۱. بررسی روت‌هایی که فقط برای کاربران لاگین نشده هستند
   if (to.meta.guestOnly && isAuthenticated) {
-    return next({ name: ROUTES.HOME })
+    return { name: ROUTES.HOME }
   }
 
   // ۲. بررسی روت‌هایی که نیاز به لاگین دارند
   if (to.meta.requiresAuth && !isAuthenticated) {
-    return next({ name: ROUTES.LOGIN, query: { redirect: to.fullPath } })
+    return { name: ROUTES.LOGIN, query: { redirect: to.fullPath } }
   }
 
   // ۳. بررسی نقش‌ها
   if (to.meta.role && to.meta.role !== userRole) {
-    return next({ name: ROUTES.HOME }) // یا ریدایرکت به صفحه 403 Access Denied
+    return { name: ROUTES.HOME } // یا ریدایرکت به صفحه 403 Access Denied
   }
 
   // در غیر این صورت اجازه عبور داده می‌شود
-  next()
+  true
 })
 
 export default router

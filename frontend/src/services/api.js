@@ -1,74 +1,10 @@
 // src/services/api.js
-export const ACCESS_TOKEN_KEY = 'shop_access_token'
-export const REFRESH_TOKEN_KEY = 'shop_refresh_token'
-export const AUTH_CHANGE_EVENT = 'shop:auth-changed'
+import { clearStoredTokens, getStoredTokens, persistTokens } from '@/utils/token'
 
 const defaultBaseURL = import.meta.env.DEV ? 'http://127.0.0.1:8000/api' : '/api'
 const baseURL = (import.meta.env.VITE_API_BASE_URL || defaultBaseURL).replace(/\/$/, '')
 
 let refreshRequestPromise = null
-
-function dispatchAuthChange(accessToken, refreshToken) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.dispatchEvent(
-    new CustomEvent(AUTH_CHANGE_EVENT, {
-      detail: {
-        accessToken,
-        refreshToken,
-      },
-    }),
-  )
-}
-
-export function getStoredTokens() {
-  if (typeof window === 'undefined') {
-    return {
-      accessToken: '',
-      refreshToken: '',
-    }
-  }
-
-  return {
-    accessToken: window.localStorage.getItem(ACCESS_TOKEN_KEY) || '',
-    refreshToken: window.localStorage.getItem(REFRESH_TOKEN_KEY) || '',
-  }
-}
-
-export function persistTokens(tokens) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  const accessToken = tokens?.access_token || ''
-  const refreshToken = tokens?.refresh_token || ''
-
-  if (accessToken) {
-    window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
-  } else {
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY)
-  }
-
-  if (refreshToken) {
-    window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
-  } else {
-    window.localStorage.removeItem(REFRESH_TOKEN_KEY)
-  }
-
-  dispatchAuthChange(accessToken, refreshToken)
-}
-
-export function clearStoredTokens() {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.removeItem(ACCESS_TOKEN_KEY)
-  window.localStorage.removeItem(REFRESH_TOKEN_KEY)
-  dispatchAuthChange('', '')
-}
 
 function getErrorMessage(payload) {
   if (!payload) {
@@ -115,25 +51,20 @@ export function extractApiData(payload) {
 
 async function request(path, options = {}) {
   const { skipAuth = false, skipAuthRefresh = false, ...fetchOptions } = options
+
   const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData
-  const headers = getAuthHeaders(
-    isFormData
-      ? {
-          ...fetchOptions.headers,
-        }
-      : {
-          'Content-Type': 'application/json',
-          ...fetchOptions.headers,
-        },
-    { skipAuth },
-  )
+
+  // ساخت هدرهای پیش‌فرض بر اساس نوع داده
+  const baseHeaders = isFormData
+    ? { ...fetchOptions.headers }
+    : { 'Content-Type': 'application/json', ...fetchOptions.headers }
+
+  // افزودن توکن به هدرها
+  const headers = getAuthHeaders(baseHeaders, { skipAuth })
 
   const response = await fetch(`${baseURL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
+    ...fetchOptions, // گزینه‌های fetch مانند method و body
+    headers, // استفاده از هدرهای اصلاح شده حاوی توکن
   })
 
   const payload = await response.json().catch(() => null)
