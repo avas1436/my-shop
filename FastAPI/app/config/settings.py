@@ -99,6 +99,11 @@ class Settings(BaseSettings):
     flower_user: str
     flower_pass: str
 
+    # coockie
+    httponly: bool
+    secure: bool
+    samesite: str
+
     # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
     @property
     def refresh_token_ttl(self) -> int:

@@ -1,7 +1,8 @@
+# app/modules/users/routers.py
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -9,16 +10,20 @@ from app.common.responses import SuccessAPIRoute, SuccessMessage
 from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
 from app.modules.users.schemas import (
+    AccessToken,
     LoginWithPassword,
     OTPVerify,
-    RefreshTokenRequest,
     Register,
     RequestOTP,
-    TokenPair,
     UserGet,
 )
 from app.modules.users.service import (
     AuthService,
+)
+from app.modules.users.utils import (
+    delete_refresh_token_cookie,
+    get_refresh_token,
+    set_refresh_token_cookie,
 )
 
 router = APIRouter(route_class=SuccessAPIRoute)
@@ -61,16 +66,24 @@ async def request_otp(
 # ====================================================================
 @router.post(
     "/otp/verify",
-    response_model=TokenPair,
+    response_model=AccessToken,
     status_code=status.HTTP_200_OK,
     summary="Verify OTP and issue token pair",
 )
 async def verify_otp_route(
+    response: Response,
     data: OTPVerify,
     service: Annotated[AuthService, Depends(get_auth_service)],
 ):
 
-    return await service.verify_otp_service(data=data)
+    token_pair = await service.verify_otp_service(data=data)
+
+    set_refresh_token_cookie(
+        response=response,
+        refresh_token=token_pair.refresh_token,
+    )
+
+    return AccessToken(access_token=token_pair.access_token)
 
 
 # ====================================================================
@@ -107,33 +120,49 @@ async def register_complete(
 # ====================================================================
 @router.post(
     "/login/password",
-    response_model=TokenPair,
+    response_model=AccessToken,
     status_code=status.HTTP_200_OK,
     summary="Login with password",
 )
 async def login_with_password(
+    response: Response,
     data: LoginWithPassword,
     service: Annotated[AuthService, Depends(get_auth_service)],
 ):
 
-    return await service.login_with_password_service(data=data)
+    token_pair = await service.login_with_password_service(data=data)
+
+    set_refresh_token_cookie(
+        response=response,
+        refresh_token=token_pair.refresh_token,
+    )
+
+    return AccessToken(access_token=token_pair.access_token)
 
 
 # ====================================================================
-# Login with Password
+# Refresh both tokens
 # ====================================================================
 @router.post(
     "/token/refresh",
-    response_model=TokenPair,
+    response_model=AccessToken,
     status_code=status.HTTP_200_OK,
     summary="Refresh access and refresh tokens",
 )
 async def refresh_token(
-    data: RefreshTokenRequest,
+    response: Response,
+    token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
 ):
 
-    return await service.refresh_token_service(refresh_token=data.refresh_token)
+    token_pair = await service.refresh_token_service(refresh_token=token)
+
+    set_refresh_token_cookie(
+        response=response,
+        refresh_token=token_pair.refresh_token,
+    )
+
+    return AccessToken(access_token=token_pair.access_token)
 
 
 # ====================================================================
@@ -146,7 +175,8 @@ async def refresh_token(
     summary="Revoke current refresh token",
 )
 async def logout(
-    data: RefreshTokenRequest,
+    response: Response,
+    token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
     _: Annotated[
         User,
@@ -157,7 +187,9 @@ async def logout(
         ),
     ],
 ):
-    await service.revoke_refresh_token_service(refresh_token=data.refresh_token)
+    await service.revoke_refresh_token_service(refresh_token=token)
+
+    delete_refresh_token_cookie(response=response)
 
     return SuccessMessage(message="Logged out successfully")
 
@@ -172,6 +204,7 @@ async def logout(
     summary="Revoke all refresh tokens for current user",
 )
 async def logout_all(
+    response: Response,
     service: Annotated[AuthService, Depends(get_auth_service)],
     phone_number: str,
     _: Annotated[
@@ -191,6 +224,8 @@ async def logout_all(
     await service.revoke_all_refresh_tokens_for_subject_service(
         phone_number=phone_number,
     )
+
+    delete_refresh_token_cookie(response=response)
 
     return SuccessMessage(message="Logged out from all devices successfully")
 

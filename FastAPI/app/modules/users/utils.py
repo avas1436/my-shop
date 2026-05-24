@@ -1,5 +1,19 @@
-# phone number validator
+# app/modules/users/utils.py
 import re
+
+from fastapi import Cookie, Response
+
+from app.cache.cache import RedisCache
+from app.config.settings import get_settings
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    get_token_payload,
+)
+from app.errors.errors import Unauthorized
+from app.modules.users.models import User
+
+settings = get_settings()
 
 
 # ==============================================================================
@@ -48,3 +62,57 @@ def validate_password(password: str):
 
     # if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
     #     raise ValueError("Password must contain special char")
+
+
+# ==============================================================================
+# Token Maker
+# ==============================================================================
+async def issue_access_token(user: User) -> str:
+    access_token = create_access_token(subject=user.phone_number)
+
+    return access_token
+
+
+async def issue_refresh_token(user: User, cache: RedisCache) -> str:
+    refresh_token = create_refresh_token(subject=user.phone_number)
+    refresh_payload = get_token_payload(refresh_token, expected_type="refresh")
+
+    await cache.store(
+        jti=str(refresh_payload["jti"]),
+        subject=str(refresh_payload["sub"]),
+    )
+
+    return refresh_token
+
+
+# ====================================================================
+# Helper Function for Setting Cookie
+# ====================================================================
+def set_refresh_token_cookie(
+    response: Response,
+    refresh_token: str,
+):
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=settings.httponly,
+        secure=settings.secure,  # در پروداکشن که HTTPS است حتماً True باشد
+        samesite=settings.samesite,  # یا "strict"
+        max_age=settings.refresh_token_ttl,
+    )
+
+
+def delete_refresh_token_cookie(response: Response):
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,
+        secure=True,
+        samesite="lax",
+    )
+
+
+def get_refresh_token(refresh_token: str | None = Cookie(None)) -> str:
+    if not refresh_token:
+        raise Unauthorized("Missing refresh token")
+    return refresh_token

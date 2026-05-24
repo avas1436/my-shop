@@ -32,59 +32,6 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 # =========================
-# Redis key / TTL helpers
-# =========================
-# خروجی مدت اعتبار رفرش توکن در فرمت تایم دلتا
-# def get_refresh_token_ttl() -> timedelta:
-#     return timedelta(days=settings.refresh_token_expire_days)
-
-
-# # کلید مورد استفاده در ردیس
-# def build_refresh_token_key(token_id: str) -> str:
-#     return f"{settings.session_prefix}:refresh:{token_id}"
-
-
-# =========================
-# Refresh session in Redis
-# =========================
-# ذخیره رفرش توکن داخل ردیس
-# async def store_refresh_token(
-#     redis_client: Redis | None,
-#     token_id: str,
-#     subject: str,
-# ) -> None:
-#     if redis_client is None:
-#         return
-
-#     ttl = max(int(get_refresh_token_ttl().total_seconds()), 1)
-
-#     await redis_client.setex(build_refresh_token_key(token_id), ttl, subject)
-
-
-# بررسی وجود رفرش توکن در ردیس
-# async def is_refresh_token_active(
-#     redis_client: Redis | None,
-#     token_id: str,
-#     subject: str,
-# ) -> bool:
-
-#     if redis_client is None:
-#         return False
-
-#     stored_subject = await redis_client.get(build_refresh_token_key(token_id))
-
-#     return str(stored_subject) == str(subject)
-
-
-# حذف رفرش توکن از ردیس
-# async def revoke_refresh_token(redis_client: Redis | None, token_id: str) -> None:
-#     if redis_client is None:
-#         return
-
-#     await redis_client.delete(build_refresh_token_key(token_id))
-
-
-# =========================
 # JWT create / decode
 # =========================
 # با موارد دریافتی یک توکن میسازد
@@ -187,37 +134,3 @@ def get_token_payload(token: str, expected_type: str = "access") -> dict[str, An
 def get_token_subject(token: str, expected_type: str = "access") -> str:
     payload = get_token_payload(token=token, expected_type=expected_type)
     return str(payload["sub"])
-
-
-# =========================
-# Refresh token guard
-# =========================
-# async def validate_refresh_token(
-#     token: str,
-#     redis_client: Redis | None,
-# ) -> dict[str, Any]:
-#     """
-#     اعتبارسنجی کامل refresh:
-#     1) JWT معتبر باشد
-#     2) type == refresh
-#     3) jti در Redis فعال باشد
-#     """
-#     payload = get_token_payload(token=token, expected_type="refresh")
-
-#     jti = payload.get("jti")
-#     subject = payload.get("sub")
-
-#     if not isinstance(jti, str) or not jti:
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Invalid refresh token",
-#         )
-
-#     is_active = await is_refresh_token_active(redis_client, jti, subject)
-#     if not is_active:
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Refresh token revoked or inactive",
-#         )
-
-#     return payload

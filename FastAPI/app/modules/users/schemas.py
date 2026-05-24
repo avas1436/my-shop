@@ -1,3 +1,4 @@
+# app/modules/users/schemas.py
 from datetime import date, datetime
 from typing import Annotated, Literal
 
@@ -131,16 +132,17 @@ class UserGet(BaseModel):
 
 
 # ==============================================================================
-# Pait Token
+# Access Token
+# ==============================================================================
+class AccessToken(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+
+
+# ==============================================================================
+# Pair Token
 # ==============================================================================
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
     token_type: Literal["bearer"] = "bearer"
-
-
-# ==============================================================================
-# Refresh Token Request
-# ==============================================================================
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str

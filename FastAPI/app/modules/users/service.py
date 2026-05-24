@@ -1,3 +1,4 @@
+# app/modules/users/services.py
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
@@ -6,8 +7,6 @@ from app.common.request_meta import ClientMeta
 from app.config.settings import get_settings
 from app.core.otp_service import create_otp, verify_otp
 from app.core.security import (
-    create_access_token,
-    create_refresh_token,
     get_token_payload,
     hash_password,
     verify_password,
@@ -28,34 +27,22 @@ from app.modules.users.schemas import (
     RequestOTP,
     TokenPair,
 )
+from app.modules.users.utils import issue_access_token, issue_refresh_token
 
 settings = get_settings()
 
 
 # =========================
-# Refresh Flow
+# User Services
 # =========================
-async def issue_token_pair(user: User, cache: RedisCache) -> TokenPair:
-
-    access_token = create_access_token(subject=user.phone_number)
-
-    refresh_token = create_refresh_token(subject=user.phone_number)
-
-    refresh_payload = get_token_payload(refresh_token, expected_type="refresh")
-
-    await cache.store(
-        jti=str(refresh_payload["jti"]),
-        subject=str(refresh_payload["sub"]),
-    )
-
-    return TokenPair(
-        access_token=access_token,
-        refresh_token=refresh_token,
-    )
-
-
 class AuthService:
-    def __init__(self, db: AsyncSession, cache: RedisCache, meta: ClientMeta, ttl: int):
+    def __init__(
+        self,
+        db: AsyncSession,
+        cache: RedisCache,
+        meta: ClientMeta,
+        ttl: int,
+    ):
         self.db = db
         self.repo = UserRepository(db=db)
         self.cache = RefreshTokenCache(cache=cache, ttl_seconds=ttl)
@@ -135,7 +122,10 @@ class AuthService:
             if changed:
                 await self.repo.commit()
 
-        return await issue_token_pair(user=user, cache=self.cache)
+        refresh = await issue_refresh_token(user=user, cache=self.cache)
+        access = await issue_access_token(user=user)
+
+        return TokenPair(access_token=access, refresh_token=refresh)
 
     # ============================================
     # Login with password
@@ -162,7 +152,10 @@ class AuthService:
 
         await self.repo.commit()
 
-        return await issue_token_pair(user=user, cache=self.cache)
+        refresh = await issue_refresh_token(user=user, cache=self.cache)
+        access = await issue_access_token(user=user)
+
+        return TokenPair(access_token=access, refresh_token=refresh)
 
     # ============================================
     # Complete Register for new users
@@ -228,7 +221,11 @@ class AuthService:
             raise Unauthorized("User not found or inactive")
 
         await self.cache.revoke(jti=token_id, subject=subject)
-        return await issue_token_pair(user=user, cache=self.cache)
+
+        refresh = await issue_refresh_token(user=user, cache=self.cache)
+        access = await issue_access_token(user=user)
+
+        return TokenPair(access_token=access, refresh_token=refresh)
 
     # ============================================
     # Revoke Refresh Token
