@@ -132,16 +132,17 @@ class UserGet(BaseModel):
 
 
 # ==============================================================================
-# Pait Token
+# Access Token
 # ==============================================================================
-class TokenPair(BaseModel):
+class AccessToken(BaseModel):
     access_token: str
-    # refresh_token: str
     token_type: Literal["bearer"] = "bearer"
 
 
 # ==============================================================================
-# Refresh Token Request
+# Pair Token
 # ==============================================================================
-# class RefreshTokenRequest(BaseModel):
-#     refresh_token: str
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: Literal["bearer"] = "bearer"
