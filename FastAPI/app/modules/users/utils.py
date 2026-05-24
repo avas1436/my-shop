@@ -93,15 +93,13 @@ def set_refresh_token_cookie(
     refresh_token: str,
 ):
 
-    age = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
-
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
-        httponly=True,
-        secure=True,  # در پروداکشن که HTTPS است حتماً True باشد
-        samesite="lax",  # یا "strict"
-        max_age=age,
+        httponly=settings.httponly,
+        secure=settings.secure,  # در پروداکشن که HTTPS است حتماً True باشد
+        samesite=settings.samesite,  # یا "strict"
+        max_age=settings.refresh_token_ttl,
     )
 
 
