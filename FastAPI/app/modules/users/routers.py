@@ -151,12 +151,11 @@ async def login_with_password(
 )
 async def refresh_token(
     response: Response,
+    token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
 ):
 
-    token_pair = await service.refresh_token_service(
-        refresh_token=response.refresh_token
-    )
+    token_pair = await service.refresh_token_service(refresh_token=token)
 
     set_refresh_token_cookie(
         response=response,
