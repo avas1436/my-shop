@@ -121,7 +121,7 @@ async def login_with_password(
 
 
 # ====================================================================
-# Login with Password
+# Refresh both tokens
 # ====================================================================
 @router.post(
     "/token/refresh",
