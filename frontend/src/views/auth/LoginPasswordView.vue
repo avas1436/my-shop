@@ -49,7 +49,7 @@ async function handleSubmit() {
     const data = await authService.loginWithPassword(form.phone, form.password)
     userStore.setAuthSuccess(data.access_token)
     await userStore.initializeAuth()
-    router.push('/') // یا مسیر پروفایل
+    router.push('/profile')
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'خطا در ورود به حساب'
   } finally {
