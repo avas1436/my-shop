@@ -90,10 +90,15 @@ const routes = [
   // ==========================================
   {
     path: '/auth',
-    component: () => import('@/views/ProfileView.vue'), // لی‌آوت مخصوص لاگین/ثبت نام
-    // redirect: { name: ROUTES.LOGIN }, // ریدایرکت پیش‌فرض بخش auth
+    component: StorefrontLayout,
+    redirect: { name: ROUTES.LOGIN }, // ریدایرکت پیش‌فرض بخش auth
     meta: { guestOnly: true }, // فقط کاربرانی که لاگین نکرده‌اند
     children: [
+      {
+        path: '',
+        name: 'auth-index',
+        component: () => import('@/views/auth/AuthIndexView.vue'),
+      },
       {
         path: 'login-password',
         name: ROUTES.LOGIN_PASSWORD,
@@ -174,27 +179,29 @@ const router = createRouter({
 // ==========================================
 // Navigation Guards
 // ==========================================
+import { useUserStore } from '@/stores/userStore'
+
 router.beforeEach((to, from) => {
-  // TODO: وضعیت لاگین کاربر و نقش او را از Store بگیرید
-  const isAuthenticated = false
-  const userRole = 'customer' // 'admin' یا
+  const userStore = useUserStore()
 
-  // ۱. بررسی روت‌هایی که فقط برای کاربران لاگین نشده هستند
-  if (to.meta.guestOnly && isAuthenticated) {
-    return { name: ROUTES.HOME }
-  }
+  const isAuthenticated = userStore.isAuthenticated
+  const userRole = userStore.userRole
 
-  // ۲. بررسی روت‌هایی که نیاز به لاگین دارند
+  // بررسی روت‌هایی که فقط برای کاربران لاگین نشده هستند
   if (to.meta.requiresAuth && !isAuthenticated) {
     return { name: ROUTES.LOGIN, query: { redirect: to.fullPath } }
   }
 
-  // ۳. بررسی نقش‌ها
-  if (to.meta.role && to.meta.role !== userRole) {
-    return { name: ROUTES.HOME } // یا ریدایرکت به صفحه 403 Access Denied
+  // اگر لاگین بود و خواست بره صفحه ورود
+  else if (to.meta.guestOnly && isAuthenticated) {
+    return { name: ROUTES.PROFILE, query: { redirect: to.fullPath } }
   }
 
-  // در غیر این صورت اجازه عبور داده می‌شود
+  // اگر نیاز به نقش ادمین داشت
+  else if (to.meta.role && to.meta.role !== userRole) {
+    return { name: ROUTES.HOME }
+  }
+
   true
 })
 

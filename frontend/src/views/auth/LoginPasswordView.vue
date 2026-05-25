@@ -1,85 +1,92 @@
 <!-- src/views/auth/LoginPasswordView.vue -->
 <template>
-  <form class="auth-form" @submit.prevent="submitPasswordLogin">
-    <BaseInput
-      v-model="loginPhone"
-      label="شماره موبایل"
-      type="tel"
-      placeholder="مثلا 09121234567"
-      inputmode="numeric"
-      maxlength="11"
-      required
-    />
+  <div class="auth-card page-panel">
+    <h1 class="section-title">ورود به حساب کاربری</h1>
+    <p class="muted mb-4">لطفا شماره موبایل و رمز عبور خود را وارد کنید.</p>
 
-    <BaseInput
-      v-model="loginPassword"
-      label="رمز عبور"
-      type="password"
-      placeholder="رمز عبور خود را وارد کنید"
-      required
-    />
+    <form @submit.prevent="handleSubmit" class="auth-form">
+      <div class="form-group">
+        <label>شماره موبایل</label>
+        <input type="text" v-model="form.phone" placeholder="۰۹۱۲۳۴۵۶۷۸۹" required />
+      </div>
+      <div class="form-group">
+        <label>رمز عبور</label>
+        <input type="password" v-model="form.password" placeholder="********" required />
+      </div>
 
-    <p v-if="user.authMessage" class="auth-feedback auth-feedback--success">
-      {{ user.authMessage }}
-    </p>
-    <p v-if="user.authError" class="auth-feedback auth-feedback--error">
-      {{ user.authError }}
-    </p>
+      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
 
-    <BaseButton type="submit" size="lg" block :disabled="user.loginLoading">
-      {{ passwordSubmitLabel }}
-    </BaseButton>
-  </form>
+      <BaseButton type="submit" :disabled="isLoading" block>
+        {{ isLoading ? 'در حال ورود...' : 'ورود' }}
+      </BaseButton>
+    </form>
+
+    <div class="auth-links mt-3">
+      <router-link :to="{ name: 'login-otp' }">ورود با رمز یکبار مصرف (OTP)</router-link>
+      <router-link :to="{ name: 'register' }">ثبت‌نام نکرده‌اید؟</router-link>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
+import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
-import { computed } from 'vue'
+import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const user = useUserStore()
+const router = useRouter()
+const userStore = useUserStore()
 
-function toEnglishDigits(value) {
-  return String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-}
-function normalizeDigits(value) {
-  return toEnglishDigits(value).replace(/\D/g, '')
-}
+const isLoading = ref(false)
+const errorMessage = ref('')
+const form = reactive({ phone: '', password: '' })
 
-const loginPhone = computed({
-  get: () => user.loginForm.phone_number,
-  set: (value) => user.setLoginField('phone_number', normalizeDigits(value).slice(0, 11)),
-})
-const loginPassword = computed({
-  get: () => user.loginForm.password,
-  set: (value) => user.setLoginField('password', value),
-})
-const passwordSubmitLabel = computed(() => (user.loginLoading ? 'در حال ورود...' : 'ورود به حساب'))
-
-async function submitPasswordLogin() {
-  await user.loginWithPassword()
+async function handleSubmit() {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const data = await authService.loginWithPassword(form.phone, form.password)
+    userStore.setAuthSuccess(data.access_token)
+    await userStore.initializeAuth()
+    router.push('/') // یا مسیر پروفایل
+  } catch (error) {
+    errorMessage.value = error.response?.data?.message || 'خطا در ورود به حساب'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
 <style scoped>
-.auth-form {
+/* استایل‌های پایه برای فرم‌های احراز هویت */
+.auth-card {
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.form-group {
+  margin-bottom: 1rem;
   display: grid;
-  gap: 1rem;
-  margin-top: 1.25rem;
+  gap: 0.5rem;
 }
-.auth-feedback {
-  margin: 0;
-  padding: 0.9rem 1rem;
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.05);
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
 }
-.auth-feedback--success {
-  color: #0f766e;
-  background: rgba(15, 118, 110, 0.1);
+.error-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 }
-.auth-feedback--error {
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
 }
 </style>
