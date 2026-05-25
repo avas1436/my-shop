@@ -1,10 +1,7 @@
 // src/services/axiosClient.js
 
-import {
-  clearStoredAccessToken,
-  getStoredAccessToken,
-  persistAccessToken
-} from '@/utils/token'
+import { useErrorStore } from '@/stores/errorStore'
+import { clearStoredAccessToken, getStoredAccessToken, persistAccessToken } from '@/utils/token'
 import axios from 'axios'
 
 const axiosClient = axios.create({
@@ -73,11 +70,31 @@ axiosClient.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error.config
+    const errorStore = useErrorStore()
 
     if (error.response) {
       const backendError = error.response.data || {}
       const status_code = backendError.status_code || error.response.status
+      const errorType = backendError.error_type || 'UnknownError'
+      const detail = backendError.detail
+      const errorCode = detail?.code || null // دریافت کد خطا برای بررسی در شرط
 
+      // استخراج پیام خطا بر اساس ساختار بک‌اند
+      let errorMessage = 'خطایی رخ داده است'
+      let validationErrors = null
+
+      if (errorType === 'RequestValidationError') {
+        // خطاهای ولیدیشن 422
+        errorMessage = 'اطلاعات وارد شده نامعتبر است'
+        validationErrors = detail // آرایه خطاهای pydantic
+      } else if (detail && detail.message) {
+        // خطاهای ServiceError و HttpError
+        errorMessage = detail.message
+      } else if (typeof detail === 'string') {
+        errorMessage = detail
+      }
+
+      // مدیریت ۴۰۱ و رفرش توکن
       if (status_code === 401 || errorCode === 'MISSING_TOKEN') {
         if (isRefreshing) {
           return new Promise(function (resolve, reject) {
@@ -127,26 +144,42 @@ axiosClient.interceptors.response.use(
         })
       }
 
-      // مدیریت سایر خطاها
-      const errorType = backendError.error_type
-      const errorMessage = backendError.detail?.message
-      const errorCode = backendError.detail?.code
-
-      // فرمت کردن ارور برای استفاده راحت‌تر در کامپوننت‌های Vue
-      return Promise.reject({
+      // ایجاد خطای استاندارد برای خطاهای غیر ۴۰۱
+      const standardError = {
         status: status_code,
         error_type: errorType,
-        message: errorMessage || 'خطایی رخ داده است',
-        code: errorCode,
-      })
+        message: errorMessage,
+        code: detail?.code || null,
+        validation_errors: validationErrors,
+        path: backendError.path || null,
+      }
+
+      // ثبت خطا در استور برای نمایش به کاربر
+      // به جز 401 که بی سر و صدا هندل می‌شود
+      if (status_code !== 401) {
+        errorStore.addError({
+          type: status_code >= 500 ? 'server' : 'client',
+          message: standardError.message,
+        })
+      }
+
+      return Promise.reject(standardError)
     }
 
-    // خطاهای شبکه
-    return Promise.reject({
+    // خطاهای شبکه (مثل قطعی اینترنت یا CORS)
+    const networkError = {
       status: null,
-      message: 'خطا در ارتباط با سرور',
+      error_type: 'NetworkError',
+      message: 'خطا در ارتباط با سرور. لطفا اتصال اینترنت خود را بررسی کنید.',
       fullError: error,
+    }
+
+    errorStore.addError({
+      type: 'network',
+      message: networkError.message,
     })
+
+    return Promise.reject(networkError)
   },
 )
 
