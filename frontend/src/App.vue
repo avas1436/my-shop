@@ -9,10 +9,12 @@
     <Transition name="fade" mode="out-in">
       <component :is="Component" />
     </Transition>
+    <ToastContainer />
   </RouterView>
 </template>
 
 <script setup>
+import ToastContainer from '@/components/layout/ToastContainer.vue'
 import { computed, onErrorCaptured, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useUserStore } from './stores/userStore'
