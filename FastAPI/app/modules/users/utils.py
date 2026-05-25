@@ -106,9 +106,9 @@ def set_refresh_token_cookie(
 def delete_refresh_token_cookie(response: Response):
     response.delete_cookie(
         key="refresh_token",
-        httponly=True,
-        secure=True,
-        samesite="lax",
+        httponly=settings.httponly,
+        secure=settings.secure,
+        samesite=settings.samesite,
     )
 
 

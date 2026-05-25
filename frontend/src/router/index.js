@@ -189,7 +189,7 @@ router.beforeEach((to, from) => {
 
   // بررسی روت‌هایی که فقط برای کاربران لاگین نشده هستند
   if (to.meta.requiresAuth && !isAuthenticated) {
-    return { name: ROUTES.LOGIN, query: { redirect: to.fullPath } }
+    return { name: ROUTES.LOGIN_PASSWORD, query: { redirect: to.fullPath } }
   }
 
   // اگر لاگین بود و خواست بره صفحه ورود
