@@ -1,7 +1,7 @@
 // src/services/axiosClient.js
 
 import {
-  clearStoredTokens,
+  clearStoredAccessToken,
   getStoredAccessToken,
   persistAccessToken
 } from '@/utils/token'
@@ -117,7 +117,7 @@ axiosClient.interceptors.response.use(
             .catch((err) => {
               // اگر خود درخواست رفرش توکن هم خطا داد
               processQueue(err, null)
-              clearStoredTokens()
+              clearStoredAccessToken()
               window.location.href = '/login'
               reject(err)
             })
