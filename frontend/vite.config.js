@@ -36,7 +36,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate', // آپدیت بدون مزاحمت برای کاربر
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['favicon.ico', 'offline.html'],
       manifest: {
         name: 'Shop Frontend',
         short_name: 'Shop',
@@ -56,7 +56,7 @@ export default defineConfig({
       },
       workbox: {
         // App Shell برای SPA
-        navigateFallback: '/index.html',
+        navigateFallback: '/offline.html', // نمایش یک صفحه برای مواقع آفلاین بودن
         navigateFallbackDenylist: [
           /^\/v1\//, // API
           /^\/assets\//, // فایل‌های استاتیک
@@ -96,12 +96,13 @@ export default defineConfig({
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'assets-cache',
-              maxEntries: 20,
-              maxAgeSeconds: 60 * 60 * 24 * 20,
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 20,
+              },
             },
           },
         ],
-        // navigateFallback: '/offline.html', نمایش یک صفحه برای مواقع آفلاین بودن
       },
     }),
   ],

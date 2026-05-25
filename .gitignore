@@ -140,6 +140,9 @@ pnpm-debug.log*
 frontend/docs/.~lock.راهنمای-معماری-فرانت-و-اتصال-بک‌اند.docx#
 
 
+# visualizer 
+**/stats.html
+
 # =============================
 # Cargo / Rust
 # =============================
