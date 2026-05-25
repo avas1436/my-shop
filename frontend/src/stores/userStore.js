@@ -1,6 +1,6 @@
 // src/stores/userStore.js
 import { authService } from '@/services/authService'
-import { clearStoredTokens, getStoredTokens } from '@/utils/token'
+import { getStoredAccessToken } from '@/utils/token'
 import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', {
@@ -23,8 +23,7 @@ export const useUserStore = defineStore('user', {
     ],
 
     // ---- وضعیت احراز هویت ----
-    accessToken: getStoredTokens().accessToken || null,
-    refreshToken: getStoredTokens().refreshToken || null,
+    accessToken: getStoredAccessToken().accessToken || null,
 
     isAuthenticated: false,
     isAuthReady: false,
@@ -44,15 +43,13 @@ export const useUserStore = defineStore('user', {
       this.authLoading = true
       this.authError = ''
 
-      const tokens = getStoredTokens()
-      this.accessToken = tokens.accessToken
-      this.refreshToken = tokens.refreshToken
+      const accessToken = getStoredAccessToken()
 
       try {
-        if (this.accessToken || this.refreshToken) {
+        if (this.accessToken) {
           // دریافت اطلاعات واقعی کاربر از API
-          const response = await authService.getMe()
-          this.profile = response.data
+          const userProfile = await authService.getMe()
+          this.profile = userProfile.data
           this.isAuthenticated = true
         } else {
           this.isAuthenticated = false
@@ -64,7 +61,6 @@ export const useUserStore = defineStore('user', {
         this.profile = null
         this.authError = 'خطا در احراز هویت'
         // اگر توکن‌ها منقضی شده باشند و رفرش هم ناموفق باشد، توکن‌ها باید پاک شوند
-        clearStoredTokens()
       } finally {
         this.authLoading = false
         this.isAuthReady = true
@@ -75,9 +71,7 @@ export const useUserStore = defineStore('user', {
     async logout() {
       try {
         // فراخوانی API برای باطل کردن رفرش توکن در سمت سرور
-        if (this.refreshToken) {
-          await authService.logout({ refresh_token: this.refreshToken })
-        }
+        await authService.logout({ refresh_token: this.refreshToken })
       } catch (err) {
         console.error('Logout API failed:', err)
       } finally {
@@ -86,20 +80,15 @@ export const useUserStore = defineStore('user', {
         this.profile = null
         this.addresses = []
         this.accessToken = null
-        this.refreshToken = null
-
-        // پاک کردن توکن‌ها از استوریج
-        clearStoredTokens()
       }
     },
 
     // یک اکشن کمکی برای به‌روزرسانی استیت بعد از لاگین/ثبت‌نام موفق
-    setAuthSuccess(profileData, tokens) {
+    setAuthSuccess(profileData, token) {
       this.profile = profileData
       this.isAuthenticated = true
-      if (tokens) {
-        this.accessToken = tokens.accessToken
-        this.refreshToken = tokens.refreshToken
+      if (token) {
+        this.accessToken = token.accessToken
       }
     },
   },

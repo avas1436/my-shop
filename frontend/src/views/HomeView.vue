@@ -1,3 +1,4 @@
+<!-- src/views/HomeView.vue -->
 <template>
   <div class="page-shell">
     <HeroBanner :highlight="featuredProducts[0]" :side-highlights="featuredProducts.slice(1, 3)" />
@@ -18,13 +19,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import CategoryCarousel from '@/components/home/CategoryCarousel.vue'
 import BrandsSection from '@/components/home/BrandsSection.vue'
+import CategoryCarousel from '@/components/home/CategoryCarousel.vue'
 import HeroBanner from '@/components/home/HeroBanner.vue'
 import ProductCarousel from '@/components/home/ProductCarousel.vue'
 import PromotionBanner from '@/components/home/PromotionBanner.vue'
 import { useProductsStore } from '@/stores/products'
+import { computed } from 'vue'
 
 const store = useProductsStore()
 const featuredProducts = computed(() => store.featuredProducts)

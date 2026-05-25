@@ -26,7 +26,7 @@
         </form>
 
         <div class="header-actions">
-          <router-link to="/profile" class="header-action header-action--link">
+          <router-link to="/auth" class="header-action header-action--link">
             {{ profileLabel }}
           </router-link>
           <button class="header-action" type="button" @click="toggleMiniCart">
@@ -45,7 +45,7 @@
         <router-link to="/category/home">خانه و آشپزخانه</router-link>
         <router-link to="/category/fashion">مد و استایل</router-link>
         <router-link to="/support">پشتیبانی</router-link>
-        <router-link to="/admin">پنل ادمین</router-link>
+        <router-link v-if="user.profile?.role === 'admin'" to="/admin">پنل ادمین</router-link>
         <router-link v-if="user.profile?.role === 'admin'" to="/admin/products/new"
           >ادمین محصول</router-link
         >

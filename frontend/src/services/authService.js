@@ -1,5 +1,8 @@
 // src/services/authService.js
-import { clearStoredTokens, getStoredTokens, persistTokens } from '@/utils/token'
+import {
+  clearStoredAccessToken,
+  persistAccessToken
+} from '@/utils/token'
 import axiosClient from './axiosClient'
 
 export const authService = {
@@ -25,7 +28,7 @@ export const authService = {
     )
     // ذخیره توکن‌ها در لوکال استورج
     if (data?.access_token) {
-      persistTokens(data)
+      persistAccessToken(data)
     }
     return data
   },
@@ -41,7 +44,7 @@ export const authService = {
     )
     // ذخیره توکن‌ها
     if (data?.access_token) {
-      persistTokens(data)
+      persistAccessToken(data)
     }
     return data
   },
@@ -65,14 +68,11 @@ export const authService = {
    * خروج از حساب کاربری فعلی
    */
   async logout() {
-    const { refreshToken } = getStoredTokens()
     try {
-      if (refreshToken) {
-        await axiosClient.post('/v1/users/logout', { refresh_token: refreshToken })
-      }
+      await axiosClient.post('/v1/users/logout', {})
     } finally {
       // پاک کردن توکن‌ها در هر صورت
-      clearStoredTokens()
+      clearStoredAccessToken()
     }
   },
 
@@ -83,7 +83,7 @@ export const authService = {
     try {
       await axiosClient.post('/v1/users/logout/all', { phone_number })
     } finally {
-      clearStoredTokens()
+      clearStoredAccessToken()
     }
   },
 }

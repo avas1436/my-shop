@@ -1,6 +1,10 @@
 // src/services/axiosClient.js
 
-import { clearStoredTokens, getStoredTokens, persistTokens } from '@/utils/token'
+import {
+  clearStoredAccessToken,
+  getStoredAccessToken,
+  persistAccessToken
+} from '@/utils/token'
 import axios from 'axios'
 
 const axiosClient = axios.create({
@@ -10,6 +14,8 @@ const axiosClient = axios.create({
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
+  // با فعال کردن این گزینه کوکی ها هم به بک اند ارسال میشوند
+  withCredentials: true,
 })
 
 // --- متغیرهای مربوط به مدیریت صف رفرش توکن ---
@@ -39,7 +45,7 @@ axiosClient.interceptors.request.use(
       return config
     }
 
-    const token = getStoredTokens().accessToken
+    const token = getStoredAccessToken().accessToken
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -89,27 +95,15 @@ axiosClient.interceptors.response.use(
         originalRequest._retry = true
         isRefreshing = true
 
-        const refreshToken = getStoredTokens().refreshToken
-
-        // اگر رفرش توکن اصلا وجود ندارد، کاربر را خارج کن
-        if (!refreshToken) {
-          clearStoredTokens()
-          window.location.href = '/login'
-          return Promise.reject(error)
-        }
-
         return new Promise(function (resolve, reject) {
           // ارسال درخواست برای دریافت توکن جدید
           axios
-            .post('http://127.0.0.1:8000/api/v1/users/token/refresh', {
-              refresh_token: refreshToken,
-            })
+            .post('http://127.0.0.1:8000/api/v1/users/token/refresh', {})
             .then(({ data }) => {
-              // فرض بر این است که بک‌‌اند توکن‌های جدید را داخل data.data برمی‌گرداند
-              const newToken = data.data
+              // سرور اکسس توکن جدید را در پاسخ برمیگرداند و کوکی رفرش جدید را ست میکند
+              const newToken = { access_token: data.access_token }
 
-              // ذخیره توکن‌های جدید
-              persistTokens(newToken)
+              persistAccessToken(newToken) // ذخیره اکسس توکن جدید
 
               // بروزرسانی هدر درخواست اصلی
               axiosClient.defaults.headers.common['Authorization'] =
@@ -123,7 +117,7 @@ axiosClient.interceptors.response.use(
             .catch((err) => {
               // اگر خود درخواست رفرش توکن هم خطا داد
               processQueue(err, null)
-              clearStoredTokens()
+              clearStoredAccessToken()
               window.location.href = '/login'
               reject(err)
             })

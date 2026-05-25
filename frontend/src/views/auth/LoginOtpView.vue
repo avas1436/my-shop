@@ -1,125 +1,105 @@
 <!-- src/views/auth/LoginOtpView.vue -->
 <template>
-  <form class="auth-form" @submit.prevent="submitRegisterOtp">
-    <BaseInput
-      v-model="registerPhone"
-      label="شماره موبایل"
-      type="tel"
-      placeholder="مثلا 09121234567"
-      inputmode="numeric"
-      maxlength="11"
-      required
-    />
+  <div class="auth-card page-panel">
+    <h1 class="section-title">ورود با رمز یکبار مصرف</h1>
 
-    <BaseInput
-      v-if="user.otpStep === 'code'"
-      v-model="otpCode"
-      label="کد تایید"
-      type="tel"
-      placeholder="کد پیامک شده را وارد کنید"
-      inputmode="numeric"
-      maxlength="6"
-      required
-    />
+    <!-- مرحله اول: دریافت شماره -->
+    <form v-if="!otpSent" @submit.prevent="requestOtp" class="auth-form">
+      <p class="muted mb-4">شماره موبایل خود را برای دریافت کد وارد کنید.</p>
+      <div class="form-group">
+        <label>شماره موبایل</label>
+        <input type="text" v-model="phone" placeholder="۰۹۱۲۳۴۵۶۷۸۹" required />
+      </div>
+      <BaseButton type="submit" :disabled="isLoading" block>ارسال کد تایید</BaseButton>
+    </form>
 
-    <p class="auth-hint">
-      این مرحله فقط برای ساخت حساب جدید است و پس از تایید شماره، فرم تکمیل اطلاعات نمایش داده می
-      شود.
-    </p>
+    <!-- مرحله دوم: تایید کد -->
+    <form v-else @submit.prevent="verifyOtp" class="auth-form">
+      <p class="muted mb-4">کد ارسال شده به {{ phone }} را وارد کنید.</p>
+      <div class="form-group">
+        <label>کد تایید</label>
+        <input type="text" v-model="otpCode" placeholder="۱۲۳۴۵" required />
+      </div>
+      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <BaseButton type="submit" :disabled="isLoading" block>تایید و ورود</BaseButton>
+    </form>
 
-    <p v-if="user.authMessage" class="auth-feedback auth-feedback--success">
-      {{ user.authMessage }}
-    </p>
-    <p v-if="user.authError" class="auth-feedback auth-feedback--error">
-      {{ user.authError }}
-    </p>
-
-    <BaseButton type="submit" size="lg" block :disabled="registerOtpDisabled">
-      {{ registerOtpSubmitLabel }}
-    </BaseButton>
-
-    <BaseButton
-      v-if="user.otpStep === 'code'"
-      type="button"
-      variant="ghost"
-      size="md"
-      block
-      @click="goBackToPhone"
-    >
-      ویرایش شماره موبایل
-    </BaseButton>
-  </form>
+    <div class="auth-links mt-3">
+      <router-link :to="{ name: 'login-password' }">ورود با رمز عبور</router-link>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import BaseInput from '@/components/base/BaseInput.vue'
+import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
-import { computed } from 'vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const user = useUserStore()
+const router = useRouter()
+const userStore = useUserStore()
 
-function toEnglishDigits(value) {
-  return String(value).replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
-}
-function normalizeDigits(value) {
-  return toEnglishDigits(value).replace(/\D/g, '')
-}
+const isLoading = ref(false)
+const otpSent = ref(false)
+const errorMessage = ref('')
+const phone = ref('')
+const otpCode = ref('')
 
-const registerPhone = computed({
-  get: () => user.otpForm.phone_number,
-  set: (value) => user.setOtpField('phone_number', normalizeDigits(value).slice(0, 11)),
-})
-const otpCode = computed({
-  get: () => user.otpForm.code,
-  set: (value) => user.setOtpField('code', normalizeDigits(value).slice(0, 6)),
-})
-
-const registerOtpDisabled = computed(() => user.otpSending || user.otpVerifying)
-const registerOtpSubmitLabel = computed(() => {
-  if (user.otpSending) return 'در حال ارسال کد...'
-  if (user.otpVerifying) return 'در حال تایید کد...'
-  return user.otpStep === 'code' ? 'تایید کد و ادامه' : 'ارسال کد تایید'
-})
-
-async function submitRegisterOtp() {
-  if (user.otpStep === 'phone') {
-    await user.requestOtp()
-    return
+async function requestOtp() {
+  isLoading.value = true
+  try {
+    await authService.requestOtp(phone.value) // متد فرضی ارسال OTP در سرویس شما
+    otpSent.value = true
+  } catch {
+    errorMessage.value = 'خطا در ارسال کد'
+  } finally {
+    isLoading.value = false
   }
-  await user.verifyOtp()
 }
 
-function goBackToPhone() {
-  user.setOtpField('code', '')
-  user.otpStep = 'phone'
-  user.clearFeedback()
+async function verifyOtp() {
+  isLoading.value = true
+  try {
+    const data = await authService.verifyOtp(phone.value, otpCode.value)
+    userStore.setAuthSuccess(data.access_token)
+    await userStore.initializeAuth()
+    router.push('/')
+  } catch {
+    errorMessage.value = 'کد نامعتبر است'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
 <style scoped>
-.auth-form {
+.auth-card {
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.form-group {
+  margin-bottom: 1rem;
   display: grid;
-  gap: 1rem;
-  margin-top: 1.25rem;
+  gap: 0.5rem;
 }
-.auth-hint {
-  margin: 0.4rem 0 0;
-  color: var(--text-muted);
-  line-height: 1.8;
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
 }
-.auth-feedback {
-  margin: 0;
-  padding: 0.9rem 1rem;
-  border-radius: 16px;
-  background: rgba(15, 23, 42, 0.05);
+.error-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 }
-.auth-feedback--success {
-  color: #0f766e;
-  background: rgba(15, 118, 110, 0.1);
-}
-.auth-feedback--error {
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
+.auth-links {
+  text-align: center;
+  font-size: 0.875rem;
+  display: block;
+  margin-top: 1rem;
 }
 </style>
