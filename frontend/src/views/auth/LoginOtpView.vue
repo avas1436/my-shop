@@ -65,6 +65,8 @@
 import BaseButton from '@/components/base/BaseButton.vue'
 import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
+import { getErrorMessage } from '@/utils/errorMessages'
+import { validateOtp, validatePhoneNumber } from '@/utils/validators'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -81,125 +83,80 @@ const form = reactive({ phone: '', otpCode: '' })
 
 const validatePhone = () => {
   fieldErrors.value = {}
-  let isValid = true
 
-  if (!form.phone) {
-    fieldErrors.value.phone = ['شماره موبایل الزامی است']
-    isValid = false
-  } else if (!/^09\d{9}$/.test(form.phone)) {
-    fieldErrors.value.phone = ['شماره موبایل نامعتبر است']
-    isValid = false
+  const errorMsg = validatePhoneNumber(form.phone)
+  if (errorMsg) {
+    fieldErrors.value.phone = [errorMsg]
+    return false
   }
 
-  return isValid
+  return true
 }
 
 const validateOtpCode = () => {
   fieldErrors.value = {}
-  let isValid = true
 
-  if (!form.otpCode) {
-    fieldErrors.value.otpCode = ['کد تایید الزامی است']
-    isValid = false
-  } else if (form.otpCode.length < 5) {
-    fieldErrors.value.otpCode = ['کد تایید باید حداقل پنج رقم باشد']
-    isValid = false
+  const errorMsg = validateOtp(form.otpCode)
+  if (errorMsg) {
+    fieldErrors.value.otpCode = [errorMsg]
+    return false
   }
 
-  return isValid
+  return true
 }
 
-async function requestOtp() {
+const requestOtp = async () => {
   errorMessage.value = ''
+  fieldErrors.value = {}
 
   if (!validatePhone()) return
 
   isLoading.value = true
-
   try {
     await authService.requestOtp(form.phone, 'login')
     otpSent.value = true
   } catch (error) {
-    // مدیریت خطاهای بک‌اند (مشابه فایل رمز عبور)
-    if (error.error_type === 'RequestValidationError' && error.validation_errors) {
-      error.validation_errors.forEach((err) => {
-        const fieldName = err.loc[err.loc.length - 1]
-        if (!fieldErrors.value[fieldName]) {
-          fieldErrors.value[fieldName] = []
-        }
-        fieldErrors.value[fieldName].push(err.msg)
-        return
-      })
-    }
-    if (error.code === 'REGISTERED') {
-      errorMessage.value = 'کاربر وجود دارد لطفا با رمز عبور وارد شوید.'
-      setTimeout(() => router.push('/auth/login-password'), 2000)
-      return
-    }
-    if (error.code === 'USER_NOT_FOUND') {
-      errorMessage.value = 'کاربر یافت نشد لطفا ابتدا ثبت نام کنید.'
-      setTimeout(() => router.push('/auth/register'), 2000)
-      return
-    }
-    if (error.status && error.status >= 400 && error.status < 500) {
+    if (error.code) {
+      errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در درخواست کد.'
+
+      if (error.code === 'REGISTERED') {
+        setTimeout(() => router.push('/auth/login-password'), 2000)
+      } else if (error.code === 'USER_NOT_FOUND') {
+        setTimeout(() => router.push('/auth/register'), 2000)
+      }
+    } else {
       errorMessage.value = error.message || 'خطا در درخواست کد.'
-      return
     }
   } finally {
     isLoading.value = false
   }
 }
 
-async function verifyOtp() {
+const verifyOtp = async () => {
   errorMessage.value = ''
   fieldErrors.value = {}
 
   if (!validateOtpCode()) return
 
   isLoading.value = true
-
   try {
     const data = await authService.verifyOtp(form.phone, form.otpCode)
-
     userStore.setAuthSuccess(data.access_token)
-
     await userStore.initializeAuth()
-
     setTimeout(() => router.push('/profile'), 500)
   } catch (error) {
-    // مدیریت خطاهای بک‌اند
-    if (error.error_type === 'RequestValidationError' && error.validation_errors) {
-      error.validation_errors.forEach((err) => {
-        let fieldName = err.loc[err.loc.length - 1]
-        fieldName = fieldName === 'code' ? 'otpCode' : fieldName // مپ کردن فیلد کد
+    if (error.code) {
+      errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در تایید کد.'
 
-        if (!fieldErrors.value[fieldName]) {
-          fieldErrors.value[fieldName] = []
-        }
-        fieldErrors.value[fieldName].push(err.msg)
-        return
-      })
-    }
-    if (error.code === 'INVALID_OTP') {
-      errorMessage.value = 'کد وارد شده نامعتبر است.'
-      return
-    }
-    if (error.code === 'ALREADY_EXIST_USER') {
-      errorMessage.value = 'کاربر وجود دارد لطفا وارد شوید.'
-      setTimeout(() => {
-        ;(router.push('/auth/login-password'), (otpSent.value = false))
+      if (error.code === 'ALREADY_EXIST_USER') {
+        otpSent.value = false
         form.otpCode = ''
-      }, 2000)
-      return
-    }
-    if (error.code === 'USER_NOT_FOUND') {
-      errorMessage.value = 'کاربر یافت نشد لطفا ابتدا ثبت نام کنید.'
-      setTimeout(() => router.push('/auth/register'), 2000)
-      return
-    }
-    if (error.status && error.status >= 400 && error.status < 500) {
+        setTimeout(() => router.push('/auth/login-password'), 2000)
+      } else if (error.code === 'USER_NOT_FOUND') {
+        setTimeout(() => router.push('/auth/register'), 2000)
+      }
+    } else {
       errorMessage.value = error.message || 'خطا در تایید کد.'
-      return
     }
   } finally {
     isLoading.value = false
