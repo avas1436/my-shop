@@ -59,10 +59,16 @@ class AuthService:
         user = await self.repo.get_by_phone(phone_number=data.phone_number)
 
         if user and data.purpose == PurposeOTP.REGISTER:
-            raise BadRequest("User with this phone number already registered.")
+            raise BadRequest(
+                message="User with this phone number already registered.",
+                code="REGISTERED",
+            )
 
         if not user and data.purpose in (PurposeOTP.LOGIN, PurposeOTP.RESET):
-            raise BadRequest("User not found")
+            raise BadRequest(
+                message="User not found",
+                code="USER_NOT_FOUND",
+            )
 
         code, wait = await create_otp(
             db=self.db,
@@ -75,7 +81,13 @@ class AuthService:
 
         if wait:
             await self.repo.rollback()
-            raise TooManyRequests(f"please wait for {wait} seconds")
+            raise TooManyRequests(
+                # message=f"please wait for {wait} seconds",
+                message=f"""برای مدت
+                {wait} 
+                ثانیه صبر کنید""",
+                code="RATE_LIMIT",
+            )
 
         await self.repo.commit()
 
@@ -100,15 +112,24 @@ class AuthService:
         )
 
         if not is_valid:
-            raise BadRequest("Invalid or expired OTP")
+            raise BadRequest(
+                message="Invalid or expired OTP",
+                code="INVALID_OTP",
+            )
 
         user = await self.repo.get_by_phone(phone_number=data.phone_number)
 
         if data.purpose == PurposeOTP.REGISTER and user is not None:
-            raise BadRequest("User with this phone number already registered.")
+            raise BadRequest(
+                message="User with this phone number already registered.",
+                code="ALREADY_EXIST_USER",
+            )
 
         if data.purpose in (PurposeOTP.LOGIN, PurposeOTP.RESET) and user is None:
-            raise BadRequest("User not found.")
+            raise BadRequest(
+                message="User not found.",
+                code="USER_NOT_FOUND",
+            )
 
         if not user:
             user = await self.repo.create_user(phone_number=data.phone_number)

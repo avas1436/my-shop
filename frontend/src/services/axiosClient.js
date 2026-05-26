@@ -149,14 +149,17 @@ axiosClient.interceptors.response.use(
         status: status_code,
         error_type: errorType,
         message: errorMessage,
-        code: detail?.code || null,
+        code: errorCode,
         validation_errors: validationErrors,
         path: backendError.path || null,
       }
 
-      // ثبت خطا در استور برای نمایش به کاربر
-      // به جز 401 که بی سر و صدا هندل می‌شود
-      if (status_code !== 401) {
+      // الان تنها ارور هایی وارد استور میشن که کد اختصاصی ندارن
+      // هدف این کار اینه که تنها ارور های غیر منتطره پاپ آپ بشن
+      const isValidationError = errorType === 'RequestValidationError'
+      const isBusinessError = !!detail?.code
+
+      if (status_code !== 401 && !isValidationError && !isBusinessError) {
         errorStore.addError({
           type: status_code >= 500 ? 'server' : 'client',
           message: standardError.message,
