@@ -5,6 +5,7 @@ export const ERROR_MESSAGES = {
   INVALID_OTP: 'کد وارد شده نامعتبر است.',
   ALREADY_EXIST_USER: 'کاربر وجود دارد لطفا وارد شوید.',
   NOT_ACTIVATE_PASSWORD: 'این حساب فاقد رمز عبور می باشد',
+  PROFILE_COMPLETED: 'اطلاعات پروفایل شما کامل شده است',
   DEFAULT_4XX: 'خطا در انجام درخواست.',
   DEFAULT_5XX: 'خطای سرور. لطفا بعدا تلاش کنید.',
 }

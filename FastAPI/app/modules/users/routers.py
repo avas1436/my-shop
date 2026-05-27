@@ -45,7 +45,7 @@ async def request_otp(
 
     code = await service.request_otp_service(data=data)
 
-    # print(code)
+    print(code)
 
     # background.add_task(
     #     send_sms,

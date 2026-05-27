@@ -140,7 +140,11 @@ class AuthService:
                 user=user
             )
 
-            if changed:
+            update = self.repo.update_login(user=user)
+            if not update:
+                raise InternalServerError(message="Failed to update last login")
+
+            if changed and update:
                 await self.repo.commit()
 
         refresh = await issue_refresh_token(user=user, cache=self.cache)
@@ -204,7 +208,10 @@ class AuthService:
             or current_user.last_name is None
             or current_user.hashed_password is None
         ):
-            raise BadRequest("Profile already completed")
+            raise BadRequest(
+                message="Profile already completed",
+                code="PROFILE_COMPLETED",
+            )
 
         hashed = hash_password(password=data.password.get_secret_value())
 

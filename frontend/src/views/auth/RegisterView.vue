@@ -2,34 +2,56 @@
 <template>
   <div class="auth-card page-panel">
     <h1 class="section-title">ثبت نام در سایت</h1>
-    <p class="muted mb-4">برای ایجاد حساب کاربری اطلاعات زیر را تکمیل کنید.</p>
 
-    <form @submit.prevent="handleRegister" class="auth-form">
-      <div class="form-group">
-        <label>نام</label>
-        <input type="text" v-model="form.firstName" required />
-      </div>
-      <div class="form-group">
-        <label>نام خانوادگی</label>
-        <input type="text" v-model="form.lastName" required />
-      </div>
+    <!-- مرحله اول: دریافت شماره موبایل -->
+    <form v-if="step === 1" @submit.prevent="requestOtp" class="auth-form">
+      <p class="muted mb-4">شماره موبایل خود را وارد کنید.</p>
+
       <div class="form-group">
         <label>شماره موبایل</label>
-        <input type="text" v-model="form.phone" required />
-      </div>
-      <div class="form-group">
-        <label>رمز عبور</label>
-        <input type="password" v-model="form.password" required />
+        <input
+          type="text"
+          v-model="form.phone"
+          placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+          :class="{ 'has-error': fieldErrors.phone }"
+        />
+        <span v-if="fieldErrors.phone" class="error-text field-error">
+          {{ fieldErrors.phone[0] }}
+        </span>
       </div>
 
-      <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="error-text global-error">{{ errorMessage }}</p>
 
       <BaseButton type="submit" :disabled="isLoading" block>
-        {{ isLoading ? 'در حال ثبت نام...' : 'ثبت نام' }}
+        {{ isLoading ? 'در حال ارسال...' : 'ارسال کد تایید' }}
       </BaseButton>
     </form>
 
-    <div class="auth-links mt-3">
+    <!-- مرحله دوم: تایید کد OTP -->
+    <form v-else-if="step === 2" @submit.prevent="verifyOtp" class="auth-form">
+      <p class="muted mb-4">کد ارسال شده به {{ form.phone }} را وارد کنید.</p>
+
+      <div class="form-group">
+        <label>کد تایید</label>
+        <input
+          type="text"
+          v-model="form.otpCode"
+          placeholder="۱۲۳۴۵"
+          :class="{ 'has-error': fieldErrors.otpCode }"
+        />
+        <span v-if="fieldErrors.otpCode" class="error-text field-error">
+          {{ fieldErrors.otpCode[0] }}
+        </span>
+      </div>
+
+      <p v-if="errorMessage" class="error-text global-error">{{ errorMessage }}</p>
+
+      <BaseButton type="submit" :disabled="isLoading" block>
+        {{ isLoading ? 'در حال بررسی...' : 'تایید کد' }}
+      </BaseButton>
+    </form>
+
+    <div class="auth-links mt-3" v-if="step === 1">
       <router-link :to="{ name: 'login-password' }">حساب کاربری دارید؟ ورود</router-link>
     </div>
   </div>
@@ -38,23 +60,74 @@
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
 import { authService } from '@/services/authService'
+import { useUserStore } from '@/stores/userStore'
+import { getErrorMessage } from '@/utils/errorMessages'
+import { validateOtp, validatePhoneNumber } from '@/utils/validators'
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+// برای تبدیل تاریخ، نصب پکیج پیشنهاد می‌شود: npm install moment-jalaali
 
-const router = useRouter()
+const userStore = useUserStore()
+
+const step = ref(1) // 1: Request OTP, 2: Verify OTP, 3: Complete Profile
 const isLoading = ref(false)
-const errorMessage = ref('')
-const form = reactive({ firstName: '', lastName: '', phone: '', password: '' })
 
-async function handleRegister() {
-  isLoading.value = true
+const errorMessage = ref('')
+const fieldErrors = ref({})
+
+const form = reactive({
+  phone: '',
+  otpCode: '',
+  firstName: '',
+  lastName: '',
+  birthDateJalali: '', // ورودی کاربر به شمسی
+  password: '',
+  passwordConfirm: '',
+})
+
+// === مرحله ۱: درخواست کد ===
+const requestOtp = async () => {
   errorMessage.value = ''
+  fieldErrors.value = {}
+
+  const phoneError = validatePhoneNumber(form.phone)
+  if (phoneError) {
+    fieldErrors.value.phone = [phoneError]
+    return
+  }
+
+  isLoading.value = true
   try {
-    await authService.register(form) // متد ثبت نام در سرویس شما
-    // بعد از ثبت‌نام موفق، هدایت به صفحه لاگین یا ورود خودکار
-    router.push({ name: 'login-password' })
+    await authService.requestOtp(form.phone, 'register') // ارسال نوع register
+    step.value = 2
   } catch (error) {
-    errorMessage.value = error.response?.data?.message || 'خطا در ثبت نام'
+    errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در درخواست کد.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// === مرحله ۲: تایید کد ===
+const verifyOtp = async () => {
+  errorMessage.value = ''
+  fieldErrors.value = {}
+
+  const otpError = validateOtp(form.otpCode)
+  if (otpError) {
+    fieldErrors.value.otpCode = [otpError]
+    return
+  }
+
+  isLoading.value = true
+  try {
+    const data = await authService.verifyOtp(form.phone, form.otpCode, 'register')
+    // لاگین کاربر در استیت
+    userStore.setAuthSuccess(data.tokens)
+    await userStore.initializeAuth()
+
+    // رفتن به مرحله تکمیل اطلاعات
+    step.value = 3
+  } catch (error) {
+    errorMessage.value = getErrorMessage(error.code) || error.message || 'کد نامعتبر است.'
   } finally {
     isLoading.value = false
   }

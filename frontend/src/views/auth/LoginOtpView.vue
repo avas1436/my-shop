@@ -143,7 +143,7 @@ const verifyOtp = async () => {
     const data = await authService.verifyOtp(form.phone, form.otpCode)
     userStore.setAuthSuccess(data.access_token)
     await userStore.initializeAuth()
-    setTimeout(() => router.push('/profile'), 500)
+    setTimeout(() => router.push('/profile'), 1500)
   } catch (error) {
     if (error.code) {
       errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در تایید کد.'
