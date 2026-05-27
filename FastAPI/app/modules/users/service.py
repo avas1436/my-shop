@@ -158,18 +158,30 @@ class AuthService:
 
         user = await self.repo.get_by_phone(phone_number=data.phone_number)
 
-        if not user or not user.hashed_password:
-            raise BadRequest("User not found.")
-
-        if not verify_password(
+        if not user or not verify_password(
             password=data.password,
             hashed_password=user.hashed_password,
         ):
-            raise BadRequest("Invalid credentials")
+            raise BadRequest(
+                message="User not found.",
+                code="USER_NOT_FOUND",
+            )
+
+        if not user.hashed_password:
+            raise BadRequest(
+                message="This account doest activate password",
+                code="NOT_ACTIVATE_PASSWORD",
+            )
+
+        # if not verify_password(
+        #     password=data.password,
+        #     hashed_password=user.hashed_password,
+        # ):
+        #     raise BadRequest(message="Invalid credentials", code="WRONG_credentials")
 
         update = self.repo.update_login(user=user)
         if not update:
-            raise InternalServerError("Failed to update last login")
+            raise InternalServerError(message="Failed to update last login")
 
         await self.repo.commit()
 

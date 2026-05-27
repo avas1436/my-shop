@@ -1,7 +1,7 @@
 // src/router/index.js
-import AdminLayout from '@/layouts/AdminLayout.vue'
-import StorefrontLayout from '@/layouts/StorefrontLayout.vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import StorefrontLayout from '@/layouts/StorefrontLayout.vue';
+import { createRouter, createWebHistory } from 'vue-router';
 import { ROUTES } from './routeNames'; // مسیر فایل ثابت‌ها
 
 const routes = [
@@ -179,10 +179,15 @@ const router = createRouter({
 // ==========================================
 // Navigation Guards
 // ==========================================
-import { useUserStore } from '@/stores/userStore'
+import { useUserStore } from '@/stores/userStore';
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
   const userStore = useUserStore()
+
+  // اگر استور هنوز آماده نیست منتظر بمان
+  if (!userStore.isAuthReady && userStore.accessToken) {
+    await userStore.initializeAuth()
+  }
 
   const isAuthenticated = userStore.isAuthenticated
   const userRole = userStore.userRole
@@ -202,7 +207,7 @@ router.beforeEach((to, from) => {
     return { name: ROUTES.HOME }
   }
 
-  true
+  return true
 })
 
 export default router

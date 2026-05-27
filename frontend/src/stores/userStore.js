@@ -1,7 +1,7 @@
 // src/stores/userStore.js
-import { authService } from '@/services/authService'
-import { getStoredAccessToken } from '@/utils/token'
-import { defineStore } from 'pinia'
+import { authService } from '@/services/authService';
+import { getStoredAccessToken } from '@/utils/token';
+import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -84,8 +84,7 @@ export const useUserStore = defineStore('user', {
     },
 
     // یک اکشن کمکی برای به‌روزرسانی استیت بعد از لاگین/ثبت‌نام موفق
-    setAuthSuccess(profileData, token) {
-      this.profile = profileData
+    setAuthSuccess(token) {
       this.isAuthenticated = true
       if (token) {
         this.accessToken = token.accessToken

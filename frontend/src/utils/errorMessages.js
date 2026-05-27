@@ -4,10 +4,11 @@ export const ERROR_MESSAGES = {
   USER_NOT_FOUND: 'کاربر یافت نشد لطفا ابتدا ثبت نام کنید.',
   INVALID_OTP: 'کد وارد شده نامعتبر است.',
   ALREADY_EXIST_USER: 'کاربر وجود دارد لطفا وارد شوید.',
+  NOT_ACTIVATE_PASSWORD: 'این حساب فاقد رمز عبور می باشد',
   DEFAULT_4XX: 'خطا در انجام درخواست.',
   DEFAULT_5XX: 'خطای سرور. لطفا بعدا تلاش کنید.',
 }
 
 export const getErrorMessage = (code) => {
-  return ERROR_MESSAGES[code] || 'خطای نامشخصی رخ داده است.'
+  return ERROR_MESSAGES[code] || null
 }

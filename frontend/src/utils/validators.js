@@ -18,3 +18,13 @@ export const validateOtp = (otpCode) => {
   }
   return null
 }
+
+export const validatePassword = (otpCode) => {
+  if (!otpCode) {
+    return 'رمز عبور الزامی است'
+  }
+  if (otpCode.length < 4) {
+    return 'رمز عبور باید حداقل چهار رقم باشد'
+  }
+  return null
+}
