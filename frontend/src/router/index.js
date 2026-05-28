@@ -1,7 +1,7 @@
 // src/router/index.js
-import AdminLayout from '@/layouts/AdminLayout.vue';
-import StorefrontLayout from '@/layouts/StorefrontLayout.vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import AdminLayout from '@/layouts/AdminLayout.vue'
+import StorefrontLayout from '@/layouts/StorefrontLayout.vue'
+import { createRouter, createWebHistory } from 'vue-router'
 import { ROUTES } from './routeNames'; // مسیر فایل ثابت‌ها
 
 const routes = [
@@ -114,6 +114,11 @@ const routes = [
         name: ROUTES.REGISTER,
         component: () => import('@/views/auth/RegisterView.vue'),
       },
+      {
+        path: 'complete',
+        name: ROUTES.COMPLETE,
+        component: () => import('@/views/auth/CompleteRegister.vue'),
+      },
     ],
   },
 
@@ -179,7 +184,7 @@ const router = createRouter({
 // ==========================================
 // Navigation Guards
 // ==========================================
-import { useUserStore } from '@/stores/userStore';
+import { useUserStore } from '@/stores/userStore'
 
 router.beforeEach(async (to, from) => {
   const userStore = useUserStore()

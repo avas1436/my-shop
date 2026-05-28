@@ -4,7 +4,7 @@
     <h1 class="section-title">ورود با رمز یکبار مصرف</h1>
 
     <!-- مرحله اول: دریافت شماره -->
-    <form v-if="!otpSent" @submit.prevent="requestOtp" class="auth-form">
+    <form v-if="!otpSent" @submit.prevent="handleRequest" class="auth-form">
       <p class="muted mb-4">شماره موبایل خود را برای دریافت کد وارد کنید.</p>
 
       <div class="form-group">
@@ -30,7 +30,7 @@
     </form>
 
     <!-- مرحله دوم: تایید کد -->
-    <form v-else @submit.prevent="verifyOtp" class="auth-form">
+    <form v-else @submit.prevent="handleVerify" class="auth-form">
       <p class="muted mb-4">کد ارسال شده به {{ form.phone }} را وارد کنید.</p>
 
       <div class="form-group">
@@ -63,105 +63,38 @@
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import { authService } from '@/services/authService'
-import { useUserStore } from '@/stores/userStore'
-import { getErrorMessage } from '@/utils/errorMessages'
-import { validateOtp, validatePhoneNumber } from '@/utils/validators'
-import { reactive, ref } from 'vue'
+import { useOtpAuth } from '@/composable/auth/useOtpAuth'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const userStore = useUserStore()
 
-const isLoading = ref(false)
-const otpSent = ref(false)
-
-const errorMessage = ref('') // برای خطاهای کلی فرم
-const fieldErrors = ref({}) // برای خطاهای اختصاصی هر فیلد
-
-const form = reactive({ phone: '', otpCode: '' })
-
-const validatePhone = () => {
-  fieldErrors.value = {}
-
-  const errorMsg = validatePhoneNumber(form.phone)
-  if (errorMsg) {
-    fieldErrors.value.phone = [errorMsg]
-    return false
-  }
-
-  return true
-}
-
-const validateOtpCode = () => {
-  fieldErrors.value = {}
-
-  const errorMsg = validateOtp(form.otpCode)
-  if (errorMsg) {
-    fieldErrors.value.otpCode = [errorMsg]
-    return false
-  }
-
-  return true
-}
-
-const requestOtp = async () => {
-  errorMessage.value = ''
-  fieldErrors.value = {}
-
-  if (!validatePhone()) return
-
-  isLoading.value = true
-  try {
-    await authService.requestOtp(form.phone, 'login')
-    otpSent.value = true
-  } catch (error) {
-    if (error.code) {
-      errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در درخواست کد.'
-
-      if (error.code === 'REGISTERED') {
-        setTimeout(() => router.push('/auth/login-password'), 2000)
-      } else if (error.code === 'USER_NOT_FOUND') {
-        setTimeout(() => router.push('/auth/register'), 2000)
-      }
-    } else {
-      errorMessage.value = error.message || 'خطا در درخواست کد.'
+const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyOtp } = useOtpAuth({
+  onRequestError: (error) => {
+    if (error.code === 'REGISTERED') {
+      setTimeout(() => router.push('/auth/login-password'), 2000)
+    } else if (error.code === 'USER_NOT_FOUND') {
+      setTimeout(() => router.push('/auth/register'), 2000)
     }
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const verifyOtp = async () => {
-  errorMessage.value = ''
-  fieldErrors.value = {}
-
-  if (!validateOtpCode()) return
-
-  isLoading.value = true
-  try {
-    const data = await authService.verifyOtp(form.phone, form.otpCode)
-    userStore.setAuthSuccess(data.access_token)
-    await userStore.initializeAuth()
-    setTimeout(() => router.push('/profile'), 1500)
-  } catch (error) {
-    if (error.code) {
-      errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در تایید کد.'
-
-      if (error.code === 'ALREADY_EXIST_USER') {
-        otpSent.value = false
-        form.otpCode = ''
-        setTimeout(() => router.push('/auth/login-password'), 2000)
-      } else if (error.code === 'USER_NOT_FOUND') {
-        setTimeout(() => router.push('/auth/register'), 2000)
-      }
+  },
+  onVerifySuccess: () => {
+    setTimeout(() => router.push('/profile'), 2000)
+  },
+  onVerifyError: (error) => {
+    if (error.code === 'ALREADY_EXIST_USER') {
+      otpSent.value = false
+      form.otpCode = ''
+      setTimeout(() => router.push('/auth/login-password'), 2000)
+    } else if (error.code === 'USER_NOT_FOUND') {
+      setTimeout(() => router.push('/auth/register'), 2000)
     } else {
       errorMessage.value = error.message || 'خطا در تایید کد.'
     }
-  } finally {
-    isLoading.value = false
-  }
-}
+  },
+})
+
+// استفاده از توابع با پاس دادن هدف مورد نظر
+const handleRequest = () => requestOtp('login')
+const handleVerify = () => verifyOtp('login')
 </script>
 
 <style scoped>

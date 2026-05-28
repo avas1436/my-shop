@@ -4,7 +4,7 @@
     <h1 class="section-title">ثبت نام در سایت</h1>
 
     <!-- مرحله اول: دریافت شماره موبایل -->
-    <form v-if="step === 1" @submit.prevent="requestOtp" class="auth-form">
+    <form v-if="!otpSent" @submit.prevent="handleRequest" class="auth-form">
       <p class="muted mb-4">شماره موبایل خود را وارد کنید.</p>
 
       <div class="form-group">
@@ -28,7 +28,7 @@
     </form>
 
     <!-- مرحله دوم: تایید کد OTP -->
-    <form v-else-if="step === 2" @submit.prevent="verifyOtp" class="auth-form">
+    <form v-else @submit.prevent="handleVerify" class="auth-form">
       <p class="muted mb-4">کد ارسال شده به {{ form.phone }} را وارد کنید.</p>
 
       <div class="form-group">
@@ -51,7 +51,7 @@
       </BaseButton>
     </form>
 
-    <div class="auth-links mt-3" v-if="step === 1">
+    <div class="auth-links mt-3" v-if="!otpSent">
       <router-link :to="{ name: 'login-password' }">حساب کاربری دارید؟ ورود</router-link>
     </div>
   </div>
@@ -59,79 +59,40 @@
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import { authService } from '@/services/authService'
+import { useOtpAuth } from '@/composables/useOtpAuth'; // مسیر فایل را چک کنید
 import { useUserStore } from '@/stores/userStore'
-import { getErrorMessage } from '@/utils/errorMessages'
-import { validateOtp, validatePhoneNumber } from '@/utils/validators'
-import { reactive, ref } from 'vue'
-// برای تبدیل تاریخ، نصب پکیج پیشنهاد می‌شود: npm install moment-jalaali
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const userStore = useUserStore()
 
-const step = ref(1) // 1: Request OTP, 2: Verify OTP, 3: Complete Profile
-const isLoading = ref(false)
-
-const errorMessage = ref('')
-const fieldErrors = ref({})
-
-const form = reactive({
-  phone: '',
-  otpCode: '',
-  firstName: '',
-  lastName: '',
-  birthDateJalali: '', // ورودی کاربر به شمسی
-  password: '',
-  passwordConfirm: '',
+const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyOtp } = useOtpAuth({
+  onRequestError: (error) => {
+    if (error.code === 'REGISTERED') {
+      setTimeout(() => router.push('/auth/login-otp'), 2000)
+    }
+  },
+  onVerifySuccess: () => {
+    if (!userStore.user?.firstName || !userStore.user?.lastName) {
+      setTimeout(() => router.push('/auth/complete'), 2000) // هدایت به صفحه تکمیل پروفایل
+    } else {
+      setTimeout(() => router.push('/profile'), 2000)
+    }
+  },
+  onVerifyError: (error) => {
+    if (error.code === 'ALREADY_EXIST_USER') {
+      otpSent.value = false
+      form.otpCode = ''
+      setTimeout(() => router.push('/auth/login-password'), 2000)
+    } else {
+      errorMessage.value = error.message || 'خطا در تایید کد.'
+    }
+  },
 })
 
-// === مرحله ۱: درخواست کد ===
-const requestOtp = async () => {
-  errorMessage.value = ''
-  fieldErrors.value = {}
-
-  const phoneError = validatePhoneNumber(form.phone)
-  if (phoneError) {
-    fieldErrors.value.phone = [phoneError]
-    return
-  }
-
-  isLoading.value = true
-  try {
-    await authService.requestOtp(form.phone, 'register') // ارسال نوع register
-    step.value = 2
-  } catch (error) {
-    errorMessage.value = getErrorMessage(error.code) || error.message || 'خطا در درخواست کد.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// === مرحله ۲: تایید کد ===
-const verifyOtp = async () => {
-  errorMessage.value = ''
-  fieldErrors.value = {}
-
-  const otpError = validateOtp(form.otpCode)
-  if (otpError) {
-    fieldErrors.value.otpCode = [otpError]
-    return
-  }
-
-  isLoading.value = true
-  try {
-    const data = await authService.verifyOtp(form.phone, form.otpCode, 'register')
-    // لاگین کاربر در استیت
-    userStore.setAuthSuccess(data.tokens)
-    await userStore.initializeAuth()
-
-    // رفتن به مرحله تکمیل اطلاعات
-    step.value = 3
-  } catch (error) {
-    errorMessage.value = getErrorMessage(error.code) || error.message || 'کد نامعتبر است.'
-  } finally {
-    isLoading.value = false
-  }
-}
+// استفاده از توابع کمکی برای ارسال کلمه 'register' به عنوان purpose و جلوگیری از ارسال رویداد (Event)
+const handleRequest = () => requestOtp('register')
+const handleVerify = () => verifyOtp('register')
 </script>
 
 <style scoped>
