@@ -4,11 +4,10 @@ import { getStoredAccessToken } from '@/utils/token'
 import { defineStore } from 'pinia'
 
 // متغیر برای جلوگیری از درخواست‌های همزمان
-let authPromise = null
+let authPromise = null // for prevent race condition
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    // ---- داده‌های فعلی شما ----
     profile: null,
     addresses: [
       {
@@ -25,8 +24,9 @@ export const useUserStore = defineStore('user', {
       },
     ],
 
-    // ---- وضعیت احراز هویت ----
-    accessToken: getStoredAccessToken().accessToken || null,
+    // وضعیت احراز هویت
+    // accessToken: getStoredAccessToken().accessToken || null,
+    accessToken: null,
 
     isAuthenticated: false,
     isAuthReady: false,
@@ -41,7 +41,7 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-    // فراخوانی در زمان لود اولیه اپلیکیشن (مثلاً در App.vue یا روتر)
+    // فراخوانی در زمان لود اولیه اپلیکیشن
     async initializeAuth(forceRefresh = false) {
       // اگر اطلاعات از قبل گرفته شده و نیاز به آپدیت اجباری نیست، کاری نکن
       if (this.isAuthReady && this.profile && !forceRefresh) return
@@ -54,10 +54,14 @@ export const useUserStore = defineStore('user', {
         this.authLoading = true
         this.authError = ''
 
+        // دریافت توکن به صورت زنده برای جلوگیری از خطای خالی بودن
+        const tokenData = getStoredAccessToken()
+        this.accessToken = tokenData?.accessToken || this.accessToken
+
         try {
           if (this.accessToken) {
             const userProfile = await authService.getMe()
-            this.profile = userProfile.data
+            this.profile = userProfile
             this.isAuthenticated = true
           } else {
             this.isAuthenticated = false
