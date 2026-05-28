@@ -3,6 +3,9 @@ import { authService } from '@/services/authService'
 import { getStoredAccessToken } from '@/utils/token'
 import { defineStore } from 'pinia'
 
+// متغیر برای جلوگیری از درخواست‌های همزمان
+let authPromise = null
+
 export const useUserStore = defineStore('user', {
   state: () => ({
     // ---- داده‌های فعلی شما ----
@@ -39,32 +42,40 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     // فراخوانی در زمان لود اولیه اپلیکیشن (مثلاً در App.vue یا روتر)
-    async initializeAuth() {
-      this.authLoading = true
-      this.authError = ''
+    async initializeAuth(forceRefresh = false) {
+      // اگر اطلاعات از قبل گرفته شده و نیاز به آپدیت اجباری نیست، کاری نکن
+      if (this.isAuthReady && this.profile && !forceRefresh) return
 
-      const accessToken = getStoredAccessToken()
+      // اگر درخواستی از قبل در حال انجام است، همان را برگردان تا درخواست جدید نرود
+      if (authPromise) return authPromise
 
-      try {
-        if (this.accessToken) {
-          // دریافت اطلاعات واقعی کاربر از API
-          const userProfile = await authService.getMe()
-          this.profile = userProfile.data
-          this.isAuthenticated = true
-        } else {
+      // ایجاد درخواست جدید و ذخیره در متغیر
+      authPromise = (async () => {
+        this.authLoading = true
+        this.authError = ''
+
+        try {
+          if (this.accessToken) {
+            const userProfile = await authService.getMe()
+            this.profile = userProfile.data
+            this.isAuthenticated = true
+          } else {
+            this.isAuthenticated = false
+            this.profile = null
+          }
+        } catch (err) {
+          console.error('Auth init failed:', err)
           this.isAuthenticated = false
           this.profile = null
+          this.authError = 'خطا در احراز هویت'
+        } finally {
+          this.authLoading = false
+          this.isAuthReady = true
+          authPromise = null // پاک کردن متغیر پس از اتمام
         }
-      } catch (err) {
-        console.error('Auth init failed:', err)
-        this.isAuthenticated = false
-        this.profile = null
-        this.authError = 'خطا در احراز هویت'
-        // اگر توکن‌ها منقضی شده باشند و رفرش هم ناموفق باشد، توکن‌ها باید پاک شوند
-      } finally {
-        this.authLoading = false
-        this.isAuthReady = true
-      }
+      })()
+
+      return authPromise
     },
 
     // اکشن برای لاگ‌اوت

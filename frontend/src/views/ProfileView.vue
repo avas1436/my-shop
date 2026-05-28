@@ -119,13 +119,13 @@ const userRoleFa = computed(() => {
 })
 
 onMounted(async () => {
-  if (!userStore.isAuthReady || (userStore.isAuthenticated && !userStore.profile)) {
-    await userStore.initializeAuth()
-  }
+  // فراخوانی ایمن، استور خودش تشخیص می‌دهد که درخواست بفرستد یا نه
+  await userStore.initializeAuth()
 })
 
 async function refreshProfile() {
-  await userStore.initializeAuth()
+  // ارسال true برای نادیده گرفتن کش و دریافت مجدد اطلاعات
+  await userStore.initializeAuth(true)
 }
 
 async function handleLogout() {
