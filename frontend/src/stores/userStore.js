@@ -1,7 +1,7 @@
 // src/stores/userStore.js
-import { authService } from '@/services/authService';
-import { getStoredAccessToken } from '@/utils/token';
-import { defineStore } from 'pinia';
+import { authService } from '@/services/authService'
+import { getStoredAccessToken } from '@/utils/token'
+import { defineStore } from 'pinia'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -89,6 +89,11 @@ export const useUserStore = defineStore('user', {
       if (token) {
         this.accessToken = token.accessToken
       }
+    },
+
+    // اضافه کردن این اکشن برای ذخیره اطلاعات پروفایل
+    setProfile(userData) {
+      this.profile = userData
     },
   },
 })

@@ -133,19 +133,19 @@ class AuthService:
 
         if not user:
             user = await self.repo.create_user(phone_number=data.phone_number)
+            self.repo.update_login(user=user)
+
             await self.repo.commit()
             await self.repo.refresh(user)
         else:
-            changed = self.repo.mark_verified(user=user) and self.repo.update_login(
-                user=user
-            )
-
+            changed = self.repo.mark_verified(user=user)
+            if not changed:
+                raise InternalServerError(message="Failed to verify phone number")
             update = self.repo.update_login(user=user)
             if not update:
                 raise InternalServerError(message="Failed to update last login")
 
-            if changed and update:
-                await self.repo.commit()
+            await self.repo.commit()
 
         refresh = await issue_refresh_token(user=user, cache=self.cache)
         access = await issue_access_token(user=user)

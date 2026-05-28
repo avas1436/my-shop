@@ -59,7 +59,8 @@
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import { useOtpAuth } from '@/composables/useOtpAuth'; // مسیر فایل را چک کنید
+import { useOtpAuth } from '@/composable/auth/useOtpAuth'
+
 import { useUserStore } from '@/stores/userStore'
 import { useRouter } from 'vue-router'
 

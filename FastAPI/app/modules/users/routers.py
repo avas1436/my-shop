@@ -245,9 +245,9 @@ def me(
         Depends(
             require_access(
                 require_recent_login_within=timedelta(days=15),
-                require_password=True,
-                require_profile_complete=True,
-                profile_required_fields=("first_name", "last_name"),
+                # require_password=True,
+                # require_profile_complete=True,
+                # profile_required_fields=("first_name", "last_name"),
             )
         ),
     ],

@@ -58,11 +58,10 @@
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
+import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-// در صورت داشتن پلاگین یا فایل اختصاصی برای axios آن را ایمپورت کنید
-// import axios from '@/plugins/axios'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -83,17 +82,12 @@ const submitProfile = async () => {
   fieldErrors.value = {}
 
   try {
-    // آدرس API بک‌اند خود برای آپدیت پروفایل را اینجا قرار دهید
-    // const response = await axios.post('/api/profile/complete', form.value)
+    const data = await authService.completeRegister(form.value)
 
-    // شبیه‌سازی درخواست برای تست (بعد از اتصال به بک‌اند این قسمت را پاک کنید)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // دریافت مجدد اطلاعات کاربر برای آپدیت شدن استیت
-    await userStore.initializeAuth()
+    userStore.setProfile(data.data)
 
     // انتقال به صفحه اصلی یا داشبورد
-    router.push({ name: 'home' })
+    setTimeout(() => router.push('/profile'), 2000)
   } catch (error) {
     if (error.response?.status === 422) {
       fieldErrors.value = error.response.data.errors || {}
