@@ -75,7 +75,7 @@ export function useOtpAuth(options = {}) {
     try {
       const data = await authService.verifyOtp(form.phone, form.otpCode, purpose)
       userStore.setAuthSuccess(data.access_token)
-      await userStore.initializeAuth()
+      await userStore.initializeAuth(true)
 
       if (options.onVerifySuccess) options.onVerifySuccess(data)
 

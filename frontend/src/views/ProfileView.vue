@@ -131,8 +131,11 @@ const userRoleFa = computed(() => {
 })
 
 onMounted(async () => {
-  // فراخوانی ایمن، استور خودش تشخیص می‌دهد که درخواست بفرستد یا نه
-  await userStore.initializeAuth()
+  if (!userStore.profile) {
+    await userStore.initializeAuth(true)
+  } else {
+    await userStore.initializeAuth()
+  }
 })
 
 async function refreshProfile() {
@@ -142,6 +145,7 @@ async function refreshProfile() {
 
 async function handleLogout() {
   await userStore.logout()
+  router.push('/')
 }
 
 async function handleCompleteProfile() {

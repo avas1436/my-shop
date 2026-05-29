@@ -77,7 +77,7 @@ const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyO
     }
   },
   onVerifySuccess: () => {
-    setTimeout(() => router.push('/profile'), 2000)
+    setTimeout(() => router.push('/profile'), 1000)
   },
   onVerifyError: (error) => {
     if (error.code === 'ALREADY_EXIST_USER') {

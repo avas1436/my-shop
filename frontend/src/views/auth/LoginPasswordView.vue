@@ -100,7 +100,8 @@ async function handleSubmit() {
   try {
     const data = await authService.loginWithPassword(form.phone, form.password)
     userStore.setAuthSuccess(data.access_token)
-    setTimeout(() => router.push('/profile'), 1500)
+    await userStore.initializeAuth(true)
+    setTimeout(() => router.push('/profile'), 1000)
   } catch (error) {
     errorMessage.value = getErrorMessage(error.code)
   } finally {
