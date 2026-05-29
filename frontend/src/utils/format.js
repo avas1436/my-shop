@@ -9,17 +9,28 @@ export function formatNumber(value) {
   return priceFormatter.format(Math.round(value || 0))
 }
 
-export function normalizeDigits(value) {
-  if (!value) return ''
-  return String(value)
-    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
-    .replace(/\D/g, '')
+// تابع کمکی برای تبدیل به اعداد فارسی
+export function toPersianDigits(value) {
+  if (value === null || value === undefined) return ''
+  const persianDigits = '۰۱۲۳۴۵۶۷۸۹'
+  return String(value).replace(/[0-9]/g, (char) => persianDigits[char])
 }
 
+// تابع اصلی برای فرمت شماره تماس
 export function formatPhone(value) {
   if (!value) return '-'
-  const digits = normalizeDigits(value)
-  return digits.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3')
+
+  let cleaned = String(value).replace(/\D/g, '')
+
+  if (cleaned.length !== 11) {
+    return toPersianDigits(cleaned)
+  }
+
+  // فرمت کردن به شکل 0913 238 7312
+  const formatted = cleaned.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3')
+
+  // اضافه کردن \u200E برای حفظ جهت چپ‌به‌راست در نمایش
+  return '\u200E' + toPersianDigits(formatted)
 }
 
 export function formatDate(value) {

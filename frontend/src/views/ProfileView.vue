@@ -21,7 +21,7 @@
 
         <ul class="profile-menu">
           <li>{{ userPhone }}</li>
-          <li>سطح دسترسی: {{ userRoleFa }}</li>
+          <li>{{ userRoleFa }}</li>
         </ul>
 
         <BaseButton variant="secondary" block @click="handleLogout">خروج از حساب</BaseButton>
@@ -71,8 +71,8 @@
                 <strong>{{ userPhone }}</strong>
               </article>
               <article>
-                <span class="muted">تاریخ تولد</span>
-                <strong>{{ userStore.profile.birth_date }}</strong>
+                <span class="muted">سن</span>
+                <strong>{{ userStore.profile.age }}</strong>
               </article>
             </div>
           </template>
