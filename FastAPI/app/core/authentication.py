@@ -52,17 +52,4 @@ async def get_current_user(
             code="USER_NOT_FOUND",
         )
 
-    # وضعیت پایه کاربر
-    if not user.is_active:
-        raise Unauthorized(
-            message="Inactive user",
-            code="INACTIVE_USER",
-        )
-
-    if user.deleted_at is not None:
-        raise Unauthorized(
-            message="User has been deleted",
-            code="USER_DELETED",
-        )
-
     return user
