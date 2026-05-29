@@ -10,7 +10,7 @@
         <label>نام</label>
         <input
           type="text"
-          v-model="form.firstName"
+          v-model="form.first_name"
           placeholder="مثلا: علی"
           :class="{ 'has-error': fieldErrors.firstName }"
         />
@@ -24,7 +24,7 @@
         <label>نام خانوادگی</label>
         <input
           type="text"
-          v-model="form.lastName"
+          v-model="form.last_name"
           placeholder="مثلا: محمدی"
           :class="{ 'has-error': fieldErrors.lastName }"
         />
@@ -40,6 +40,20 @@
           type="password"
           v-model="form.password"
           placeholder="یک رمز عبور امن وارد کنید"
+          :class="{ 'has-error': fieldErrors.password }"
+        />
+        <span v-if="fieldErrors.password" class="error-text field-error">
+          {{ fieldErrors.password[0] }}
+        </span>
+      </div>
+
+      <!-- تکرار رمز عبور -->
+      <div class="form-group">
+        <label>تکرار رمز عبور</label>
+        <input
+          type="password"
+          v-model="form.password_confirm"
+          placeholder="رمز عبور خود را مجددا وارد کنید"
           :class="{ 'has-error': fieldErrors.password }"
         />
         <span v-if="fieldErrors.password" class="error-text field-error">
@@ -67,9 +81,10 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const form = ref({
-  firstName: '',
-  lastName: '',
+  first_name: '',
+  last_name: '',
   password: '',
+  password_confirm: '',
 })
 
 const isLoading = ref(false)

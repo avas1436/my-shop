@@ -24,7 +24,20 @@
           <li>{{ userRoleFa }}</li>
         </ul>
 
-        <BaseButton variant="secondary" block @click="handleLogout">خروج از حساب</BaseButton>
+        <BaseButton variant="success" block @click="handleAddAddress">
+          افزودن آدرس جدید
+        </BaseButton>
+
+        <BaseButton
+          v-if="!!userStore.first_name"
+          variant="warning"
+          block
+          @click="handleCompleteProfile"
+        >
+          تکمیل حساب کاربری
+        </BaseButton>
+
+        <BaseButton variant="secondary" block @click="handleLogout"> خروج از حساب </BaseButton>
       </aside>
 
       <div class="profile-content">
@@ -32,7 +45,6 @@
           <div class="section-head section-head--spread">
             <div>
               <h1 class="section-title">اطلاعات حساب</h1>
-              <p class="section-subtitle">اطلاعات دریافتی شما از سرور</p>
             </div>
             <BaseButton
               type="button"
@@ -70,10 +82,10 @@
                 <span class="muted">شماره تماس</span>
                 <strong>{{ userPhone }}</strong>
               </article>
-              <article>
+              <!-- <article>
                 <span class="muted">سن</span>
                 <strong>{{ userStore.profile.age }}</strong>
-              </article>
+              </article> -->
             </div>
           </template>
         </section>
@@ -130,7 +142,10 @@ async function refreshProfile() {
 
 async function handleLogout() {
   await userStore.logout()
-  router.push('/')
+}
+
+async function handleCompleteProfile() {
+  router.push('/auth/complete')
 }
 </script>
 
