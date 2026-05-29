@@ -95,7 +95,7 @@ axiosClient.interceptors.response.use(
       }
 
       // مدیریت ۴۰۱ و رفرش توکن
-      if (status_code === 401 || errorCode === 'MISSING_TOKEN') {
+      if ((status_code === 401 || errorCode === 'MISSING_TOKEN') && !originalRequest._retry) {
         if (isRefreshing) {
           return new Promise(function (resolve, reject) {
             failedQueue.push({ resolve, reject })
@@ -115,11 +115,10 @@ axiosClient.interceptors.response.use(
         return new Promise(function (resolve, reject) {
           // ارسال درخواست برای دریافت توکن جدید
           axios
-            .post('http://127.0.0.1:8000/api/v1/users/token/refresh', {})
+            .post('http://127.0.0.1:8000/api/v1/users/token/refresh', {}, { withCredentials: true })
             .then(({ data }) => {
               // سرور اکسس توکن جدید را در پاسخ برمیگرداند و کوکی رفرش جدید را ست میکند
-              const newToken = { access_token: data.access_token }
-
+              const newToken = { access_token: data.data.access_token }
               persistAccessToken(newToken) // ذخیره اکسس توکن جدید
 
               // بروزرسانی هدر درخواست اصلی
