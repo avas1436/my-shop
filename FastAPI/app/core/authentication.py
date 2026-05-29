@@ -46,10 +46,11 @@ async def get_current_user(
 
     user = await repo.get_by_phone(subject)
 
+    # هرگز نباید در ارور بگوییم کاربر یافت نشد
     if user is None:
         raise Unauthorized(
-            message="User not found",
-            code="USER_NOT_FOUND",
+            message="Invalid authentication",
+            code="INVALID_TOKEN",
         )
 
     return user
