@@ -1,6 +1,7 @@
 // src/services/axiosClient.js
 
 import { useErrorStore } from '@/stores/errorStore'
+import { getErrorMessage } from '@/utils/errorMessages'
 import { clearStoredAccessToken, getStoredAccessToken, persistAccessToken } from '@/utils/token'
 import axios from 'axios'
 
@@ -73,9 +74,16 @@ axiosClient.interceptors.response.use(
     const errorStore = useErrorStore()
 
     if (error.response) {
+      // 1. Network Errors
+      if (!error.response) {
+        const msg = getErrorMessage('NETWORK_ERROR')
+        errorStore.addError({ type: 'network', message: msg })
+        return Promise.reject({ message: msg, type: 'network' })
+      }
+
       const backendError = error.response.data || {}
       const status_code = backendError.status_code || error.response.status
-      const errorType = backendError.error_type || 'UnknownError'
+      const errorType = backendError.error_type || 'خطای ناشناخته'
       const detail = backendError.detail
       const errorCode = detail?.code || null // دریافت کد خطا برای بررسی در شرط
 
