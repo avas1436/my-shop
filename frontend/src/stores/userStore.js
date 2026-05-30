@@ -102,7 +102,7 @@ export const useUserStore = defineStore('user', {
     setAuthSuccess(token) {
       this.isAuthenticated = true
       if (token) {
-        this.accessToken = token.accessToken
+        this.accessToken = token.access_token
       }
     },
 

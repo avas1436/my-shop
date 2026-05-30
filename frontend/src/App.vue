@@ -29,6 +29,6 @@ const user = useUserStore()
 const isAuthReady = computed(() => user.isAuthReady)
 
 onMounted(() => {
-  user.initializeAuth()
+  user.initializeAuth(true)
 })
 </script>
