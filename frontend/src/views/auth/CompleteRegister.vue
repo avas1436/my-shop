@@ -112,7 +112,7 @@ const submitProfile = async () => {
   }
 
   const passwordError = validatePassword(form.password)
-  if (!passwordError) {
+  if (passwordError) {
     isLoading.value = false
     fieldErrors.value.password = [passwordError]
     return

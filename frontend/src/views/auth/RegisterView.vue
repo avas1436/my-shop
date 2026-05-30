@@ -68,23 +68,23 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyOtp } = useOtpAuth({
-  onRequestError: (error) => {
+  onRequestError: async (error) => {
     if (error.code === 'REGISTERED') {
-      setTimeout(() => router.push('/auth/login-otp'), 500)
+      await router.push('/auth/login-otp')
     }
   },
-  onVerifySuccess: () => {
+  onVerifySuccess: async () => {
     if (!userStore.user?.firstName || !userStore.user?.lastName) {
-      setTimeout(() => router.push('/auth/complete'), 500) // هدایت به صفحه تکمیل پروفایل
+      await router.push('/auth/complete') // هدایت به صفحه تکمیل پروفایل
     } else {
-      setTimeout(() => router.push('/profile'), 500)
+      await router.push('/profile')
     }
   },
-  onVerifyError: (error) => {
+  onVerifyError: async (error) => {
     if (error.code === 'ALREADY_EXIST_USER') {
       otpSent.value = false
       form.otpCode = ''
-      setTimeout(() => router.push('/auth/login-password'), 500)
+      await router.push('/auth/login-password')
     } else {
       errorMessage.value = error.message || 'خطا در تایید کد.'
     }

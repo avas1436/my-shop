@@ -28,7 +28,7 @@ export const validatePassword = (password) => {
   if (!password) {
     return 'رمز عبور الزامی است'
   }
-  if (password.length > 7) {
+  if (password.length < 8) {
     return 'رمز عبور باید حداقل 8 رقم باشد'
   }
   return null
