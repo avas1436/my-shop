@@ -12,10 +12,10 @@
           type="text"
           v-model="form.first_name"
           placeholder="مثلا: علی"
-          :class="{ 'has-error': fieldErrors.firstName }"
+          :class="{ 'has-error': fieldErrors.first_name }"
         />
-        <span v-if="fieldErrors.firstName" class="error-text field-error">
-          {{ fieldErrors.firstName[0] }}
+        <span v-if="fieldErrors.first_name" class="error-text field-error">
+          {{ fieldErrors.first_name[0] }}
         </span>
       </div>
 
@@ -26,10 +26,10 @@
           type="text"
           v-model="form.last_name"
           placeholder="مثلا: محمدی"
-          :class="{ 'has-error': fieldErrors.lastName }"
+          :class="{ 'has-error': fieldErrors.last_name }"
         />
-        <span v-if="fieldErrors.lastName" class="error-text field-error">
-          {{ fieldErrors.lastName[0] }}
+        <span v-if="fieldErrors.last_name" class="error-text field-error">
+          {{ fieldErrors.last_name[0] }}
         </span>
       </div>
 
@@ -54,10 +54,10 @@
           type="password"
           v-model="form.password_confirm"
           placeholder="رمز عبور خود را مجددا وارد کنید"
-          :class="{ 'has-error': fieldErrors.password }"
+          :class="{ 'has-error': fieldErrors.password_confirm }"
         />
-        <span v-if="fieldErrors.password" class="error-text field-error">
-          {{ fieldErrors.password[0] }}
+        <span v-if="fieldErrors.password_confirm" class="error-text field-error">
+          {{ fieldErrors.password_confirm[0] }}
         </span>
       </div>
 
@@ -74,13 +74,14 @@
 import BaseButton from '@/components/base/BaseButton.vue'
 import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
-import { ref } from 'vue'
+import { validateConfirmPassword, validatePassword, validatePersianName } from '@/utils/validators'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const form = ref({
+const form = reactive({
   first_name: '',
   last_name: '',
   password: '',
@@ -96,16 +97,50 @@ const submitProfile = async () => {
   errorMessage.value = ''
   fieldErrors.value = {}
 
+  const firstNameError = validatePersianName(form.first_name, 'نام')
+  if (firstNameError) {
+    isLoading.value = false
+    fieldErrors.value.first_name = [firstNameError]
+    return
+  }
+
+  const lastNameError = validatePersianName(form.last_name, 'نام خانوادگی')
+  if (lastNameError) {
+    isLoading.value = false
+    fieldErrors.value.last_name = [lastNameError]
+    return
+  }
+
+  const passwordError = validatePassword(form.password)
+  if (!passwordError) {
+    isLoading.value = false
+    fieldErrors.value.password = [passwordError]
+    return
+  }
+
+  if (!validateConfirmPassword(form.password, form.password_confirm)) {
+    isLoading.value = false
+    fieldErrors.value.password_confirm = ['رمز عبور و تکرار آن مطابقت ندارند']
+    return
+  }
+
   try {
-    const data = await authService.completeRegister(form.value)
+    const data = await authService.completeRegister(form)
 
     userStore.setProfile(data.data)
 
     // انتقال به صفحه اصلی یا داشبورد
-    setTimeout(() => router.push('/profile'), 500)
+    await router.push('/profile')
   } catch (error) {
-    if (error.response?.status === 422) {
-      fieldErrors.value = error.response.data.errors || {}
+    // if (error.response?.status === 422) {
+    //   fieldErrors.value = error.response.data.errors || {}
+    // }
+    if (error.validation_errors) {
+      fieldErrors.value = error.validation_errors.reduce((acc, curr) => {
+        const field = curr.loc[curr.loc.length - 1]
+        acc[field] = [curr.msg]
+        return acc
+      }, {})
     } else {
       errorMessage.value = error.response?.data?.message || 'خطایی در ثبت اطلاعات رخ داد.'
     }
