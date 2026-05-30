@@ -69,23 +69,23 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyOtp } = useOtpAuth({
-  onRequestError: (error) => {
+  onRequestError: async (error) => {
     if (error.code === 'REGISTERED') {
-      setTimeout(() => router.push('/auth/login-password'), 2000)
+      await router.push('/auth/login-password')
     } else if (error.code === 'USER_NOT_FOUND') {
-      setTimeout(() => router.push('/auth/register'), 2000)
+      await router.push('/auth/register')
     }
   },
-  onVerifySuccess: () => {
-    setTimeout(() => router.push('/profile'), 1000)
+  onVerifySuccess: async () => {
+    await router.push('/profile')
   },
-  onVerifyError: (error) => {
+  onVerifyError: async (error) => {
     if (error.code === 'ALREADY_EXIST_USER') {
       otpSent.value = false
       form.otpCode = ''
-      setTimeout(() => router.push('/auth/login-password'), 2000)
+      await router.push('/auth/login-password')
     } else if (error.code === 'USER_NOT_FOUND') {
-      setTimeout(() => router.push('/auth/register'), 2000)
+      await router.push('/auth/register')
     } else {
       errorMessage.value = error.message || 'خطا در تایید کد.'
     }

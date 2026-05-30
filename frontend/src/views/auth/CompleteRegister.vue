@@ -102,7 +102,7 @@ const submitProfile = async () => {
     userStore.setProfile(data.data)
 
     // انتقال به صفحه اصلی یا داشبورد
-    setTimeout(() => router.push('/profile'), 2000)
+    setTimeout(() => router.push('/profile'), 500)
   } catch (error) {
     if (error.response?.status === 422) {
       fieldErrors.value = error.response.data.errors || {}

@@ -70,21 +70,21 @@ const userStore = useUserStore()
 const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyOtp } = useOtpAuth({
   onRequestError: (error) => {
     if (error.code === 'REGISTERED') {
-      setTimeout(() => router.push('/auth/login-otp'), 2000)
+      setTimeout(() => router.push('/auth/login-otp'), 500)
     }
   },
   onVerifySuccess: () => {
     if (!userStore.user?.firstName || !userStore.user?.lastName) {
-      setTimeout(() => router.push('/auth/complete'), 2000) // هدایت به صفحه تکمیل پروفایل
+      setTimeout(() => router.push('/auth/complete'), 500) // هدایت به صفحه تکمیل پروفایل
     } else {
-      setTimeout(() => router.push('/profile'), 2000)
+      setTimeout(() => router.push('/profile'), 500)
     }
   },
   onVerifyError: (error) => {
     if (error.code === 'ALREADY_EXIST_USER') {
       otpSent.value = false
       form.otpCode = ''
-      setTimeout(() => router.push('/auth/login-password'), 2000)
+      setTimeout(() => router.push('/auth/login-password'), 500)
     } else {
       errorMessage.value = error.message || 'خطا در تایید کد.'
     }

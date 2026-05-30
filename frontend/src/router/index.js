@@ -195,7 +195,7 @@ router.beforeEach(async (to, from) => {
   const userStore = useUserStore()
 
   // اگر استور هنوز آماده نیست منتظر بمان
-  if (!userStore.isAuthReady && userStore.accessToken) {
+  if (!userStore.isAuthReady) {
     await userStore.initializeAuth()
   }
 

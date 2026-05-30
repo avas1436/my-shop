@@ -102,7 +102,8 @@ async function handleSubmit() {
     userStore.setAuthSuccess(data)
     console.log(data)
     await userStore.initializeAuth(true)
-    setTimeout(() => router.push('/profile'), 1000)
+    router.push('/profile')
+    // setTimeout(() => router.push('/profile'), 1000)
   } catch (error) {
     errorMessage.value = getErrorMessage(error.code)
   } finally {

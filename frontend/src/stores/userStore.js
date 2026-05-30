@@ -1,6 +1,6 @@
 // src/stores/userStore.js
 import { authService } from '@/services/authService'
-import { getStoredAccessToken } from '@/utils/token'
+import { clearStoredAccessToken, getStoredAccessToken } from '@/utils/token'
 import { defineStore } from 'pinia'
 
 // متغیر برای جلوگیری از درخواست‌های همزمان
@@ -86,7 +86,7 @@ export const useUserStore = defineStore('user', {
     async logout() {
       try {
         // فراخوانی API برای باطل کردن رفرش توکن در سمت سرور
-        await authService.logout({ refresh_token: this.refreshToken })
+        await authService.logout()
       } catch (err) {
         console.error('Logout API failed:', err)
       } finally {
@@ -95,6 +95,7 @@ export const useUserStore = defineStore('user', {
         this.profile = null
         this.addresses = []
         this.accessToken = null
+        clearStoredAccessToken()
       }
     },
 
