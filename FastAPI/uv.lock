@@ -121,6 +121,7 @@ dependencies = [
     { name = "fastapi-offline" },
     { name = "flower" },
     { name = "gunicorn" },
+    { name = "ipaddress" },
     { name = "kavenegar" },
     { name = "locust" },
     { name = "orjson" },
@@ -153,6 +154,7 @@ requires-dist = [
     { name = "fastapi-offline", specifier = ">=1.7.6" },
     { name = "flower", specifier = ">=2.0.1" },
     { name = "gunicorn", specifier = ">=25.3.0" },
+    { name = "ipaddress", specifier = ">=1.0.23" },
     { name = "kavenegar", specifier = ">=1.1.2" },
     { name = "locust", specifier = ">=2.43.4" },
     { name = "orjson", specifier = ">=3.11.8" },
@@ -786,6 +788,15 @@ source = { registry = "https://pypi.devneeds.ir/simple/" }
 sdist = { url = "https://pypi.devneeds.ir/packages/iniconfig/2.3.0/iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730" }
 wheels = [
     { url = "https://pypi.devneeds.ir/packages/iniconfig/2.3.0/iniconfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12" },
+]
+
+[[package]]
+name = "ipaddress"
+version = "1.0.23"
+source = { registry = "https://pypi.devneeds.ir/simple/" }
+sdist = { url = "https://pypi.devneeds.ir/packages/ipaddress/1.0.23/ipaddress-1.0.23.tar.gz", hash = "sha256:b7f8e0369580bb4a24d5ba1d7cc29660a4a6987763faf1d8a8046830e020e7e2" }
+wheels = [
+    { url = "https://pypi.devneeds.ir/packages/ipaddress/1.0.23/ipaddress-1.0.23-py2.py3-none-any.whl", hash = "sha256:6e0f4a39e66cb5bb9a137b00276a2eff74f93b71dcbdad6f10ff7df9d3557fcc" },
 ]
 
 [[package]]

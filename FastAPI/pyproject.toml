@@ -28,6 +28,7 @@ dependencies = [
     "celery>=5.6.3",
     "flower>=2.0.1",
     "types-aiofiles>=25.1.0.20260409",
+    "ipaddress>=1.0.23",
 ]
 
 [dependency-groups]

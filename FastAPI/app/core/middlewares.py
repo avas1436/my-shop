@@ -1,3 +1,4 @@
+# app/core/middlewares.py
 import re
 import time
 
@@ -8,9 +9,9 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 
 from app.cache.redis_dependency import RedisNotInitializedError, get_redis_from_app
+from app.common.request_meta import extract_real_ip
 from app.common.responses import create_raw_json_response
 
 #  ---------- الگوهای Bot Detection ----------
@@ -23,7 +24,7 @@ PUBLIC_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
 
 # ---------- Rate Limiter ----------
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=extract_real_ip,
     default_limits=["100/minute"],
     strategy="fixed-window",
 )
@@ -44,7 +45,10 @@ async def block_suspicious_bots(request: Request, call_next):
             content={
                 "message": "Forbidden",
                 "code": "SUSPICIOUS_BOT",
-                "details": {"user_agent": user_agent[:100]},  # truncate برای امنیت
+                "details": {
+                    "user_agent": user_agent[:100],
+                    "client_ip": extract_real_ip(request),
+                },
             },
             status_code=403,
             headers={"X-Blocked-Reason": "suspicious-bot"},
@@ -59,7 +63,9 @@ async def block_suspicious_bots(request: Request, call_next):
             content={
                 "message": "Bad Request",
                 "code": "INVALID_FORWARDED_HEADER",
-                "details": {"x_forwarded_count": len(x_forwarded.split(","))},
+                "details": {
+                    "x_forwarded_count": len(x_forwarded.split(",")),
+                },
             },
             status_code=400,
             include_meta=False,
@@ -121,6 +127,7 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
                     if retry_after.isdigit()
                     else retry_after,
                     "endpoint": request.url.path,
+                    "client_ip": extract_real_ip(request),
                 },
             },
             status_code=429,
