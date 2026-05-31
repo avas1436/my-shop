@@ -147,22 +147,23 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        # Admin API - محدودیت سخت
-        - "traefik.http.routers.backend-admin.rule=Host(`api.avas.com`) && PathPrefix(`/api/v1/admin`)"
+        # Admin API
+        - "traefik.http.routers.backend-admin.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/api/v1/admin`)"
         - "traefik.http.routers.backend-admin.entrypoints=websecure"
         - "traefik.http.routers.backend-admin.middlewares=admin-chain@file"
-        # User API
-        - "traefik.http.routers.backend-user.rule=Host(`api.avas.com`) && PathPrefix(`/api/v1`)"
-        - "traefik.http.routers.backend-user.entrypoints=websecure"
-        - "traefik.http.routers.backend-user.middlewares=user-chain@file"
-        # Auth API - محدودیت خیلی سخت
-        - "traefik.http.routers.backend-auth.rule=Host(`api.avas.com`) && PathPrefix(`/api/v1/auth`)"
+        # Auth API (سخت‌گیرانه‌ترین)
+        - "traefik.http.routers.backend-auth.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/api/v1/auth`)"
         - "traefik.http.routers.backend-auth.entrypoints=websecure"
         - "traefik.http.routers.backend-auth.middlewares=auth-chain@file"
+        # User API (عمومی)
+        - "traefik.http.routers.backend-user.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/api/v1`)"
+        - "traefik.http.routers.backend-user.entrypoints=websecure"
+        - "traefik.http.routers.backend-user.middlewares=user-chain@file"
         # Public endpoints
-        - "traefik.http.routers.backend-public.rule=Host(`api.avas.com`) && (PathPrefix(`/health`) || PathPrefix(`/metrics`) || PathPrefix(`/docs`))"
+        - "traefik.http.routers.backend-public.rule=Host(`${API_DOMAIN}`) && (PathPrefix(`/health`) || PathPrefix(`/metrics`) || PathPrefix(`/docs`))"
         - "traefik.http.routers.backend-public.entrypoints=websecure"
         - "traefik.http.routers.backend-public.middlewares=public-chain@file"
+        # Service
         - "traefik.http.services.backend.loadbalancer.server.port=8000"
         - "traefik.docker.network=traefik-public"
 
@@ -212,14 +213,23 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        # Bot Routes
-        - "traefik.http.routers.axum-bot.rule=Host(`api.avas.com`) && (PathPrefix(`/public/products`) || PathPrefix(`/public/sitemap`) || PathPrefix(`/public/feed`))"
-        - "traefik.http.routers.axum-bot.entrypoints=websecure"
-        - "traefik.http.routers.axum-bot.middlewares=bot-chain@file"
-        # SEO Routes
-        - "traefik.http.routers.axum-seo.rule=Host(`avas.com`,`www.avas.com`) && (Path(`/sitemap.xml`) || Path(`/robots.txt`) || Path(`/feed.xml`))"
+        # === Bot & SEO Routes ===
+        - "traefik.http.routers.axum-seo.rule=Host(`${DOMAIN}`,`www.${DOMAIN}`) && (Path(`/sitemap.xml`) || Path(`/robots.txt`) || Path(`/feed.xml`))"
         - "traefik.http.routers.axum-seo.entrypoints=websecure"
         - "traefik.http.routers.axum-seo.middlewares=seo-chain@file"
+
+        # === Public Bot API ===
+        - "traefik.http.routers.axum-bot.rule=Host(`${API_DOMAIN}`) && (PathPrefix(`/public/products`) || PathPrefix(`/public/sitemap`) || PathPrefix(`/public/feed`))"
+        - "traefik.http.routers.axum-bot.entrypoints=websecure"
+        - "traefik.http.routers.axum-bot.middlewares=bot-chain@file"
+
+        # === Read-Heavy GET Endpoints (شلوغ‌ترین مسیرهای خواندن) ===
+        - "traefik.http.routers.axum-read.rule=Host(`${API_DOMAIN}`) && (PathPrefix(`/api/v1/products`) || PathPrefix(`/api/v1/categories`) || PathPrefix(`/api/v1/search`) || PathPrefix(`/api/v1/home`)) && Method(`GET`)"
+        - "traefik.http.routers.axum-read.entrypoints=websecure"
+        - "traefik.http.routers.axum-read.middlewares=read-heavy-chain@file"
+        - "traefik.http.routers.axum-read.priority=10" # ← اولویت بالاتر از user-chain
+
+        # Service
         - "traefik.http.services.axum.loadbalancer.server.port=8080"
         - "traefik.docker.network=traefik-public"
 
