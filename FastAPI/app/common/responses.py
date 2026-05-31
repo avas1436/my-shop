@@ -120,3 +120,58 @@ class SuccessAPIRoute(APIRoute):
             return response
 
         return custom_handler
+
+
+# ==============================================
+# RAW JSON OUTPUT
+# ==============================================
+class RawJSONResponse(Response):
+    media_type = "application/json"
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+
+def raw_json_payload(
+    *,
+    data: Any,
+    path: str | None = None,
+    include_meta: bool = True,
+) -> dict[str, Any]:
+
+    payload: dict[str, Any] = {}
+
+    # 1. اضافه کردن داده اصلی
+    payload["data"] = data
+
+    # 2. اضافه کردن متادیتای استاندارد
+    if include_meta:
+        payload["meta"] = {
+            "timestamp": datetime.now(UTC).isoformat(),
+            "version": "1.0",  # نسخه فرمت پاسخ
+        }
+        if path:
+            payload["meta"]["path"] = path
+
+    return payload
+
+
+def create_raw_json_response(
+    content: Any,
+    status_code: int = 200,
+    headers: dict[str, str] | None = None,
+    include_meta: bool = True,
+    path: str | None = None,
+) -> RawJSONResponse:
+
+    final_content = raw_json_payload(data=content, path=path, include_meta=include_meta)
+
+    return RawJSONResponse(
+        content=final_content,
+        status_code=status_code,
+        headers=headers,
+    )
