@@ -91,9 +91,9 @@ def create_app() -> FastAPI:
         version=settings.app_version,
         debug=settings.debug,
         # کنترل مستندات از طریق پارامترهای استاندارد
-        openapi_url=settings.openapi_url if settings.docs_enabled else None,
-        docs_url=settings.docs_url if settings.docs_enabled else None,
-        redoc_url=settings.redoc_url if settings.docs_enabled else None,
+        openapi_url=settings.openapi_url if settings.docs_enable else None,
+        docs_url=settings.docs_url if settings.docs_enable else None,
+        redoc_url=settings.redoc_url if settings.docs_enable else None,
         lifespan=lifespan,
     )
 
