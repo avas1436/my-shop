@@ -1,16 +1,17 @@
 import re
 import time
-from typing import Any
 
 from app.core.slowapi_storage import RedisAsyncStorage
 from fastapi import FastAPI, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
+
+from app.cache.redis_dependency import RedisNotInitializedError, get_redis_from_app
+from app.common.responses import create_raw_json_response
 
 #  ---------- الگوهای Bot Detection ----------
 SUSPICIOUS_UA_RE = re.compile(
@@ -28,44 +29,41 @@ limiter = Limiter(
 )
 
 
-def _error_response(
-    status_code: int,
-    message: str,
-    code: str | None = None,
-    details: dict[str, Any] | None = None,
-    headers: dict[str, str] | None = None,
-) -> JSONResponse:
-    content: dict[str, Any] = {
-        "message": message,
-        "code": code,
-        "details": details,
-    }
-    return JSONResponse(status_code=status_code, content=content, headers=headers)
-
-
 # ---------- Middleware 1: Block Suspicious Bots ----------
 async def block_suspicious_bots(request: Request, call_next):
-    """بلاک کردن ربات‌های مخرب قبل از Rate Limit."""
+
+    # مسیرهای عمومی را بررسی نکن
     if request.url.path in PUBLIC_PATHS:
         return await call_next(request)
 
     user_agent = request.headers.get("user-agent", "")
 
+    # بررسی User-Agent مشکوک
     if SUSPICIOUS_UA_RE.search(user_agent):
-        return _error_response(
+        return create_raw_json_response(
+            content={
+                "message": "Forbidden",
+                "code": "SUSPICIOUS_BOT",
+                "details": {"user_agent": user_agent[:100]},  # truncate برای امنیت
+            },
             status_code=403,
-            message="Forbidden",
-            code="SUSPICIOUS_BOT",
             headers={"X-Blocked-Reason": "suspicious-bot"},
+            include_meta=False,  # بدون meta برای کاهش حجم پاسخ
+            path=request.url.path,
         )
 
+    # بررسی header های مشکوک
     x_forwarded = request.headers.get("x-forwarded-for", "")
-
     if x_forwarded and len(x_forwarded.split(",")) > 5:
-        return _error_response(
+        return create_raw_json_response(
+            content={
+                "message": "Bad Request",
+                "code": "INVALID_FORWARDED_HEADER",
+                "details": {"x_forwarded_count": len(x_forwarded.split(","))},
+            },
             status_code=400,
-            message="Bad Request",
-            code="INVALID_FORWARDED_HEADER",
+            include_meta=False,
+            path=request.url.path,
         )
 
     return await call_next(request)
@@ -74,12 +72,14 @@ async def block_suspicious_bots(request: Request, call_next):
 # ---------- Middleware 2: Process Time ----------
 async def add_process_time(request: Request, call_next):
     """محاسبه زمان پردازش برای monitoring."""
+    # مسیرهای عمومی را نادیده بگیر
     if request.url.path in PUBLIC_PATHS:
         return await call_next(request)
 
     start = time.perf_counter()
     response = await call_next(request)
-    response.headers["X-Process-Time"] = f"{time.perf_counter() - start:.4f}"
+    process_time = time.perf_counter() - start
+    response.headers["X-Process-Time"] = f"{process_time:.4f}"
     return response
 
 
@@ -89,13 +89,15 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
     app.middleware("http")(add_process_time)
 
     # 2. Rate Limiter با Redis از app.state
-    redis_controller = getattr(app.state, "redis", None)
-    if redis_controller and redis_controller.redis_client:
+    try:
+        redis_client = get_redis_from_app(app)
         limiter._storage = RedisAsyncStorage(
-            redis_client=redis_controller.redis_client,
+            redis_client=redis_client,
             prefix="ratelimit:",
             expiration=60,
         )
+    except RedisNotInitializedError:
+        pass
     app.state.limiter = limiter
     app.add_middleware(SlowAPIMiddleware)
 
@@ -109,17 +111,22 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
     @app.exception_handler(RateLimitExceeded)
     async def handle_rate_limit(request: Request, exc: RateLimitExceeded):
         retry_after = str(exc.detail)
-        return _error_response(
-            status_code=429,
-            message="Too Many Requests",
-            code="RATE_LIMIT_EXCEEDED",
-            details={
-                "retry_after": int(retry_after)
-                if retry_after.isdigit()
-                else retry_after,
-                "endpoint": request.url.path,
+
+        return create_raw_json_response(
+            content={
+                "message": "Too Many Requests",
+                "code": "RATE_LIMIT_EXCEEDED",
+                "details": {
+                    "retry_after": int(retry_after)
+                    if retry_after.isdigit()
+                    else retry_after,
+                    "endpoint": request.url.path,
+                },
             },
+            status_code=429,
             headers={"Retry-After": retry_after},
+            include_meta=True,  # با meta برای ردیابی
+            path=request.url.path,
         )
 
     # 5. Prometheus Metrics
