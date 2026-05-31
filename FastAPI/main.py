@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi_offline import FastAPIOffline
 
 import app.models
 from app.api.v1.router import api_router
@@ -78,13 +77,23 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------
     # Create App instance
     # -------------------------------------------------------------
-    app = FastAPIOffline(
+    # app = FastAPIOffline(
+    #     title=settings.app_name,
+    #     version=settings.app_version,
+    #     debug=settings.debug,
+    #     openapi_url=settings.openapi_url,
+    #     docs_url=settings.docs_url,
+    #     redoc_url=settings.redoc_url,
+    #     lifespan=lifespan,
+    # )
+    app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
-        openapi_url=settings.openapi_url,
-        docs_url=settings.docs_url,
-        redoc_url=settings.redoc_url,
+        # کنترل مستندات از طریق پارامترهای استاندارد
+        openapi_url=settings.openapi_url if settings.docs_enabled else None,
+        docs_url=settings.docs_url if settings.docs_enabled else None,
+        redoc_url=settings.redoc_url if settings.docs_enabled else None,
         lifespan=lifespan,
     )
 
@@ -102,6 +111,20 @@ def create_app() -> FastAPI:
     )
 
     # -------------------------------------------------------------
+    # Routes
+    # -------------------------------------------------------------
+    app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+    # -------------------------------------------------------------
+    # Media route for local images
+    # -------------------------------------------------------------
+    app.mount(
+        "/media",
+        StaticFiles(directory=settings.media_root),
+        name="media",
+    )
+
+    # -------------------------------------------------------------
     # MiddleWares
     # -------------------------------------------------------------
     # register_middlewares(app=app, trusted_host=settings.trusted_hosts)
@@ -110,16 +133,6 @@ def create_app() -> FastAPI:
     # Exception Handlers
     # -------------------------------------------------------------
     register_exception_handlers(app=app, logger=logger)
-
-    # -------------------------------------------------------------
-    # Routes
-    # -------------------------------------------------------------
-    app.include_router(api_router, prefix=settings.api_v1_prefix)
-
-    # -------------------------------------------------------------
-    # Media route for local images
-    # -------------------------------------------------------------
-    app.mount("/media", StaticFiles(directory=settings.media_root), name="media")
 
     # -------------------------------------------------------------
     # Check health
