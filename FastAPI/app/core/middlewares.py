@@ -2,7 +2,6 @@
 import re
 import time
 
-from app.core.slowapi_storage import RedisAsyncStorage
 from fastapi import FastAPI, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -11,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.cache.redis_dependency import RedisNotInitializedError, get_redis_from_app
+from app.cache.slowapi_storage import RedisAsyncStorage
 from app.common.request_meta import extract_real_ip
 from app.common.responses import create_raw_json_response
 

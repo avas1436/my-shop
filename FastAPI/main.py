@@ -10,6 +10,7 @@ from app.config.logging_config import setup_logger
 from app.config.settings import get_settings
 from app.core.database import engine
 from app.core.exceptions import register_exception_handlers
+from app.core.middlewares import register_middlewares
 from app.core.redis import RedisController
 
 
@@ -127,7 +128,7 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------
     # MiddleWares
     # -------------------------------------------------------------
-    # register_middlewares(app=app, trusted_host=settings.trusted_hosts)
+    register_middlewares(app=app, trusted_host=settings.trusted_hosts)
 
     # -------------------------------------------------------------
     # Exception Handlers

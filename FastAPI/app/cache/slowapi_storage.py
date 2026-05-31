@@ -1,8 +1,8 @@
 # app/cache/slowapi_storage.py
 # این فایل قابلیت های اتمیک مناسب کنترل تعداد درخواست دارد
 
+from limits.storage import MemoryStorage
 from redis.asyncio import Redis
-from slowapi.storages import MemoryStorage
 
 
 class RedisAsyncStorage(MemoryStorage):
