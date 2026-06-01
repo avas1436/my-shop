@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from app.common.enums import ProductSortEnum
 from app.common.pagination import PageResponse
 from app.common.responses import SuccessAPIRoute
-from app.core.middlewares import limiter
 from app.modules.catalog.dependencies.product import get_user_product_service
 from app.modules.catalog.schemas.product import (
     ProductFullUserRead,
@@ -25,7 +24,6 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=list[ProductUserLightRead],
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit("60/minute; 1000/day")
 async def homepage_featured_products(
     request: Request,
     service: Annotated[UserProductService, Depends(get_user_product_service)],
@@ -42,7 +40,6 @@ async def homepage_featured_products(
     response_model=PageResponse[dict],
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit("20/minute; 300/hour")
 async def search_products(
     request: Request,
     service: Annotated[UserProductService, Depends(get_user_product_service)],
@@ -86,7 +83,6 @@ async def search_products(
     response_model=ProductFullUserRead,
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit("60/minute; 1000/day")
 async def get_product_by_id(
     request: Request,
     product_id: int,
@@ -103,7 +99,6 @@ async def get_product_by_id(
     response_model=ProductFullUserRead,
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit("60/minute; 1000/day")
 async def get_product_by_slug(
     request: Request,
     slug: str,

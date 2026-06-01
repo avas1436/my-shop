@@ -5,13 +5,12 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
-from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 
 from app.common.request_meta import extract_real_ip
 from app.common.responses import create_raw_json_response
 from app.config.settings import get_settings
+from app.core.rate_limit import ASGIRateLimitMiddleware
 
 #  ---------- الگوهای Bot Detection ----------
 SUSPICIOUS_UA_RE = re.compile(
@@ -26,12 +25,12 @@ settings = get_settings()
 
 
 # ---------- Rate Limiter ----------
-limiter = Limiter(
-    key_func=extract_real_ip,
-    default_limits=["100/minute"],
-    strategy="fixed-window",
-    storage_uri=settings.redis_url,
-)
+# limiter = Limiter(
+#     key_func=extract_real_ip,
+#     default_limits=["100/minute"],
+#     strategy="fixed-window",
+#     storage_uri=settings.redis_url,
+# )
 
 
 # ---------- Middleware 1: Block Suspicious Bots ----------
@@ -99,8 +98,7 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
     app.middleware("http")(add_process_time)
 
     # 2. Rate Limiter با Redis از app.state
-    app.state.limiter = limiter
-    app.add_middleware(SlowAPIMiddleware)
+    app.add_middleware(ASGIRateLimitMiddleware)
 
     # 3. Trusted Host
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_host)

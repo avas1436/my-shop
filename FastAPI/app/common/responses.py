@@ -138,37 +138,38 @@ class RawJSONResponse(Response):
 
 def raw_json_payload(
     *,
-    data: Any,
-    path: str | None = None,
-    include_meta: bool = True,
+    status_code: int,
+    detail: Any,
+    error_type: str,
+    path: str,
 ) -> dict[str, Any]:
 
-    payload: dict[str, Any] = {}
+    now = datetime.now(UTC)
 
-    # 1. اضافه کردن داده اصلی
-    payload["data"] = data
-
-    # 2. اضافه کردن متادیتای استاندارد
-    if include_meta:
-        payload["meta"] = {
-            "timestamp": datetime.now(UTC).isoformat(),
-            "version": "1.0",  # نسخه فرمت پاسخ
-        }
-        if path:
-            payload["meta"]["path"] = path
-
-    return payload
+    return {
+        "success": False,
+        "status_code": status_code,
+        "error_type": error_type,
+        "detail": detail,
+        "path": path,
+        "timestamp": now.isoformat(),
+    }
 
 
 def create_raw_json_response(
-    content: Any,
-    status_code: int = 200,
+    detail: Any,
+    error_type: str,
+    path: str,
+    status_code: int = 400,
     headers: dict[str, str] | None = None,
-    include_meta: bool = True,
-    path: str | None = None,
 ) -> RawJSONResponse:
 
-    final_content = raw_json_payload(data=content, path=path, include_meta=include_meta)
+    final_content = raw_json_payload(
+        status_code=status_code,
+        detail=detail,
+        error_type=error_type,
+        path=path,
+    )
 
     return RawJSONResponse(
         content=final_content,

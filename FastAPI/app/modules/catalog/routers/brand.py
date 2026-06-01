@@ -8,7 +8,6 @@ from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.pagination import PageResponse
 from app.common.responses import SuccessAPIRoute, SuccessMessage
-from app.core.middlewares import limiter
 from app.modules.catalog.dependencies.brand import get_brand_service
 from app.modules.catalog.schemas.brand import BrandCreate, BrandRead, BrandUpdate
 from app.modules.catalog.services.brand import BrandService
@@ -40,7 +39,6 @@ async def create_brand(
 
 
 @router.get("/{brand_id}", response_model=BrandRead, status_code=status.HTTP_200_OK)
-@limiter.limit("3/minute")
 async def get_brand(
     request: Request,
     brand_id: int,
