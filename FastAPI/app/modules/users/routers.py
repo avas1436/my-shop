@@ -2,11 +2,12 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
 from app.common.responses import SuccessAPIRoute, SuccessMessage
+from app.core.middlewares import limiter
 from app.modules.users.dependencies import get_auth_service
 from app.modules.users.models import User
 from app.modules.users.schemas import (
@@ -37,7 +38,9 @@ router = APIRouter(route_class=SuccessAPIRoute)
     status_code=status.HTTP_201_CREATED,
     response_model=SuccessMessage,
 )
+@limiter.limit("5/day")
 async def request_otp(
+    request: Request,
     data: RequestOTP,
     service: Annotated[AuthService, Depends(get_auth_service)],
     # background: BackgroundTasks,
@@ -70,7 +73,9 @@ async def request_otp(
     status_code=status.HTTP_200_OK,
     summary="Verify OTP and issue token pair",
 )
+@limiter.limit("5/day")
 async def verify_otp_route(
+    request: Request,
     response: Response,
     data: OTPVerify,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -95,7 +100,9 @@ async def verify_otp_route(
     status_code=status.HTTP_200_OK,
     summary="Complete register after first login",
 )
+@limiter.limit("5/day")
 async def register_complete(
+    request: Request,
     data: Register,
     service: Annotated[AuthService, Depends(get_auth_service)],
     current_user: Annotated[
@@ -124,7 +131,9 @@ async def register_complete(
     status_code=status.HTTP_200_OK,
     summary="Login with password",
 )
+@limiter.limit("5/day")
 async def login_with_password(
+    request: Request,
     response: Response,
     data: LoginWithPassword,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -149,7 +158,9 @@ async def login_with_password(
     status_code=status.HTTP_200_OK,
     summary="Refresh access and refresh tokens",
 )
+@limiter.limit("5/day")
 async def refresh_token(
+    request: Request,
     response: Response,
     token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -174,7 +185,9 @@ async def refresh_token(
     response_model=SuccessMessage,
     summary="Revoke current refresh token",
 )
+@limiter.limit("5/day")
 async def logout(
+    request: Request,
     response: Response,
     token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -203,7 +216,10 @@ async def logout(
     response_model=SuccessMessage,
     summary="Revoke all refresh tokens for current user",
 )
+@limiter.limit("5/day")
+@limiter.limit("5/minute; 20/day")
 async def logout_all(
+    request: Request,
     response: Response,
     service: Annotated[AuthService, Depends(get_auth_service)],
     phone_number: str,
@@ -240,6 +256,7 @@ async def logout_all(
     summary="Get User Status",
 )
 def me(
+    request: Request,
     current_user: Annotated[
         User,
         Depends(

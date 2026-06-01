@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -29,6 +29,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     status_code=status.HTTP_201_CREATED,
 )
 async def admin_create_draft_product(
+    request: Request,
     payload: DraftProductCreate,
     service: Annotated[AdminProductService, Depends(get_admin_product_service)],
     _: Annotated[
@@ -58,6 +59,7 @@ async def admin_create_draft_product(
     response_model=ProductSimpleRead,
 )
 async def admin_soft_delete_product(
+    request: Request,
     product_id: int,
     service: Annotated[AdminProductService, Depends(get_admin_product_service)],
     _: Annotated[
@@ -88,6 +90,7 @@ async def admin_soft_delete_product(
     response_model=SuccessMessage,
 )
 async def admin_hard_delete_product(
+    request: Request,
     product_id: int,
     service: Annotated[AdminProductService, Depends(get_admin_product_service)],
     _: Annotated[
@@ -135,6 +138,7 @@ async def admin_hard_delete_product(
     status_code=status.HTTP_200_OK,
 )
 async def show_product(
+    request: Request,
     product_id: int,
     service: Annotated[AdminProductService, Depends(get_admin_product_service)],
     _: Annotated[
@@ -165,6 +169,7 @@ async def show_product(
     response_model=ProductSimpleRead,
 )
 async def admin_patch_product(
+    request: Request,
     product_id: int,
     updates: ProductAdminUpdate,
     service: Annotated[AdminProductService, Depends(get_admin_product_service)],
@@ -196,6 +201,7 @@ async def admin_patch_product(
     response_model=ProductSimpleRead,
 )
 async def admin_publish_product(
+    request: Request,
     product_id: int,
     service: Annotated[AdminProductService, Depends(get_admin_product_service)],
     _: Annotated[

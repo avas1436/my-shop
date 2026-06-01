@@ -7,6 +7,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
+from app.core.middlewares import limiter
 from app.modules.users.models import User
 
 router = APIRouter()
@@ -28,6 +29,7 @@ AdminOnly = Annotated[
 
 
 @router.get("/routes")
+@limiter.limit("5/minute")
 async def list_all_routes(
     request: Request,
     _: AdminOnly,
@@ -46,7 +48,11 @@ async def list_all_routes(
 
 
 @router.get("/metrics", response_class=PlainTextResponse)
-async def metrics(_: AdminOnly):
+@limiter.limit("5/day")
+async def metrics(
+    request: Request,
+    _: AdminOnly,
+):
     data = generate_latest()
     return PlainTextResponse(
         content=data.decode("utf-8"), media_type=CONTENT_TYPE_LATEST

@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -26,6 +26,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     status_code=status.HTTP_201_CREATED,
 )
 async def create_variant(
+    request: Request,
     data: ProductVariantCreate,
     service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
     _: Annotated[
@@ -51,6 +52,7 @@ async def create_variant(
     status_code=status.HTTP_200_OK,
 )
 async def list_variants(
+    request: Request,
     service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
     search: str | None = None,
     product_id: int | None = None,
@@ -67,6 +69,7 @@ async def list_variants(
     status_code=status.HTTP_200_OK,
 )
 async def get_variant(
+    request: Request,
     variant_id: int,
     service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
 ):
@@ -79,6 +82,7 @@ async def get_variant(
     status_code=status.HTTP_200_OK,
 )
 async def update_variant(
+    request: Request,
     variant_id: int,
     data: ProductVariantUpdate,
     service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
@@ -105,6 +109,7 @@ async def update_variant(
     status_code=status.HTTP_200_OK,
 )
 async def delete_variant(
+    request: Request,
     variant_id: int,
     service: Annotated[ProductVariantService, Depends(get_product_variant_service)],
     _: Annotated[

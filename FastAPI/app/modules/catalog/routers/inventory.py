@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -28,6 +28,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=InventoryRead,
 )
 async def create_inventory(
+    request: Request,
     data: InventoryCreate,
     service: Annotated[InventoryService, Depends(get_inventory_service)],
     _: Annotated[
@@ -53,6 +54,7 @@ async def create_inventory(
     response_model=PageResponse[dict],
 )
 async def list_inventories(
+    request: Request,
     service: Annotated[InventoryService, Depends(get_inventory_service)],
     variant_id: int | None = None,
     in_stock: bool | None = None,
@@ -68,6 +70,7 @@ async def list_inventories(
     response_model=InventoryRead,
 )
 async def get_inventory(
+    request: Request,
     inventory_id: int,
     service: Annotated[InventoryService, Depends(get_inventory_service)],
 ):
@@ -80,6 +83,7 @@ async def get_inventory(
     response_model=InventoryRead,
 )
 async def update_inventory(
+    request: Request,
     inventory_id: int,
     data: InventoryUpdate,
     service: Annotated[InventoryService, Depends(get_inventory_service)],
@@ -106,6 +110,7 @@ async def update_inventory(
     response_model=SuccessMessage,
 )
 async def delete_inventory(
+    request: Request,
     inventory_id: int,
     service: Annotated[InventoryService, Depends(get_inventory_service)],
     _: Annotated[
