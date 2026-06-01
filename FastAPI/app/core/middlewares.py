@@ -9,10 +9,9 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.cache.redis_dependency import RedisNotInitializedError, get_redis_from_app
-from app.cache.slowapi_storage import RedisAsyncStorage
 from app.common.request_meta import extract_real_ip
 from app.common.responses import create_raw_json_response
+from app.config.settings import get_settings
 
 #  ---------- الگوهای Bot Detection ----------
 SUSPICIOUS_UA_RE = re.compile(
@@ -22,11 +21,16 @@ SUSPICIOUS_UA_RE = re.compile(
 
 PUBLIC_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
 
+
+settings = get_settings()
+
+
 # ---------- Rate Limiter ----------
 limiter = Limiter(
     key_func=extract_real_ip,
     default_limits=["100/minute"],
     strategy="fixed-window",
+    storage_uri=settings.redis_url,
 )
 
 
@@ -95,15 +99,6 @@ def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
     app.middleware("http")(add_process_time)
 
     # 2. Rate Limiter با Redis از app.state
-    try:
-        redis_client = get_redis_from_app(app)
-        limiter._storage = RedisAsyncStorage(
-            redis_client=redis_client,
-            prefix="ratelimit:",
-            expiration=60,
-        )
-    except RedisNotInitializedError:
-        pass
     app.state.limiter = limiter
     app.add_middleware(SlowAPIMiddleware)
 

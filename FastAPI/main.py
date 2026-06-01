@@ -52,6 +52,7 @@ async def lifespan(app: FastAPI):
     try:
         await redis_controller.init_redis()
         logger.info("Redis initialized")
+
     except Exception as e:
         logger.error(f"Redis initialization failed: {e}")
         redis_controller = None

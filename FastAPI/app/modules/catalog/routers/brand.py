@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -37,8 +37,13 @@ async def create_brand(
     return await service.create_brand(data)
 
 
+from app.core.middlewares import limiter
+
+
 @router.get("/{brand_id}", response_model=BrandRead, status_code=status.HTTP_200_OK)
+@limiter.limit("3/minute")
 async def get_brand(
+    request: Request,
     brand_id: int,
     service: Annotated[BrandService, Depends(get_brand_service)],
 ):
