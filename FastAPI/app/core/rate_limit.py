@@ -51,6 +51,20 @@ class ASGIRateLimitMiddleware:
                     },
                 }
             ),
+            "/api/v1/users/me": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 1,
+                        "hour": 5,
+                        "day": 100,
+                    },
+                    "guest": {
+                        "minute": 0,
+                        "hour": 20,
+                        "day": 100,
+                    },
+                }
+            ),
         }
     )
 
@@ -75,6 +89,7 @@ class ASGIRateLimitMiddleware:
 
         # شناسه کاربر
         auth_header = request.headers.get("authorization")
+        user_id = None
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
             try:
@@ -86,7 +101,7 @@ class ASGIRateLimitMiddleware:
 
         # دریافت کلاینت Redis از State
         try:
-            redis_client = request.app.state.redis.RedisController
+            redis_client = request.app.state.redis.redis_client
         except AttributeError:
             redis_client = None
 
@@ -143,7 +158,11 @@ class ASGIRateLimitMiddleware:
                 if request_count > limit:
                     response = create_raw_json_response(
                         status_code=429,
-                        detail="تعداد درخواست‌های شما بیش از حد مجاز است.",
+                        detail={
+                            "message": "Rate limit exceeded. You have made too many requests to this endpoint within the allowed timeframe. Please wait and try again later.",
+                            "code": "RATE_LIMIT_EXCEEDED",
+                            "details": None,
+                        },
                         error_type="TOO_MANY_REQUESTS",
                         path=path,
                         headers={"Retry-After": str(window_seconds)},

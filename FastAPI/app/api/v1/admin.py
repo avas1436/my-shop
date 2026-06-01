@@ -30,7 +30,7 @@ AdminOnly = Annotated[
 @router.get("/routes")
 async def list_all_routes(
     request: Request,
-    # _: AdminOnly,
+    _: AdminOnly,
 ):
 
     routes = []
