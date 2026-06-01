@@ -23,45 +23,150 @@ class ASGIRateLimitMiddleware:
     # تعریف در سطح کلاس به صورت ایمن و فقط‌خواندنی
     STRICT_ROUTES = MappingProxyType(
         {
-            "/api/v1/auth/login": MappingProxyType(
+            # ==========================================
+            # 1. روت‌های احراز هویت
+            # ==========================================
+            "/api/v1/users/otp/request": MappingProxyType(
                 {
                     "user": {
-                        "minute": 5,
-                        "hour": 20,
-                        "day": 100,
-                    },
-                    "guest": {
-                        "minute": 5,
-                        "hour": 20,
-                        "day": 100,
-                    },
-                }
-            ),
-            "/api/v1/admin/infra/routes": MappingProxyType(
-                {
-                    "user": {
-                        "minute": 1,
-                        "hour": 20,
-                        "day": 100,
-                    },
-                    "guest": {
-                        "minute": 1,
-                        "hour": 20,
-                        "day": 100,
-                    },
-                }
-            ),
-            "/api/v1/users/me": MappingProxyType(
-                {
-                    "user": {
-                        "minute": 1,
+                        "minute": 2,
                         "hour": 5,
+                        "day": 10,
+                    },
+                    "guest": {
+                        "minute": 2,
+                        "hour": 5,
+                        "day": 10,
+                    },
+                }
+            ),
+            "/api/v1/users/otp/verify": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 5,
+                        "hour": 15,
+                        "day": 50,
+                    },
+                    "guest": {
+                        "minute": 5,
+                        "hour": 15,
+                        "day": 50,
+                    },
+                }
+            ),
+            "/api/v1/users/login/password": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 5,
+                        "hour": 20,
                         "day": 100,
+                    },
+                    "guest": {
+                        "minute": 5,
+                        "hour": 20,
+                        "day": 100,
+                    },
+                }
+            ),
+            "/api/v1/users/register/complete": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 3,
+                        "hour": 10,
+                        "day": 30,
+                    },
+                    "guest": {
+                        "minute": 3,
+                        "hour": 10,
+                        "day": 30,
+                    },
+                }
+            ),
+            "/api/v1/users/token/refresh": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 10,
+                        "hour": 50,
+                        "day": 200,
                     },
                     "guest": {
                         "minute": 0,
+                    },  # کاربران مهمان امکان رفرش توکن ندارند
+                }
+            ),
+            "/api/v1/users/logout": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 5,
                         "hour": 20,
-                        "day": 100,
+                    },
+                    "guest": {
+                        "minute": 0,
+                    },
+                }
+            ),
+            "/api/v1/users/logout/all": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 2,
+                        "hour": 5,
+                    },
+                    "guest": {
+                        "minute": 0,
+                    },
+                }
+            ),
+            # ==========================================
+            # 2. پروفایل کاربری
+            # ==========================================
+            "/api/v1/users/me": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 10,
+                        "hour": 100,
+                    },
+                    "guest": {
+                        "minute": 0,
+                    },
+                }
+            ),
+            # ==========================================
+            # 3. مسیرهای سنگین و جستجو
+            # ==========================================
+            "/api/v1/products/search": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 30,
+                        "hour": 300,
+                    },
+                    "guest": {
+                        "minute": 15,
+                        "hour": 100,
+                    },
+                }
+            ),
+            # ==========================================
+            # 4. زیرساخت و مانیتورینگ
+            # ==========================================
+            "/api/v1/admin/infra/routes": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 10,
+                        "hour": 60,
+                    },
+                    "guest": {
+                        "minute": 0,
+                    },
+                }
+            ),
+            "/api/v1/admin/infra/metrics": MappingProxyType(
+                {
+                    "user": {
+                        "minute": 10,
+                        "hour": 60,
+                    },
+                    "guest": {
+                        "minute": 0,
                     },
                 }
             ),
