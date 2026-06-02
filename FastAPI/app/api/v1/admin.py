@@ -32,6 +32,7 @@ async def list_all_routes(
     request: Request,
     _: AdminOnly,
 ):
+
     routes = []
     for r in request.app.routes:
         methods = sorted(list(getattr(r, "methods", []) or []))
@@ -46,7 +47,10 @@ async def list_all_routes(
 
 
 @router.get("/metrics", response_class=PlainTextResponse)
-async def metrics(_: AdminOnly):
+async def metrics(
+    request: Request,
+    _: AdminOnly,
+):
     data = generate_latest()
     return PlainTextResponse(
         content=data.decode("utf-8"), media_type=CONTENT_TYPE_LATEST

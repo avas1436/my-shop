@@ -120,3 +120,59 @@ class SuccessAPIRoute(APIRoute):
             return response
 
         return custom_handler
+
+
+# ==============================================
+# RAW JSON OUTPUT
+# ==============================================
+class RawJSONResponse(Response):
+    media_type = "application/json"
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+
+def raw_json_payload(
+    *,
+    status_code: int,
+    detail: Any,
+    error_type: str,
+    path: str,
+) -> dict[str, Any]:
+
+    now = datetime.now(UTC)
+
+    return {
+        "success": False,
+        "status_code": status_code,
+        "error_type": error_type,
+        "detail": detail,
+        "path": path,
+        "timestamp": now.isoformat(),
+    }
+
+
+def create_raw_json_response(
+    detail: Any,
+    error_type: str,
+    path: str,
+    status_code: int = 400,
+    headers: dict[str, str] | None = None,
+) -> RawJSONResponse:
+
+    final_content = raw_json_payload(
+        status_code=status_code,
+        detail=detail,
+        error_type=error_type,
+        path=path,
+    )
+
+    return RawJSONResponse(
+        content=final_content,
+        status_code=status_code,
+        headers=headers,
+    )

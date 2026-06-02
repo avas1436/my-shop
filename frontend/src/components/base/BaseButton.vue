@@ -87,4 +87,25 @@ defineProps({
   background: transparent;
   border: 1px solid rgba(91, 61, 245, 0.18);
 }
+
+/* دکمه افزودن (مثلا افزودن آدرس) - رنگ سبز */
+.base-button--success {
+  color: #fff;
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 16px 32px rgba(16, 185, 129, 0.22);
+}
+
+.base-button--success:hover {
+  box-shadow: 0 20px 36px rgba(16, 185, 129, 0.28);
+}
+
+.base-button--warning {
+  color: #fff;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 16px 32px rgba(245, 158, 11, 0.22);
+}
+
+.base-button--warning:hover {
+  box-shadow: 0 20px 36px rgba(245, 158, 11, 0.28);
+}
 </style>

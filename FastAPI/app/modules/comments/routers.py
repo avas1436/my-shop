@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -25,6 +25,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=CommentRead,
 )
 async def create_comment(
+    request: Request,
     product_id: int,
     data: CommentCreate,
     service: Annotated[CommentService, Depends(get_comment_service)],
@@ -52,6 +53,7 @@ async def create_comment(
     response_model=PageResponse[dict],
 )
 async def list_comments(
+    request: Request,
     service: Annotated[CommentService, Depends(get_comment_service)],
     user_id: int | None = None,
     product_id: int | None = None,
@@ -72,6 +74,7 @@ async def list_comments(
     response_model=CommentRead,
 )
 async def update_comment(
+    request: Request,
     comment_id: int,
     data: CommentUpdate,
     service: Annotated[CommentService, Depends(get_comment_service)],
@@ -102,6 +105,7 @@ async def update_comment(
     response_model=SuccessMessage,
 )
 async def delete_comment(
+    request: Request,
     comment_id: int,
     service: Annotated[CommentService, Depends(get_comment_service)],
     user: Annotated[

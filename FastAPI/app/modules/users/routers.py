@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -38,6 +38,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=SuccessMessage,
 )
 async def request_otp(
+    request: Request,
     data: RequestOTP,
     service: Annotated[AuthService, Depends(get_auth_service)],
     # background: BackgroundTasks,
@@ -45,7 +46,7 @@ async def request_otp(
 
     code = await service.request_otp_service(data=data)
 
-    # print(code)
+    print(code)
 
     # background.add_task(
     #     send_sms,
@@ -71,6 +72,7 @@ async def request_otp(
     summary="Verify OTP and issue token pair",
 )
 async def verify_otp_route(
+    request: Request,
     response: Response,
     data: OTPVerify,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -96,6 +98,7 @@ async def verify_otp_route(
     summary="Complete register after first login",
 )
 async def register_complete(
+    request: Request,
     data: Register,
     service: Annotated[AuthService, Depends(get_auth_service)],
     current_user: Annotated[
@@ -125,6 +128,7 @@ async def register_complete(
     summary="Login with password",
 )
 async def login_with_password(
+    request: Request,
     response: Response,
     data: LoginWithPassword,
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -150,6 +154,7 @@ async def login_with_password(
     summary="Refresh access and refresh tokens",
 )
 async def refresh_token(
+    request: Request,
     response: Response,
     token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -175,6 +180,7 @@ async def refresh_token(
     summary="Revoke current refresh token",
 )
 async def logout(
+    request: Request,
     response: Response,
     token: Annotated[str, Depends(get_refresh_token)],
     service: Annotated[AuthService, Depends(get_auth_service)],
@@ -204,6 +210,7 @@ async def logout(
     summary="Revoke all refresh tokens for current user",
 )
 async def logout_all(
+    request: Request,
     response: Response,
     service: Annotated[AuthService, Depends(get_auth_service)],
     phone_number: str,
@@ -240,14 +247,15 @@ async def logout_all(
     summary="Get User Status",
 )
 def me(
+    request: Request,
     current_user: Annotated[
         User,
         Depends(
             require_access(
                 require_recent_login_within=timedelta(days=15),
-                require_password=True,
-                require_profile_complete=True,
-                profile_required_fields=("first_name", "last_name"),
+                # require_password=True,
+                # require_profile_complete=True,
+                # profile_required_fields=("first_name", "last_name"),
             )
         ),
     ],

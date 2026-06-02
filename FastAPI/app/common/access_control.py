@@ -59,10 +59,10 @@ def require_access(
             require_not_deleted
             and getattr(current_user, "deleted_at", None) is not None
         ):
-            _forbidden("User account is deleted", "USER_DELETED")
+            _forbidden("Account has been removed", "ACCOUNT_DELETED")
 
         if require_active and not bool(getattr(current_user, "is_active", False)):
-            _forbidden("User account is inactive", "ACCOUNT_INACTIVE")
+            _forbidden("Account is suspended", "ACCOUNT_INACTIVE")
 
         if require_phone_verified and not bool(
             getattr(current_user, "is_phone_verified", False)

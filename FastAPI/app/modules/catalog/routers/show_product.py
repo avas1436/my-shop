@@ -1,7 +1,7 @@
 # app/modules/catalog/routers/show_product.py
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
 from app.common.enums import ProductSortEnum
 from app.common.pagination import PageResponse
@@ -25,6 +25,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     status_code=status.HTTP_200_OK,
 )
 async def homepage_featured_products(
+    request: Request,
     service: Annotated[UserProductService, Depends(get_user_product_service)],
     limit: int = Query(12, ge=1, le=50),
 ):
@@ -40,6 +41,7 @@ async def homepage_featured_products(
     status_code=status.HTTP_200_OK,
 )
 async def search_products(
+    request: Request,
     service: Annotated[UserProductService, Depends(get_user_product_service)],
     q: Annotated[str | None, Query(min_length=1, max_length=200)] = None,
     brand_slugs: Annotated[list[str] | None, Query()] = None,
@@ -82,6 +84,7 @@ async def search_products(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_by_id(
+    request: Request,
     product_id: int,
     service: Annotated[UserProductService, Depends(get_user_product_service)],
 ):
@@ -97,6 +100,7 @@ async def get_product_by_id(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_by_slug(
+    request: Request,
     slug: str,
     service: Annotated[UserProductService, Depends(get_user_product_service)],
 ):

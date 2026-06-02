@@ -8,9 +8,9 @@ from pydantic import (
     Field,
     SecretStr,
     StringConstraints,
+    ValidationInfo,
     computed_field,
     field_validator,
-    model_validator,
 )
 
 from app.common.enums import PurposeOTP
@@ -60,15 +60,17 @@ class Register(BaseModel):
         validate_password(v.get_secret_value())
         return v
 
-    @model_validator(mode="after")
-    def verify_passwords_match(self) -> "Register":
-        pwd = self.password.get_secret_value()
-        pwd_confirm = self.password_confirm.get_secret_value()
+    @field_validator("password_confirm")
+    @classmethod
+    def verify_passwords_match(cls, v: SecretStr, info: ValidationInfo):
+        if "password" in info.data:
+            pwd = info.data["password"].get_secret_value()
+            pwd_confirm = v.get_secret_value()
 
-        if pwd != pwd_confirm:
-            raise ValueError("Password and password confirmation do not match")
+            if pwd != pwd_confirm:
+                raise ValueError("Password and password confirmation do not match")
 
-        return self
+        return v
 
     model_config = ConfigDict(
         extra="forbid",  # Mass Assignment Attack

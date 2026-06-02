@@ -1,0 +1,99 @@
+# docker/traefik/traefik.yml
+# Static Config
+
+# این قسمت تعیین میکند که داشبورد ترافیک بدون رمز  نا ایمن باز نشود
+api:
+  dashboard: true
+  insecure: false
+
+# قسمت تعیین کننده لاگ در فایل
+log:
+  level: WARN
+  format: json
+
+# کسانی که وارد داشبورد ترافیک میشن اطلاعاتشون ذخیره میشه
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+  bufferingSize: 100
+  filters:
+    statusCodes:
+      - "200-299"
+      - "400-499"
+      - "500-599"
+  fields:
+    defaultMode: keep
+    headers:
+      defaultMode: keep
+      names:
+        User-Agent: keep
+        X-Forwarded-For: keep
+        # برای امنیت اطلاعات این دو مورد ذخیره نمیشه
+        Authorization: drop
+        Cookie: drop
+
+# تعریف پورت های ورودی کاربران
+entryPoints:
+  # همه کسانی که از این مسیر وارد میشن به قسمت امن https منتقل میشن
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  # همه دامنه و زیرمجموعه آن باید از این مسیر عبور کنند
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: avas.com
+            sans:
+              - "*.avas.com"
+
+# محل تامین اطلاعات اصلی ترافیک
+providers:
+  # به داکر با این شرایط وصل میشه
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    swarmMode: true
+    # با این تنظیم تنها با فعال کردن گزینه
+    # traefik.enable=true
+    # یک کانتینر به اینترنت وصل میشه
+    exposedByDefault: false
+    network: traefik-public
+    watch: true
+    swarmModeRefreshSeconds: "15s"
+
+  # اطلاعات پویا از این آدرس خوانده میشن
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+# صدور خودکار گواهی SSL
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: avas@zade.com
+      storage: /acme.json
+      tlsChallenge: {}
+
+metrics:
+  prometheus:
+    buckets:
+      - 0.1
+      - 0.3
+      - 1.2
+      - 5.0
+
+# فعال بودن پینگ برای تست خود ترافیک
+ping:
+  entryPoint: web
+
+# مانع از انتقال اطلاعات سرور من به سازندگان ترافیک میشه
+global:
+  sendAnonymousUsage: false

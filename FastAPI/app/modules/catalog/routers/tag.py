@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -32,6 +32,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
 # --------------------------------------------------
 @router.post("/admin", response_model=TagRead, status_code=status.HTTP_201_CREATED)
 async def create_tag(
+    request: Request,
     data: TagCreate,
     service: Annotated[TagService, Depends(get_tag_service)],
     _: Annotated[
@@ -53,6 +54,7 @@ async def create_tag(
 
 @router.get("/admin/{tag_id}", response_model=TagRead, status_code=status.HTTP_200_OK)
 async def get_tag(
+    request: Request,
     tag_id: int,
     service: Annotated[TagService, Depends(get_tag_service)],
 ):
@@ -61,6 +63,7 @@ async def get_tag(
 
 @router.get("/admin", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
 async def list_tags(
+    request: Request,
     service: Annotated[TagService, Depends(get_tag_service)],
     search: str | None = None,
     tag_id: int | None = None,
@@ -72,6 +75,7 @@ async def list_tags(
 
 @router.put("/admin/{tag_id}", response_model=TagRead, status_code=status.HTTP_200_OK)
 async def update_tag(
+    request: Request,
     tag_id: int,
     data: TagUpdate,
     service: Annotated[TagService, Depends(get_tag_service)],
@@ -96,6 +100,7 @@ async def update_tag(
     "/admin/{tag_id}", response_model=SuccessMessage, status_code=status.HTTP_200_OK
 )
 async def delete_tag(
+    request: Request,
     tag_id: int,
     service: Annotated[TagService, Depends(get_tag_service)],
     _: Annotated[
@@ -125,6 +130,7 @@ async def delete_tag(
     status_code=status.HTTP_200_OK,
 )
 async def attach_tags(
+    request: Request,
     product_id: int,
     data: ProductTagAttach,
     service: Annotated[ProductTagService, Depends(get_product_tag_service)],
@@ -151,6 +157,7 @@ async def attach_tags(
     status_code=status.HTTP_200_OK,
 )
 async def detach_tags(
+    request: Request,
     product_id: int,
     data: ProductTagDetach,
     service: Annotated[ProductTagService, Depends(get_product_tag_service)],
@@ -177,6 +184,7 @@ async def detach_tags(
     status_code=status.HTTP_200_OK,
 )
 async def sync_tags(
+    request: Request,
     product_id: int,
     data: ProductTagSync,
     service: Annotated[ProductTagService, Depends(get_product_tag_service)],

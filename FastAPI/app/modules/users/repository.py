@@ -66,6 +66,8 @@ class UserRepository:
         if not user.is_phone_verified:
             user.is_phone_verified = True
             changed = True
+        elif user.is_phone_verified:
+            changed = True
         return changed
 
     def update_login(self, user: User) -> bool:

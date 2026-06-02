@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -43,6 +43,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=AttributeRead,
 )
 async def create_attribute(
+    request: Request,
     data: AttributeCreate,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
     _: Annotated[
@@ -68,6 +69,7 @@ async def create_attribute(
     response_model=PageResponse[dict],
 )
 async def list_attributes(
+    request: Request,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
     search: str | None = None,
     attribute_id: int | None = None,
@@ -89,6 +91,7 @@ async def list_attributes(
     response_model=AttributeRead,
 )
 async def get_attribute(
+    request: Request,
     attribute_id: int,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
 ):
@@ -102,6 +105,7 @@ async def get_attribute(
     response_model=AttributeRead,
 )
 async def update_attribute(
+    request: Request,
     attribute_id: int,
     data: AttributeUpdate,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
@@ -128,6 +132,7 @@ async def update_attribute(
     response_model=SuccessMessage,
 )
 async def delete_attribute(
+    request: Request,
     attribute_id: int,
     service: Annotated[AttributeService, Depends(get_attribute_service)],
     _: Annotated[
@@ -159,6 +164,7 @@ async def delete_attribute(
     response_model=ProductAttributeRead,
 )
 async def create_product_attribute(
+    request: Request,
     data: ProductAttributeCreate,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
     _: Annotated[
@@ -185,6 +191,7 @@ async def create_product_attribute(
     response_model=ProductAttributeRead,
 )
 async def get_product_attribute(
+    request: Request,
     pa_id: int,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
 ):
@@ -198,6 +205,7 @@ async def get_product_attribute(
     response_model=PageResponse[dict],
 )
 async def list_product_attributes(
+    request: Request,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
     search: str | None = None,
     product_id: int | None = None,
@@ -216,6 +224,7 @@ async def list_product_attributes(
     status_code=status.HTTP_200_OK,
 )
 async def update_product_attribute(
+    request: Request,
     pa_id: int,
     data: ProductAttributeUpdate,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
@@ -242,6 +251,7 @@ async def update_product_attribute(
     status_code=status.HTTP_200_OK,
 )
 async def delete_product_attribute(
+    request: Request,
     pa_id: int,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
     _: Annotated[
@@ -273,6 +283,7 @@ async def delete_product_attribute(
     status_code=status.HTTP_200_OK,
 )
 async def create_product_variant_attribute(
+    request: Request,
     data: ProductVariantAttributeCreate,
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)
@@ -300,6 +311,7 @@ async def create_product_variant_attribute(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_variant_attribute(
+    request: Request,
     pva_id: int,
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)
@@ -315,6 +327,7 @@ async def get_product_variant_attribute(
     status_code=status.HTTP_200_OK,
 )
 async def list_product_variant_attributes(
+    request: Request,
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)
     ],
@@ -336,6 +349,7 @@ async def list_product_variant_attributes(
     status_code=status.HTTP_200_OK,
 )
 async def update_product_variant_attribute(
+    request: Request,
     pva_id: int,
     data: ProductVariantAttributeUpdate,
     service: Annotated[
@@ -365,6 +379,7 @@ async def update_product_variant_attribute(
     status_code=status.HTTP_200_OK,
 )
 async def delete_product_variant_attribute(
+    request: Request,
     pva_id: int,
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)

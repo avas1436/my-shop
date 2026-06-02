@@ -133,15 +133,19 @@ class AuthService:
 
         if not user:
             user = await self.repo.create_user(phone_number=data.phone_number)
+            self.repo.update_login(user=user)
+
             await self.repo.commit()
             await self.repo.refresh(user)
         else:
-            changed = self.repo.mark_verified(user=user) and self.repo.update_login(
-                user=user
-            )
+            changed = self.repo.mark_verified(user=user)
+            if not changed:
+                raise InternalServerError(message="Failed to verify phone number")
+            update = self.repo.update_login(user=user)
+            if not update:
+                raise InternalServerError(message="Failed to update last login")
 
-            if changed:
-                await self.repo.commit()
+            await self.repo.commit()
 
         refresh = await issue_refresh_token(user=user, cache=self.cache)
         access = await issue_access_token(user=user)
@@ -158,18 +162,30 @@ class AuthService:
 
         user = await self.repo.get_by_phone(phone_number=data.phone_number)
 
-        if not user or not user.hashed_password:
-            raise BadRequest("User not found.")
-
-        if not verify_password(
+        if not user or not verify_password(
             password=data.password,
             hashed_password=user.hashed_password,
         ):
-            raise BadRequest("Invalid credentials")
+            raise BadRequest(
+                message="User not found.",
+                code="USER_NOT_FOUND",
+            )
+
+        if not user.hashed_password:
+            raise BadRequest(
+                message="This account doest activate password",
+                code="NOT_ACTIVATE_PASSWORD",
+            )
+
+        # if not verify_password(
+        #     password=data.password,
+        #     hashed_password=user.hashed_password,
+        # ):
+        #     raise BadRequest(message="Invalid credentials", code="WRONG_credentials")
 
         update = self.repo.update_login(user=user)
         if not update:
-            raise InternalServerError("Failed to update last login")
+            raise InternalServerError(message="Failed to update last login")
 
         await self.repo.commit()
 
@@ -192,7 +208,10 @@ class AuthService:
             or current_user.last_name is None
             or current_user.hashed_password is None
         ):
-            raise BadRequest("Profile already completed")
+            raise BadRequest(
+                message="Profile already completed",
+                code="PROFILE_COMPLETED",
+            )
 
         hashed = hash_password(password=data.password.get_secret_value())
 

@@ -18,6 +18,7 @@ export const ROUTES = {
   LOGIN_PASSWORD: 'login-password',
   LOGIN_OTP: 'login-otp',
   REGISTER: 'register',
+  COMPLETE: 'complete',
 
   // Admin
   ADMIN_DASHBOARD: 'admin-dashboard',

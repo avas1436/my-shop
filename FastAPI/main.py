@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi_offline import FastAPIOffline
 
 import app.models
 from app.api.v1.router import api_router
@@ -11,6 +10,7 @@ from app.config.logging_config import setup_logger
 from app.config.settings import get_settings
 from app.core.database import engine
 from app.core.exceptions import register_exception_handlers
+from app.core.middlewares import register_middlewares
 from app.core.redis import RedisController
 
 
@@ -52,6 +52,7 @@ async def lifespan(app: FastAPI):
     try:
         await redis_controller.init_redis()
         logger.info("Redis initialized")
+
     except Exception as e:
         logger.error(f"Redis initialization failed: {e}")
         redis_controller = None
@@ -78,13 +79,23 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------
     # Create App instance
     # -------------------------------------------------------------
-    app = FastAPIOffline(
+    # app = FastAPIOffline(
+    #     title=settings.app_name,
+    #     version=settings.app_version,
+    #     debug=settings.debug,
+    #     openapi_url=settings.openapi_url,
+    #     docs_url=settings.docs_url,
+    #     redoc_url=settings.redoc_url,
+    #     lifespan=lifespan,
+    # )
+    app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
-        openapi_url=settings.openapi_url,
-        docs_url=settings.docs_url,
-        redoc_url=settings.redoc_url,
+        # کنترل مستندات از طریق پارامترهای استاندارد
+        openapi_url=settings.openapi_url if settings.docs_enable else None,
+        docs_url=settings.docs_url if settings.docs_enable else None,
+        redoc_url=settings.redoc_url if settings.docs_enable else None,
         lifespan=lifespan,
     )
 
@@ -102,16 +113,6 @@ def create_app() -> FastAPI:
     )
 
     # -------------------------------------------------------------
-    # MiddleWares
-    # -------------------------------------------------------------
-    # register_middlewares(app=app, trusted_host=settings.trusted_hosts)
-
-    # -------------------------------------------------------------
-    # Exception Handlers
-    # -------------------------------------------------------------
-    register_exception_handlers(app=app, logger=logger)
-
-    # -------------------------------------------------------------
     # Routes
     # -------------------------------------------------------------
     app.include_router(api_router, prefix=settings.api_v1_prefix)
@@ -119,7 +120,21 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------
     # Media route for local images
     # -------------------------------------------------------------
-    app.mount("/media", StaticFiles(directory=settings.media_root), name="media")
+    app.mount(
+        "/media",
+        StaticFiles(directory=settings.media_root),
+        name="media",
+    )
+
+    # -------------------------------------------------------------
+    # MiddleWares
+    # -------------------------------------------------------------
+    register_middlewares(app=app, trusted_host=settings.trusted_hosts)
+
+    # -------------------------------------------------------------
+    # Exception Handlers
+    # -------------------------------------------------------------
+    register_exception_handlers(app=app, logger=logger)
 
     # -------------------------------------------------------------
     # Check health

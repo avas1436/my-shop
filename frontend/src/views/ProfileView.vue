@@ -2,12 +2,12 @@
 <template>
   <div class="page-shell">
     <!-- نمایش لودینگ تا زمانی که وضعیت لاگین مشخص شود -->
-    <div v-if="!user.isAuthReady" class="auth-feedback text-center mt-4">
+    <div v-if="!userStore.isAuthReady" class="auth-feedback text-center mt-4">
       در حال بررسی وضعیت کاربری...
     </div>
 
     <!-- بخش لاگین / ثبت‌نام-->
-    <template v-else-if="!user.isAuthenticated">
+    <template v-else-if="!userStore.isAuthenticated">
       <router-view />
     </template>
 
@@ -20,11 +20,24 @@
         </div>
 
         <ul class="profile-menu">
-          <li>{{ formatPhone(userPhone) }}</li>
-          <li>سطح دسترسی: {{ userRoleFa }}</li>
+          <li>{{ userPhone }}</li>
+          <li>{{ userRoleFa }}</li>
         </ul>
 
-        <BaseButton variant="secondary" block @click="handleLogout">خروج از حساب</BaseButton>
+        <BaseButton variant="success" block @click="handleAddAddress">
+          افزودن آدرس جدید
+        </BaseButton>
+
+        <BaseButton
+          v-if="!!userStore.first_name"
+          variant="warning"
+          block
+          @click="handleCompleteProfile"
+        >
+          تکمیل حساب کاربری
+        </BaseButton>
+
+        <BaseButton variant="secondary" block @click="handleLogout"> خروج از حساب </BaseButton>
       </aside>
 
       <div class="profile-content">
@@ -32,13 +45,12 @@
           <div class="section-head section-head--spread">
             <div>
               <h1 class="section-title">اطلاعات حساب</h1>
-              <p class="section-subtitle">اطلاعات دریافتی شما از سرور</p>
             </div>
             <BaseButton
               type="button"
               variant="ghost"
               size="md"
-              :disabled="user.authLoading"
+              :disabled="userStore.authLoading"
               @click="refreshProfile"
             >
               بروزرسانی
@@ -46,43 +58,43 @@
           </div>
 
           <!-- اصلاح زنجیره v-if و v-else-if -->
-          <template v-if="user.authError">
+          <template v-if="userStore.authError">
             <p class="auth-feedback auth-feedback--error">
-              {{ user.authError }}
+              {{ userStore.authError }}
             </p>
           </template>
 
-          <template v-else-if="user.authLoading && !user.profile">
+          <template v-else-if="userStore.authLoading && !userStore.profile">
             <p class="auth-feedback">در حال دریافت اطلاعات حساب...</p>
           </template>
 
-          <template v-else-if="user.profile">
+          <template v-else-if="userStore.profile">
             <div class="profile-summary profile-summary--details">
               <article>
                 <span class="muted">نام</span>
-                <strong>{{ user.profile.first_name || '-' }}</strong>
+                <strong>{{ userStore.profile.first_name || '-' }}</strong>
               </article>
               <article>
                 <span class="muted">نام خانوادگی</span>
-                <strong>{{ user.profile.last_name || '-' }}</strong>
+                <strong>{{ userStore.profile.last_name || '-' }}</strong>
               </article>
               <article>
                 <span class="muted">شماره تماس</span>
-                <strong>{{ formatPhone(user.profile.phone_number) }}</strong>
+                <strong>{{ userPhone }}</strong>
               </article>
-              <article>
-                <span class="muted">تاریخ تولد</span>
-                <strong>{{ formatDate(user.profile.birth_date) }}</strong>
-              </article>
+              <!-- <article>
+                <span class="muted">سن</span>
+                <strong>{{ userStore.profile.age }}</strong>
+              </article> -->
             </div>
           </template>
         </section>
 
         <!-- آدرس‌های کاربر (استفاده از ?. برای جلوگیری از کرش صفحه) -->
-        <section class="page-panel profile-card" v-if="user.addresses?.length">
+        <section class="page-panel profile-card" v-if="userStore.addresses?.length">
           <h2 class="section-title">آدرس‌های من</h2>
           <div class="profile-orders">
-            <article v-for="address in user.addresses" :key="address.id" class="profile-order">
+            <article v-for="address in userStore.addresses" :key="address.id" class="profile-order">
               <div>
                 <strong>{{ address.title }}</strong>
                 <p class="muted">{{ address.city }}</p>
@@ -99,62 +111,45 @@
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
 import { useUserStore } from '@/stores/userStore'
+import { formatPhone } from '@/utils/format'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-const user = useUserStore()
+const userStore = useUserStore()
 const router = useRouter()
 
 const displayName = computed(() => {
-  if (!user.profile) return 'کاربر مهمان'
-  return (
-    `${user.profile.first_name || ''} ${user.profile.last_name || ''}`.trim() || 'کاربر بدون نام'
-  )
+  const profile = userStore.profile
+  if (!profile) return 'کاربر مهمان'
+  return `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'کاربر بدون نام'
 })
 
-const userPhone = computed(() => user.profile?.phone_number || '')
+const userPhone = computed(() => formatPhone(userStore.profile?.phone_number))
 
 const userRoleFa = computed(() => {
-  if (user.userRole === 'admin') return 'مدیر'
-  return 'مشتری'
+  return userStore.profile?.role === 'admin' ? 'مدیر' : 'مشتری'
 })
 
 onMounted(async () => {
-  if (!user.isAuthReady) {
-    await user.initializeAuth()
+  if (!userStore.profile) {
+    await userStore.initializeAuth(true)
+  } else {
+    await userStore.initializeAuth()
   }
 })
 
 async function refreshProfile() {
-  await user.initializeAuth()
+  // ارسال true برای نادیده گرفتن کش و دریافت مجدد اطلاعات
+  await userStore.initializeAuth(true)
 }
 
 async function handleLogout() {
-  await user.logout()
-  // در صورت نبود ROUTES.HOME مستقیم به مسیر اصلی هدایت کنید:
+  await userStore.logout()
   router.push('/')
 }
 
-function normalizeDigits(value) {
-  if (!value) return ''
-  return String(value)
-    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
-    .replace(/\D/g, '')
-}
-
-function formatPhone(value) {
-  if (!value) return '-'
-  const digits = normalizeDigits(value)
-  return digits.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3')
-}
-
-function formatDate(value) {
-  if (!value) return '-'
-  return new Intl.DateTimeFormat('fa-IR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(value))
+async function handleCompleteProfile() {
+  router.push('/auth/complete')
 }
 </script>
 

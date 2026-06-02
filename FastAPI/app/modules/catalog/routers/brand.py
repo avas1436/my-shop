@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -18,6 +18,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
 
 @router.post("/", response_model=BrandRead, status_code=status.HTTP_201_CREATED)
 async def create_brand(
+    request: Request,
     data: BrandCreate,
     service: Annotated[BrandService, Depends(get_brand_service)],
     _: Annotated[
@@ -39,6 +40,7 @@ async def create_brand(
 
 @router.get("/{brand_id}", response_model=BrandRead, status_code=status.HTTP_200_OK)
 async def get_brand(
+    request: Request,
     brand_id: int,
     service: Annotated[BrandService, Depends(get_brand_service)],
 ):
@@ -47,6 +49,7 @@ async def get_brand(
 
 @router.get("/", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
 async def list_brands(
+    request: Request,
     service: Annotated[BrandService, Depends(get_brand_service)],
     search: str | None = None,
     brand_id: int | None = None,
@@ -58,6 +61,7 @@ async def list_brands(
 
 @router.put("/{brand_id}", response_model=BrandRead, status_code=status.HTTP_200_OK)
 async def update_brand(
+    request: Request,
     brand_id: int,
     data: BrandUpdate,
     service: Annotated[BrandService, Depends(get_brand_service)],
@@ -82,6 +86,7 @@ async def update_brand(
     "/{brand_id}", response_model=SuccessMessage, status_code=status.HTTP_200_OK
 )
 async def delete_brand(
+    request: Request,
     brand_id: int,
     service: Annotated[BrandService, Depends(get_brand_service)],
     _: Annotated[

@@ -92,27 +92,37 @@ const routes = [
     path: '/auth',
     component: StorefrontLayout,
     redirect: { name: ROUTES.LOGIN }, // ریدایرکت پیش‌فرض بخش auth
-    meta: { guestOnly: true }, // فقط کاربرانی که لاگین نکرده‌اند
+    // meta: { guestOnly: true }, // فقط کاربرانی که لاگین نکرده‌اند
     children: [
       {
         path: '',
         name: 'auth-index',
+        meta: { guestOnly: true },
         component: () => import('@/views/auth/AuthIndexView.vue'),
       },
       {
         path: 'login-password',
         name: ROUTES.LOGIN_PASSWORD,
+        meta: { guestOnly: true },
         component: () => import('@/views/auth/LoginPasswordView.vue'),
       },
       {
         path: 'login-otp',
         name: ROUTES.LOGIN_OTP,
+        meta: { guestOnly: true },
         component: () => import('@/views/auth/LoginOtpView.vue'),
       },
       {
         path: 'register',
         name: ROUTES.REGISTER,
+        meta: { guestOnly: true },
         component: () => import('@/views/auth/RegisterView.vue'),
+      },
+      {
+        path: 'complete',
+        name: ROUTES.COMPLETE,
+        meta: { requiresAuth: true, onlyIncompleteProfile: true },
+        component: () => import('@/views/auth/CompleteRegister.vue'),
       },
     ],
   },
@@ -181,11 +191,18 @@ const router = createRouter({
 // ==========================================
 import { useUserStore } from '@/stores/userStore'
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
   const userStore = useUserStore()
+
+  // اگر استور هنوز آماده نیست منتظر بمان
+  if (!userStore.isAuthReady) {
+    await userStore.initializeAuth()
+  }
 
   const isAuthenticated = userStore.isAuthenticated
   const userRole = userStore.userRole
+
+  const hasCompleteProfile = !!userStore.profile?.first_name && !!userStore.profile?.last_name
 
   // بررسی روت‌هایی که فقط برای کاربران لاگین نشده هستند
   if (to.meta.requiresAuth && !isAuthenticated) {
@@ -193,16 +210,26 @@ router.beforeEach((to, from) => {
   }
 
   // اگر لاگین بود و خواست بره صفحه ورود
-  else if (to.meta.guestOnly && isAuthenticated) {
+  if (to.meta.guestOnly && isAuthenticated) {
     return { name: ROUTES.PROFILE, query: { redirect: to.fullPath } }
   }
 
   // اگر نیاز به نقش ادمین داشت
-  else if (to.meta.role && to.meta.role !== userRole) {
+  if (to.meta.role && to.meta.role !== userRole) {
     return { name: ROUTES.HOME }
   }
 
-  true
+  // اگر صفحه نیاز به پروفایل کامل دارد اما پروفایل ناقص است
+  if (to.meta.requireCompleteProfile && !hasCompleteProfile) {
+    return { name: ROUTES.COMPLETE, query: { redirect: to.fullPath } }
+  }
+
+  // اگر کاربر وارد صفحه "تکمیل حساب" شد، اما از قبل پروفایلش کامل است
+  if (to.meta.onlyIncompleteProfile && hasCompleteProfile) {
+    return { name: ROUTES.PROFILE }
+  }
+
+  return true
 })
 
 export default router

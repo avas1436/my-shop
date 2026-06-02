@@ -7,6 +7,7 @@ from fastapi import (
     Depends,
     File,
     Form,
+    Request,
     UploadFile,
     status,
 )
@@ -34,6 +35,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
     response_model=GetImage,
 )
 async def upload_image(
+    request: Request,
     service: Annotated[ImageService, Depends(get_image_service)],
     _: Annotated[
         User,
@@ -72,6 +74,7 @@ async def upload_image(
     response_model=list[GetImage],
 )
 async def list_images(
+    request: Request,
     product_id: int,
     service: Annotated[ImageService, Depends(get_image_service)],
 ):
@@ -87,6 +90,7 @@ async def list_images(
     response_model=GetImage,
 )
 async def get_image(
+    request: Request,
     image_id: int,
     service: Annotated[ImageService, Depends(get_image_service)],
 ):
@@ -102,6 +106,7 @@ async def get_image(
     response_model=GetImage,
 )
 async def update_image(
+    request: Request,
     image_id: int,
     payload: ImageUpdate,
     service: Annotated[ImageService, Depends(get_image_service)],
@@ -131,6 +136,7 @@ async def update_image(
     response_model=SuccessMessage,
 )
 async def delete_image(
+    request: Request,
     image_id: int,
     service: Annotated[ImageService, Depends(get_image_service)],
     _: Annotated[

@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from app.common.access_control import require_access
 from app.common.enums import UserRole
@@ -35,6 +35,7 @@ router = APIRouter(route_class=SuccessAPIRoute)
 # --------------------------------------------------
 @router.post("/", response_model=CategoryRead, status_code=status.HTTP_201_CREATED)
 async def create_category(
+    request: Request,
     data: CategoryCreate,
     service: Annotated[CategoryService, Depends(get_category_service)],
     _: Annotated[
@@ -58,6 +59,7 @@ async def create_category(
     "/{category_id}", response_model=CategoryRead, status_code=status.HTTP_200_OK
 )
 async def get_category(
+    request: Request,
     category_id: int,
     service: Annotated[CategoryService, Depends(get_category_service)],
 ):
@@ -66,6 +68,7 @@ async def get_category(
 
 @router.get("/", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
 async def list_categories(
+    request: Request,
     service: Annotated[CategoryService, Depends(get_category_service)],
     search: str | None = None,
     parent_id: int | None = None,
@@ -80,6 +83,7 @@ async def list_categories(
     "/{category_id}", response_model=CategoryRead, status_code=status.HTTP_200_OK
 )
 async def update_category(
+    request: Request,
     category_id: int,
     data: CategoryUpdate,
     service: Annotated[CategoryService, Depends(get_category_service)],
@@ -104,6 +108,7 @@ async def update_category(
     "/{category_id}", response_model=SuccessMessage, status_code=status.HTTP_200_OK
 )
 async def delete_category(
+    request: Request,
     category_id: int,
     service: Annotated[CategoryService, Depends(get_category_service)],
     _: Annotated[
@@ -133,6 +138,7 @@ async def delete_category(
     status_code=status.HTTP_200_OK,
 )
 async def attach_categories(
+    request: Request,
     product_id: int,
     data: ProductCategoryAttach,
     service: Annotated[ProductCategoryService, Depends(get_product_category_service)],
@@ -159,6 +165,7 @@ async def attach_categories(
     status_code=status.HTTP_200_OK,
 )
 async def detach_categories(
+    request: Request,
     product_id: int,
     data: ProductCategoryDetach,
     service: Annotated[ProductCategoryService, Depends(get_product_category_service)],
@@ -185,6 +192,7 @@ async def detach_categories(
     status_code=status.HTTP_200_OK,
 )
 async def sync_categories(
+    request: Request,
     product_id: int,
     data: ProductCategorySync,
     service: Annotated[ProductCategoryService, Depends(get_product_category_service)],

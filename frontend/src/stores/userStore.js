@@ -1,11 +1,13 @@
 // src/stores/userStore.js
 import { authService } from '@/services/authService'
-import { getStoredAccessToken } from '@/utils/token'
+import { clearStoredAccessToken, getStoredAccessToken } from '@/utils/token'
 import { defineStore } from 'pinia'
+
+// متغیر برای جلوگیری از درخواست‌های همزمان
+let authPromise = null // for prevent race condition
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    // ---- داده‌های فعلی شما ----
     profile: null,
     addresses: [
       {
@@ -22,8 +24,9 @@ export const useUserStore = defineStore('user', {
       },
     ],
 
-    // ---- وضعیت احراز هویت ----
-    accessToken: getStoredAccessToken().accessToken || null,
+    // وضعیت احراز هویت
+    // accessToken: getStoredAccessToken().accessToken || null,
+    accessToken: null,
 
     isAuthenticated: false,
     isAuthReady: false,
@@ -38,40 +41,52 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-    // فراخوانی در زمان لود اولیه اپلیکیشن (مثلاً در App.vue یا روتر)
-    async initializeAuth() {
-      this.authLoading = true
-      this.authError = ''
+    // فراخوانی در زمان لود اولیه اپلیکیشن
+    async initializeAuth(forceRefresh = false) {
+      // اگر اطلاعات از قبل گرفته شده و نیاز به آپدیت اجباری نیست، کاری نکن
+      if (this.isAuthReady && this.profile && !forceRefresh) return
 
-      const accessToken = getStoredAccessToken()
+      // اگر درخواستی از قبل در حال انجام است، همان را برگردان تا درخواست جدید نرود
+      if (authPromise) return authPromise
 
-      try {
-        if (this.accessToken) {
-          // دریافت اطلاعات واقعی کاربر از API
-          const userProfile = await authService.getMe()
-          this.profile = userProfile.data
-          this.isAuthenticated = true
-        } else {
+      // ایجاد درخواست جدید و ذخیره در متغیر
+      authPromise = (async () => {
+        this.authLoading = true
+        this.authError = ''
+
+        // دریافت توکن به صورت زنده برای جلوگیری از خطای خالی بودن
+        const tokenData = getStoredAccessToken()
+        this.accessToken = tokenData?.accessToken || this.accessToken
+
+        try {
+          if (this.accessToken) {
+            const userProfile = await authService.getMe()
+            this.profile = userProfile
+            this.isAuthenticated = true
+          } else {
+            this.isAuthenticated = false
+            this.profile = null
+          }
+        } catch (err) {
+          console.error('Auth init failed:', err)
           this.isAuthenticated = false
           this.profile = null
+          this.authError = 'خطا در احراز هویت'
+        } finally {
+          this.authLoading = false
+          this.isAuthReady = true
+          authPromise = null // پاک کردن متغیر پس از اتمام
         }
-      } catch (err) {
-        console.error('Auth init failed:', err)
-        this.isAuthenticated = false
-        this.profile = null
-        this.authError = 'خطا در احراز هویت'
-        // اگر توکن‌ها منقضی شده باشند و رفرش هم ناموفق باشد، توکن‌ها باید پاک شوند
-      } finally {
-        this.authLoading = false
-        this.isAuthReady = true
-      }
+      })()
+
+      return authPromise
     },
 
     // اکشن برای لاگ‌اوت
     async logout() {
       try {
         // فراخوانی API برای باطل کردن رفرش توکن در سمت سرور
-        await authService.logout({ refresh_token: this.refreshToken })
+        await authService.logout()
       } catch (err) {
         console.error('Logout API failed:', err)
       } finally {
@@ -80,16 +95,21 @@ export const useUserStore = defineStore('user', {
         this.profile = null
         this.addresses = []
         this.accessToken = null
+        clearStoredAccessToken()
       }
     },
 
     // یک اکشن کمکی برای به‌روزرسانی استیت بعد از لاگین/ثبت‌نام موفق
-    setAuthSuccess(profileData, token) {
-      this.profile = profileData
+    setAuthSuccess(token) {
       this.isAuthenticated = true
       if (token) {
-        this.accessToken = token.accessToken
+        this.accessToken = token.access_token
       }
+    },
+
+    // اضافه کردن این اکشن برای ذخیره اطلاعات پروفایل
+    setProfile(userData) {
+      this.profile = userData
     },
   },
 })

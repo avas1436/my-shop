@@ -126,7 +126,10 @@ def get_token_payload(token: str, expected_type: str = "access") -> dict[str, An
     subject = payload.get("sub")
 
     if token_type != expected_type or not subject:
-        raise Unauthorized("Invalid token payload")
+        raise Unauthorized(
+            message="Invalid token payload",
+            code="INVALID_TOKEN_PAYLOAD",
+        )
 
     return payload
 

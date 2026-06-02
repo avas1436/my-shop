@@ -54,6 +54,8 @@
 import BaseButton from '@/components/base/BaseButton.vue'
 import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
+import { getErrorMessage } from '@/utils/errorMessages'
+import { validatePassword, validatePhoneNumber } from '@/utils/validators'
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -66,55 +68,44 @@ const fieldErrors = ref({}) // برای خطاهای اختصاصی هر فیل�
 
 const form = reactive({ phone: '', password: '' })
 
-// تابع اعتبارسنجی سمت فرانت‌اند
-const validateFrontend = () => {
+const validateForm = () => {
   fieldErrors.value = {}
-  let isValid = true
 
-  if (!form.phone) {
-    fieldErrors.value.phone = ['شماره موبایل الزامی است']
-    isValid = false
-  }
-  if (!form.password) {
-    fieldErrors.value.password = ['رمز عبور الزامی است']
-    isValid = false
+  const errorPhone = validatePhoneNumber(form.phone)
+  if (errorPhone) {
+    fieldErrors.value.phone = [errorPhone]
   }
 
-  return isValid
+  const errorPass = validatePassword(form.password)
+  if (errorPass) {
+    fieldErrors.value.password = [errorPass]
+  }
+
+  if (errorPhone || errorPass) {
+    return false
+  }
+
+  return true
 }
 
 async function handleSubmit() {
   errorMessage.value = ''
+  fieldErrors.value = {}
 
   // ۱. بررسی خطاهای فرانت‌اند قبل از ارسال درخواست
-  if (!validateFrontend()) return
+  if (!validateForm()) return
 
   isLoading.value = true
 
   try {
     const data = await authService.loginWithPassword(form.phone, form.password)
-    userStore.setAuthSuccess(data.access_token)
-    await userStore.initializeAuth()
+    userStore.setAuthSuccess(data)
+    console.log(data)
+    await userStore.initializeAuth(true)
     router.push('/profile')
+    // setTimeout(() => router.push('/profile'), 1000)
   } catch (error) {
-    // ۲. مدیریت خطاهای بک‌اند
-
-    // الف) 422 validation
-    if (error.error_type === 'RequestValidationError' && error.validation_errors) {
-      error.validation_errors.forEach((err) => {
-        // در Pydantic معمولا فیلد در ایندکس آخر loc قرار دارد: ['body', 'phone']
-        const fieldName = err.loc[err.loc.length - 1]
-
-        if (!fieldErrors.value[fieldName]) {
-          fieldErrors.value[fieldName] = []
-        }
-        fieldErrors.value[fieldName].push(err.msg)
-      })
-    }
-    // ب) خطاهای بیزینسی بک‌اند (مثل 400, 401, 403, 404)
-    else if (error.status && error.status >= 400 && error.status < 500) {
-      errorMessage.value = error.message || 'اطلاعات ورود نامعتبر است.'
-    }
+    errorMessage.value = getErrorMessage(error.code)
   } finally {
     isLoading.value = false
   }
