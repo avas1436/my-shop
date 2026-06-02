@@ -1,3 +1,4 @@
+# app/core/database.py
 from collections.abc import AsyncIterator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -10,13 +11,13 @@ settings = get_settings()
 # انجین خود دیتا بیس نیست بلکه راه ورود و قوانین ورود به دیتابیس توسط برنامه است
 engine = create_async_engine(
     settings.database_url,
-    echo=False,
+    echo=False,  # چاپ کویری های دیتابیس در کنسول
     future=True,
-    pool_size=settings.db_pool_size,
-    max_overflow=settings.db_max_overflow,
+    pool_size=settings.db_pool_size,  # تعداد اتصالات همزمان فعال در دیتا بیس
+    max_overflow=settings.db_max_overflow,  # حداکثر اتصال در زمان اوج ترافیک
     pool_timeout=settings.db_pool_timeout,
     pool_recycle=settings.db_pool_recycle,
-    pool_pre_ping=settings.db_pool_pre_ping,
+    pool_pre_ping=settings.db_pool_pre_ping,  # یک تست ساده پینگ قبل از اتصال
 )
 
 
@@ -38,6 +39,18 @@ class Base(DeclarativeBase):
     pass
 
 
+# async def get_db() -> AsyncIterator[AsyncSession]:
+#     async with AsyncSessionLocal() as session:
+#         yield session
+
+
+# در این نسخه در صورتی که بین انجام یک درخواست اروری اینجاد شود
+# حتی در صورتی که داخل کد برای ارور ها رول بک تعیین نشده باشد
+# در این لایه به صورت خودکار رول بک زده میشود
 async def get_db() -> AsyncIterator[AsyncSession]:
     async with AsyncSessionLocal() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
