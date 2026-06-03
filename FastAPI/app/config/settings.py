@@ -110,10 +110,12 @@ class Settings(BaseSettings):
         return self.refresh_token_expire_days * 24 * 60 * 60
 
     model_config = SettingsConfigDict(
-        env_file=".env.dev",
+        env_file=(".env.dev", ".env"),  # اولی اولویت بالاتر
         # env_file=".env.dev",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        # اضافه کردن این خط برای اولویت دادن به متغیرهای سیستم عامل
+        extra="ignore",
     )
 
 
