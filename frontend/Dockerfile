@@ -5,10 +5,13 @@ FROM node:20-slim AS base
 
 WORKDIR /frontend
 
-COPY package.json package-lock.json ./
+RUN corepack enable
 
-RUN npm ci --no-audit --no-fund
+# COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml ./
 
+# RUN npm ci --no-audit --no-fund
+RUN pnpm install --frozen-lockfile
 
 # ===== Build Stage =====
 FROM base AS build
