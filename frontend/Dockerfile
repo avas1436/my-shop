@@ -22,8 +22,8 @@ COPY --from=base /frontend/node_modules ./node_modules
 COPY . .
 
 
-RUN npm run build
-
+# RUN npm run build
+RUN pnpm build
 
 # ===== Final Stage =====
 FROM caddy:2-alpine AS release
