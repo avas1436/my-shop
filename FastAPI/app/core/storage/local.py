@@ -9,6 +9,10 @@ from app.config.settings import get_settings
 settings = get_settings()
 
 
+if not os.path.exists(settings.media_root):
+    os.makedirs(settings.media_root, exist_ok=True)
+
+
 class LocalStorage:
     async def save(
         self, data: bytes, path: str, content_type: str | None = None
