@@ -191,6 +191,23 @@ axiosClient.interceptors.response.use(
       return Promise.reject(standardError)
     }
 
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      const msg =
+        getErrorMessage('TIMEOUT_ERROR') || 'پاسخی از سرور دریافت نشد. لطفا مجددا تلاش کنید.'
+
+      errorStore.addError({
+        type: 'error',
+        message: msg,
+      })
+
+      return Promise.reject({
+        status: 408,
+        error_type: 'TimeoutError',
+        message: msg,
+        fullError: error,
+      })
+    }
+
     // خطاهای شبکه (مثل قطعی اینترنت یا CORS)
     const networkError = {
       status: null,
