@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     docs_url: str | None = None
     redoc_url: str | None = None
     api_v1_prefix: str = "/api/v1"
+    public_path: tuple = Field(
+        default={"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
+    )
 
     # cors middleware
     cors_origins: list[str] = ["https://myapp.com"]

@@ -19,8 +19,6 @@ SUSPICIOUS_UA_RE = re.compile(
     re.IGNORECASE,
 )
 
-PUBLIC_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
-
 
 settings = get_settings()
 
@@ -38,7 +36,7 @@ settings = get_settings()
 async def block_suspicious_bots(request: Request, call_next):
 
     # مسیرهای عمومی را بررسی نکن
-    if request.url.path in PUBLIC_PATHS:
+    if request.url.path in settings.public_path:
         return await call_next(request)
 
     user_agent = request.headers.get("user-agent", "")
@@ -83,7 +81,7 @@ async def block_suspicious_bots(request: Request, call_next):
 async def add_process_time(request: Request, call_next):
     """محاسبه زمان پردازش برای monitoring."""
     # مسیرهای عمومی را نادیده بگیر
-    if request.url.path in PUBLIC_PATHS:
+    if request.url.path in settings.public_path:
         return await call_next(request)
 
     start = time.perf_counter()

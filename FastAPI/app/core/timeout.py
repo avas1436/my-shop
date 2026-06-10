@@ -6,14 +6,13 @@ from fastapi import Request
 
 from app.common.responses import create_raw_json_response
 from app.config.settings import get_settings
-from app.core.middlewares import PUBLIC_PATHS
 
 settings = get_settings()
 
 
 # ---------- Middleware 0: Timeout Middleware ----------
 async def request_timeout_middleware(request: Request, call_next):
-    if request.url.path in PUBLIC_PATHS or request.url.path.startswith("/docs"):
+    if request.url.path in settings.public_path or request.url.path.startswith("/docs"):
         return await call_next(request)
 
     try:
@@ -31,6 +30,5 @@ async def request_timeout_middleware(request: Request, call_next):
                 "detail": f"Request execution exceeded the {settings.timeout_duration_seconds} second limit.",
             },
             error_type="TIMEOUT",
-            include_meta=False,
             path=request.url.path,
         )
