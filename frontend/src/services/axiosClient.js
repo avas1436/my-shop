@@ -73,18 +73,11 @@ axiosClient.interceptors.response.use(
     const originalRequest = error.config
     const errorStore = useErrorStore()
 
-    console.log('AXIOS ERROR:', error)
-    console.log('STATUS:', error.response?.status)
-    console.log('DATA:', error.response?.data)
+    // console.log('AXIOS ERROR:', error)
+    // console.log('STATUS:', error.response?.status)
+    // console.log('DATA:', error.response?.data)
 
     if (error.response) {
-      // 1. Network Errors
-      if (!error.response) {
-        const msg = getErrorMessage('NETWORK_ERROR')
-        errorStore.addError({ type: 'error', message: msg })
-        return Promise.reject({ message: msg, type: 'network' })
-      }
-
       const backendError = error.response.data || {}
       const status_code = backendError.status_code || error.response.status
       const errorType = backendError.error_type || 'خطای ناشناخته'
