@@ -186,6 +186,10 @@ class ASGIRateLimitMiddleware:
         # اطلاعات درخواست
         request = Request(scope, receive)
 
+        # OPTIONS را لیمیت نکن
+        if request.method == "OPTIONS":
+            return await self.app(scope, receive, send)
+
         # آدرس روت
         path = request.url.path
 
@@ -272,6 +276,12 @@ class ASGIRateLimitMiddleware:
                         path=path,
                         headers={"Retry-After": str(window_seconds)},
                     )
+                    origin = request.headers.get("origin")
+
+                    response.headers["Access-Control-Allow-Origin"] = origin
+                    response.headers["Access-Control-Allow-Credentials"] = "true"
+                    response.headers["Vary"] = "Origin"
+
                     await response(scope, receive, send)
                     return
         except Exception:
