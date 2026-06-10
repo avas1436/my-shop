@@ -43,7 +43,7 @@ axiosClient.interceptors.request.use(
       return config
     }
 
-    const token = getStoredAccessToken().accessToken
+    const token = getStoredAccessToken()?.accessToken
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
