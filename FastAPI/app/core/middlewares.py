@@ -11,6 +11,7 @@ from app.common.request_meta import extract_real_ip
 from app.common.responses import create_raw_json_response
 from app.config.settings import get_settings
 from app.core.rate_limit import ASGIRateLimitMiddleware
+from app.core.timeout import request_timeout_middleware
 
 #  ---------- الگوهای Bot Detection ----------
 SUSPICIOUS_UA_RE = re.compile(
@@ -94,6 +95,9 @@ async def add_process_time(request: Request, call_next):
 
 # ---------- ثبت Middlewares ----------
 def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
+    # 0. timeout middleware
+    app.middleware("http")(request_timeout_middleware)
+
     # 1. Process Time
     app.middleware("http")(add_process_time)
 

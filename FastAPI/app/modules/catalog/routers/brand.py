@@ -44,6 +44,9 @@ async def get_brand(
     brand_id: int,
     service: Annotated[BrandService, Depends(get_brand_service)],
 ):
+    import time
+
+    time.sleep(20)
     return await service.get_brand(brand_id)
 
 

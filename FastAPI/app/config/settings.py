@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     secret_key: str = Field(
         default="change-me", min_length=8, description="کلید محرمانه پروژه"
     )
+    timeout_duration_seconds: float = Field(default=10.0)
 
     # development urls
     docs_enable: bool = True
