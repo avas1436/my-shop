@@ -90,7 +90,7 @@ class ASGIRateLimitMiddleware:
                         "day": 200,
                     },
                     "guest": {
-                        "minute": 0,
+                        "minute": 1,
                     },  # کاربران مهمان امکان رفرش توکن ندارند
                 }
             ),
@@ -101,7 +101,7 @@ class ASGIRateLimitMiddleware:
                         "hour": 20,
                     },
                     "guest": {
-                        "minute": 0,
+                        "minute": 1,
                     },
                 }
             ),
@@ -126,7 +126,7 @@ class ASGIRateLimitMiddleware:
                         "hour": 100,
                     },
                     "guest": {
-                        "minute": 0,
+                        "minute": 6,
                     },
                 }
             ),
