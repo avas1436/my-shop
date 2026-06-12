@@ -154,10 +154,11 @@
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
+import { ROUTES } from '@/router/routeNames'
 import { productService } from '@/services/productService'
 import { useProductsStore } from '@/stores/products'
 import { getErrorMessage } from '@/utils/errorMessages'
-import { onMounted, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -167,7 +168,6 @@ const products = useProductsStore()
 const isFormOpen = ref(false)
 
 const isLoading = ref(false)
-const isUpdatingStock = ref(null)
 const errorMessage = ref('')
 const fieldErrors = ref({})
 
@@ -186,15 +186,15 @@ const form = reactive({
   brand_id: '',
 })
 
-onMounted(async () => {
-  try {
-    if (products.fetchAdminInitialData) {
-      await products.fetchAdminInitialData()
-    }
-  } catch (error) {
-    errorMessage.value = 'خطا در دریافت اطلاعات اولیه از سرور'
-  }
-})
+// onMounted(async () => {
+//   try {
+//     if (products.fetchAdminInitialData) {
+//       await products.fetchAdminInitialData()
+//     }
+//   } catch (error) {
+//     errorMessage.value = 'خطا در دریافت اطلاعات اولیه از سرور'
+//   }
+// })
 
 function toggleForm() {
   isFormOpen.value = !isFormOpen.value
@@ -224,8 +224,14 @@ async function handleSubmit() {
     const response = await productService.createDraft({ ...form })
     resetForm()
 
-    if (response?.id) {
-      router.push(`/admin/products/${response.id}`)
+    if (response?.id || response?.data?.id) {
+      const targetId = response.id || response.data.id
+
+      // ریدایرکت زنده به صفحه ویرایش ویترینی کالا
+      router.push({
+        name: ROUTES.ADMIN_PRODUCT_DETAIL,
+        params: { product_id: targetId },
+      })
     }
   } catch (error) {
     if (error.response?.data?.errors) {
@@ -238,38 +244,25 @@ async function handleSubmit() {
   }
 }
 
-async function handleUpdateStock(id, event) {
-  const newStock = parseInt(event.target.value, 10)
-  isUpdatingStock.value = id
+// async function handleSoftDelete(id) {
+//   if (!confirm('آیا از انتقال این محصول به زباله‌دان مطمئن هستید؟')) return
 
-  try {
-    await productService.patchProduct(id, { stock: newStock })
-    if (products.updateStockInStore) {
-      products.updateStockInStore(id, newStock)
-    }
-  } catch (error) {
-    alert('خطا در به‌روزرسانی موجودی سرور')
-  } finally {
-    isUpdatingStock.value = null
-  }
-}
+//   try {
+//     await productService.softDelete(id)
+//     if (products.removeProductFromStore) {
+//       products.removeProductFromStore(id)
+//     }
+//   } catch (error) {
+//     alert('خطا در حذف محصول')
+//   }
+// }
 
-async function handleSoftDelete(id) {
-  if (!confirm('آیا از انتقال این محصول به زباله‌دان مطمئن هستید؟')) return
-
-  try {
-    await productService.softDelete(id)
-    if (products.removeProductFromStore) {
-      products.removeProductFromStore(id)
-    }
-  } catch (error) {
-    alert('خطا در حذف محصول')
-  }
-}
-
-function goToDetail(id) {
-  router.push(`/admin/products/${id}`)
-}
+// function goToDetail(id) {
+//   router.push({
+//     name: ROUTES.ADMIN_PRODUCT_DETAIL,
+//     params: { product_id: id },
+//   })
+// }
 </script>
 
 <style scoped>

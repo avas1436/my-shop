@@ -144,7 +144,13 @@ const routes = [
       {
         path: 'products',
         name: ROUTES.ADMIN_PRODUCTS,
-        component: () => import('@/views/admin/AdminProductsView.vue'),
+        component: () => import('@/views/admin/AdminProduct.vue'),
+        props: true,
+      },
+      {
+        path: 'products/:product_id/full',
+        name: ROUTES.ADMIN_PRODUCT_DETAIL,
+        component: () => import('@/views/admin/AdminProductDetailView.vue'),
         props: true,
       },
       {

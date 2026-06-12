@@ -24,6 +24,7 @@ export const ROUTES = {
   // Admin
   ADMIN_DASHBOARD: 'admin-dashboard',
   ADMIN_PRODUCTS: 'admin-products',
+  ADMIN_PRODUCT_DETAIL: 'admin-product-detail',
   ADMIN_ORDERS: 'admin-orders',
   ADMIN_CUSTOMERS: 'admin-customers',
   ADMIN_INVENTORY: 'admin-inventory',
