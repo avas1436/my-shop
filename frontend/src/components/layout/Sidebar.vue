@@ -33,7 +33,14 @@ const items = [
   { to: '/admin/products', label: 'محصولات', icon: '◧' },
   { to: '/admin/orders', label: 'سفارش‌ها', icon: '◩' },
   { to: '/admin/customers', label: 'مشتریان', icon: '◎' },
-  { to: '/admin/content', label: 'محتوا و تنظیمات', icon: '✦' },
+  { to: '/admin/inventory', label: 'انبارداری و تامین', icon: '◪' },
+  { to: '/admin/financials', label: 'مدیریت مالی و تراکنش‌ها', icon: '⛃' },
+  { to: '/admin/marketing', label: 'تخفیف‌ها و کمپین‌ها', icon: '✦' },
+  { to: '/admin/support', label: 'تیکت‌ها و پشتیبانی', icon: '✉' },
+  { to: '/admin/analytics', label: 'گزارش‌ها و آمار', icon: '📈' },
+  { to: '/admin/staff', label: 'دسترسی کارکنان', icon: '👥' },
+  { to: '/admin/content', label: 'مدیریت محتوا', icon: '📝' },
+  { to: '/admin/settings', label: 'تنظیمات پیشرفته سیستم', icon: '⚙' },
 ]
 </script>
 
@@ -49,8 +56,15 @@ const items = [
   border-left: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(16, 24, 40, 0.96);
   color: rgba(255, 255, 255, 0.88);
+  overflow-y: auto;
 }
-
+.admin-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
 .admin-sidebar__brand {
   display: flex;
   align-items: center;
