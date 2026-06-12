@@ -14,6 +14,7 @@ export const ROUTES = {
   ABOUT: 'about',
 
   // Auth
+  AUTH_INDEX: 'auth-index',
   LOGIN: 'login',
   LOGIN_PASSWORD: 'login-password',
   LOGIN_OTP: 'login-otp',
@@ -25,7 +26,14 @@ export const ROUTES = {
   ADMIN_PRODUCTS: 'admin-products',
   ADMIN_ORDERS: 'admin-orders',
   ADMIN_CUSTOMERS: 'admin-customers',
+  ADMIN_INVENTORY: 'admin-inventory',
+  ADMIN_FINANCIALS: 'admin-financials',
+  ADMIN_MARKETING: 'admin-marketing',
+  ADMIN_SUPPORT: 'admin-support',
+  ADMIN_ANALYTICS: 'admin-analytics',
+  ADMIN_STAFF: 'admin-staff',
   ADMIN_CONTENT: 'admin-content',
+  ADMIN_SETTINGS: 'admin-settings',
 
   // Errors
   NOT_FOUND: 'not-found',
