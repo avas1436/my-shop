@@ -6,10 +6,7 @@
       <header class="admin-topbar">
         <div>
           <span class="pill">پنل مدیریت</span>
-          <h1>مدیریت فروشگاه ShopVerse</h1>
-          <p>
-            دید کلی از فروش، سفارش‌ها، محصولات و تنظیمات محتوایی فروشگاه در یک نمای یکپارچه.
-          </p>
+          <h1>مدیریت فروشگاه {{ admin.settings.storeName }}</h1>
         </div>
 
         <router-link to="/" class="admin-topbar__link">بازگشت به فروشگاه</router-link>
@@ -23,8 +20,11 @@
 </template>
 
 <script setup>
-import { RouterView } from 'vue-router'
-import Sidebar from '@/components/layout/Sidebar.vue'
+import Sidebar from '@/components/layout/Sidebar.vue';
+import { useAdminStore } from '@/stores/adminStore';
+import { RouterView } from 'vue-router';
+
+const admin = useAdminStore()
 </script>
 
 <style scoped>
@@ -34,8 +34,7 @@ import Sidebar from '@/components/layout/Sidebar.vue'
   grid-template-columns: 290px 1fr;
   background:
     radial-gradient(circle at top right, rgba(91, 61, 245, 0.14), transparent 22%),
-    radial-gradient(circle at left bottom, rgba(255, 122, 89, 0.12), transparent 24%),
-    #eff3fb;
+    radial-gradient(circle at left bottom, rgba(255, 122, 89, 0.12), transparent 24%), #eff3fb;
 }
 
 .admin-main {

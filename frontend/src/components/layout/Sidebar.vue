@@ -1,9 +1,10 @@
 <template>
   <aside class="admin-sidebar">
     <router-link to="/admin" class="admin-sidebar__brand">
-      <span class="admin-sidebar__logo">SV</span>
+      <!-- <span class="admin-sidebar__logo">SV</span> -->
+      <img src="@/assets/images/logo.jpg" alt="لوگوی فروشگاه" class="brand__logo" />
       <div>
-        <strong>ShopVerse Admin</strong>
+        <!-- <strong>ShopVerse Admin</strong> -->
         <span>مرکز کنترل فروشگاه</span>
       </div>
     </router-link>
@@ -117,7 +118,13 @@ const items = [
   color: #fff;
   font-weight: 700;
 }
-
+.brand__logo {
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+}
 .admin-sidebar__nav {
   display: grid;
   gap: 0.45rem;
