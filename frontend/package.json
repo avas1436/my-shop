@@ -13,6 +13,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@lucide/vue": "^1.18.0",
     "axios": "^1.16.1",
     "moment-jalaali": "^0.10.4",
     "pinia": "^3.0.4",

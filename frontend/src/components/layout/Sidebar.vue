@@ -10,7 +10,7 @@
 
     <nav class="admin-sidebar__nav">
       <router-link v-for="item in items" :key="item.to" :to="item.to">
-        <span>{{ item.icon }}</span>
+        <component :is="item.icon" class="sidebar-icon" />
         {{ item.label }}
       </router-link>
     </nav>
@@ -24,27 +24,49 @@
 </template>
 
 <script setup>
+// آدرس ایمپورت جدید از اسکوپ @lucide/vue
+import {
+  CircleDollarSign,
+  FileText,
+  LayoutDashboard,
+  Mail,
+  Settings,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingBasket,
+  Tag,
+  TrendingUp,
+  Users,
+  Warehouse,
+} from '@lucide/vue';
+
 defineOptions({
   name: 'AdminSidebar',
 })
 
 const items = [
-  { to: '/admin', label: 'داشبورد', icon: '◫' },
-  { to: '/admin/products', label: 'محصولات', icon: '◧' },
-  { to: '/admin/orders', label: 'سفارش‌ها', icon: '◩' },
-  { to: '/admin/customers', label: 'مشتریان', icon: '◎' },
-  { to: '/admin/inventory', label: 'انبارداری و تامین', icon: '◪' },
-  { to: '/admin/financials', label: 'مدیریت مالی و تراکنش‌ها', icon: '⛃' },
-  { to: '/admin/marketing', label: 'تخفیف‌ها و کمپین‌ها', icon: '✦' },
-  { to: '/admin/support', label: 'تیکت‌ها و پشتیبانی', icon: '✉' },
-  { to: '/admin/analytics', label: 'گزارش‌ها و آمار', icon: '📈' },
-  { to: '/admin/staff', label: 'دسترسی کارکنان', icon: '👥' },
-  { to: '/admin/content', label: 'مدیریت محتوا', icon: '📝' },
-  { to: '/admin/settings', label: 'تنظیمات پیشرفته سیستم', icon: '⚙' },
+  { to: '/admin', label: 'داشبورد', icon: LayoutDashboard },
+  { to: '/admin/products', label: 'محصولات', icon: ShoppingBag },
+  { to: '/admin/orders', label: 'سفارش‌ها', icon: ShoppingBasket },
+  { to: '/admin/customers', label: 'مشتریان', icon: Users },
+  { to: '/admin/inventory', label: 'انبارداری و تامین', icon: Warehouse },
+  { to: '/admin/financials', label: 'مدیریت مالی و تراکنش‌ها', icon: CircleDollarSign },
+  { to: '/admin/marketing', label: 'تخفیف‌ها و کمپین‌ها', icon: Tag },
+  { to: '/admin/support', label: 'تیکت‌ها و پشتیبانی', icon: Mail },
+  { to: '/admin/analytics', label: 'گزارش‌ها و آمار', icon: TrendingUp },
+  { to: '/admin/staff', label: 'دسترسی کارکنان', icon: ShieldCheck },
+  { to: '/admin/content', label: 'مدیریت محتوا', icon: FileText },
+  { to: '/admin/settings', label: 'تنظیمات پیشرفته سیستم', icon: Settings },
 ]
 </script>
 
 <style scoped>
+.sidebar-icon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2px;
+  flex-shrink: 0;
+}
 .admin-sidebar {
   position: sticky;
   top: 0;
