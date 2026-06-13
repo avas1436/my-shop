@@ -104,7 +104,7 @@ axiosClient.interceptors.response.use(
         const msg = getErrorMessage(errorCode) || getErrorMessage('DEFAULT_429')
 
         errorStore.addError({
-          type: 'warning',
+          type: 'error',
           message: msg,
         })
 
@@ -183,7 +183,7 @@ axiosClient.interceptors.response.use(
 
       if (status_code !== 401 && !isValidationError && !isBusinessError) {
         errorStore.addError({
-          type: status_code >= 500 ? 'server' : 'client',
+          type: 'error',
           message: standardError.message,
         })
       }
@@ -217,7 +217,7 @@ axiosClient.interceptors.response.use(
     }
 
     errorStore.addError({
-      type: 'network',
+      type: 'error',
       message: networkError.message,
     })
 

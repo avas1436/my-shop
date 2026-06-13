@@ -18,6 +18,20 @@ export const ERROR_MESSAGES = {
   DEFAULT_429: 'درخواست‌های شما خیلی سریع ارسال شده‌اند. لطفاً چند لحظه دیگر دوباره تلاش کنید.',
   ECONNABORTED: 'پاسخی از سرور دریافت نشد. لطفا مجددا تلاش کنید.',
 
+  // Product & Catalog Error Codes
+  PRODUCT_INVALID_ID: 'شناسه محصول وارد شده نامعتبر است.',
+  PRODUCT_NOT_FOUND: 'محصول مورد نظر یافت نشد یا حذف شده است.',
+  PRODUCT_DATA_CONFLICT: 'تداخل در اطلاعات کالا؛ نام کالا یا نامک (Slug) تکراری است.',
+  PRODUCT_CREATE_FAILED: 'خطایی در ثبت و ایجاد کالا در سیستم رخ داد.',
+  PRODUCT_UPDATE_FAILED: 'خطایی در به‌روزرسانی مشخصات کالا رخ داد.',
+  PRODUCT_DELETE_FAILED: 'حذف موقت کالا با خطا مواجه شد.',
+  PRODUCT_HARD_DELETE_FAILED: 'حذف دائمی کالا از پایگاه داده با خطا مواجه شد.',
+  PRODUCT_PUBLISH_FAILED: 'خطایی در فرآیند انتشار نهایی کالا رخ داد.',
+  PRODUCT_ALREADY_INACTIVE_OR_DELETED:
+    'این محصول غیرفعال یا حذف شده است و امکان انتشار مجدد آن وجود ندارد.',
+  PRODUCT_IDENTIFIER_REQUIRED: 'ارسال شناسه (ID) یا نامک (Slug) برای دریافت کالا الزامی است.',
+  PAGINATION_INVALID_VALUES: 'مقادیر ارسالی برای صفحه‌بندی کالاها نامعتبر است.',
+
   // Business Logic
   USER_NOT_FOUND: 'کاربر یافت نشد.',
   INVALID_OTP: 'کد وارد شده نامعتبر است.',
