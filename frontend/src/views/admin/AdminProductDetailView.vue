@@ -35,26 +35,20 @@
         <div class="form-grid">
           <div class="form-group">
             <label>وضعیت انتشار (Status):</label>
-            <select v-model="product.status" @change="patchField('status', product.status)">
-              <option value="draft">پیش‌نویس (Draft)</option>
-              <option value="active">منتشر شده (Active)</option>
+            <select v-model="product.status">
+              <option value="draft">پیش‌نویس</option>
+              <option value="active">منتشر شده</option>
+              <option value="inactive">غیر فعال</option>
+              <option value="archived">بایگانی شده</option>
             </select>
           </div>
           <div class="form-group toggle-group">
             <label class="toggle-label">
-              <input
-                type="checkbox"
-                v-model="product.is_featured"
-                @change="patchField('is_featured', product.is_featured)"
-              />
+              <input type="checkbox" v-model="product.is_featured" />
               کالای ویژه (Featured)
             </label>
             <label class="toggle-label">
-              <input
-                type="checkbox"
-                v-model="product.is_digital"
-                @change="patchField('is_digital', product.is_digital)"
-              />
+              <input type="checkbox" v-model="product.is_digital" />
               کالای دیجیتال
             </label>
           </div>
@@ -66,28 +60,58 @@
         <div class="form-grid">
           <div class="form-group">
             <label>نام محصول:</label>
-            <input v-model="product.name" type="text" @change="patchField('name', product.name)" />
+            <input v-model="product.name" type="text" />
           </div>
+
           <div class="form-group">
-            <label>برند:</label>
-            <select v-model="product.brand_id" @change="patchField('brand_id', product.brand_id)">
-              <option value="">بدون برند</option>
-              <option v-for="brand in brandsList" :key="brand.id" :value="brand.id">
-                {{ brand.name }}
-              </option>
-            </select>
+            <label>جستجوی نام برند:</label>
+            <div class="brand-search-container">
+              <input
+                v-model="brandSearchQuery"
+                type="text"
+                placeholder="بخشی از نام برند را تایپ کنید..."
+              />
+              <p v-if="isSearchingBrand" class="search-loading">در حال جستجو...</p>
+
+              <ul
+                v-if="brandSearchQuery && searchedBrands.length && !isSearchingBrand"
+                class="brand-search-results"
+              >
+                <li
+                  v-for="brand in searchedBrands"
+                  :key="brand.id"
+                  @click="selectBrand(brand)"
+                  class="clickable-brand-item"
+                >
+                  {{ brand.name }} (ID: {{ brand.id }})
+                </li>
+              </ul>
+
+              <p
+                v-if="brandSearchQuery && !searchedBrands.length && !isSearchingBrand"
+                class="no-results"
+              >
+                برندی یافت نشد.
+              </p>
+            </div>
           </div>
+
+          <div class="form-group">
+            <label>آیدی برند:</label>
+            <input
+              v-model.number="product.brand_id"
+              type="number"
+              placeholder="وارد کردن مستقیم آیدی"
+            />
+          </div>
+
           <div class="form-group">
             <label>کد کالا (SKU):</label>
-            <input v-model="product.sku" type="text" @change="patchField('sku', product.sku)" />
+            <input v-model="product.sku" type="text" />
           </div>
           <div class="form-group full-width">
             <label>توضیحات (Description):</label>
-            <textarea
-              v-model="product.description"
-              rows="4"
-              @change="patchField('description', product.description)"
-            ></textarea>
+            <textarea v-model="product.description" rows="4"></textarea>
           </div>
         </div>
       </div>
@@ -97,44 +121,23 @@
         <div class="form-grid">
           <div class="form-group">
             <label>قیمت اصلی (Price):</label>
-            <input
-              v-model.number="product.price"
-              type="number"
-              @change="patchField('price', product.price)"
-            />
+            <input v-model.number="product.price" type="number" />
           </div>
           <div class="form-group">
             <label>قیمت با تخفیف (Discount Price):</label>
-            <input
-              v-model.number="product.discount_price"
-              type="number"
-              @change="patchField('discount_price', product.discount_price)"
-            />
+            <input v-model.number="product.discount_price" type="number" />
           </div>
           <div class="form-group">
             <label>قیمت خرید (Cost Price):</label>
-            <input
-              v-model.number="product.cost_price"
-              type="number"
-              @change="patchField('cost_price', product.cost_price)"
-            />
+            <input v-model.number="product.cost_price" type="number" />
           </div>
           <div class="form-group">
             <label>نرخ مالیات (Tax Rate %):</label>
-            <input
-              v-model.number="product.tax_rate"
-              type="number"
-              @change="patchField('tax_rate', product.tax_rate)"
-            />
+            <input v-model.number="product.tax_rate" type="number" />
           </div>
           <div class="form-group">
             <label>واحد پول (Currency Code):</label>
-            <input
-              v-model="product.currency_code"
-              type="text"
-              placeholder="مثال: IRT یا USD"
-              @change="patchField('currency_code', product.currency_code)"
-            />
+            <input v-model="product.currency_code" type="text" placeholder="مثال: IRI یا IRT" />
           </div>
         </div>
       </div>
@@ -144,39 +147,23 @@
         <div class="form-grid">
           <div class="form-group">
             <label>وزن (Weight):</label>
-            <input
-              type="number"
-              v-model.number="product.weight"
-              @change="patchField('weight', product.weight)"
-            />
+            <input type="number" v-model.number="product.weight" />
           </div>
           <div class="form-group">
             <label>عرض (Width):</label>
-            <input
-              type="number"
-              v-model.number="product.width"
-              @change="patchField('width', product.width)"
-            />
+            <input type="number" v-model.number="product.width" />
           </div>
           <div class="form-group">
             <label>ارتفاع (Height):</label>
-            <input
-              type="number"
-              v-model.number="product.height"
-              @change="patchField('height', product.height)"
-            />
+            <input type="number" v-model.number="product.height" />
           </div>
           <div class="form-group">
             <label>عمق/طول (Depth):</label>
-            <input
-              type="number"
-              v-model.number="product.depth"
-              @change="patchField('depth', product.depth)"
-            />
+            <input type="number" v-model.number="product.depth" />
           </div>
           <div class="form-group">
             <label>بارکد جهانی (GTIN):</label>
-            <input type="text" v-model="product.gtin" @change="patchField('gtin', product.gtin)" />
+            <input type="text" v-model="product.gtin" />
           </div>
         </div>
       </div>
@@ -186,25 +173,29 @@
         <div class="form-grid">
           <div class="form-group full-width">
             <label>نامک (Slug):</label>
-            <input type="text" v-model="product.slug" @change="patchField('slug', product.slug)" />
+            <input type="text" v-model="product.slug" />
           </div>
           <div class="form-group full-width">
             <label>عنوان متا (Meta Title):</label>
-            <input
-              type="text"
-              v-model="product.meta_title"
-              @change="patchField('meta_title', product.meta_title)"
-            />
+            <input type="text" v-model="product.meta_title" />
           </div>
           <div class="form-group full-width">
             <label>توضیحات متا (Meta Description):</label>
-            <textarea
-              v-model="product.meta_description"
-              rows="3"
-              @change="patchField('meta_description', product.meta_description)"
-            ></textarea>
+            <textarea v-model="product.meta_description" rows="3"></textarea>
           </div>
         </div>
+      </div>
+
+      <div class="form-actions mt-4 border-top pt-4">
+        <BaseButton
+          variant="primary"
+          size="lg"
+          @click="saveAllChanges"
+          :disabled="isLoading"
+          class="w-100"
+        >
+          {{ isLoading ? 'در حال ذخیره‌سازی...' : ' ذخیره تمامی اطلاعات پایه' }}
+        </BaseButton>
       </div>
     </div>
 
@@ -439,11 +430,11 @@
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
-import { productService } from '@/services/productService'
+import { brandService, productService } from '@/services/productService'
 import { useErrorStore } from '@/stores/errorStore'
 import { getErrorMessage } from '@/utils/errorMessages'
 import { formatPrsianDate } from '@/utils/format'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute() // اطلاعات مسیر فعلی
@@ -459,7 +450,9 @@ const currentTab = ref('general')
 const newVariant = ref({ quantity: 0, final_price: null, sku: '' })
 const newAttribute = ref({ id: '', value: '' })
 
+// ==============================
 // واکشی تمامی اطلاعات مورد نیاز
+// ==============================
 const loadAllAdminData = async () => {
   try {
     isLoading.value = true
@@ -485,7 +478,104 @@ onMounted(() => {
   loadAllAdminData()
 })
 
-// === پردازش‌های تصویر ===
+// ==============================
+// توابع ویرایش پایه
+// ==============================
+const productUpdate = ref({})
+
+const refreshProductData = async () => {
+  const response = await productService.getProductFull(product.value.id)
+  product.value = response
+}
+
+// ذخیره تمامی اطلاعات در یک درخواست واحد (جایگزین patchField)
+const saveAllChanges = async () => {
+  try {
+    isLoading.value = true
+
+    // ارسال کل آبجکت محصول به بک‌اند
+    await productService.updateProduct(product.value.id, productUpdate.value)
+
+    // فراخوانی مجدد اطلاعات برای اطمینان از صحت دیتا
+    await refreshProductData()
+
+    // نمایش پیام موفقیت
+    const errorStore = useErrorStore()
+    errorStore.addError({
+      type: 'success',
+      message: 'تغییرات با موفقیت ذخیره شد',
+    })
+  } catch (error) {
+    // استفاده از الگوی ارور هندلینگ اختصاصی
+    const errorStore = useErrorStore()
+    const msg = getErrorMessage(error.code) || 'خطایی در به‌روزرسانی محصول رخ داده است'
+
+    errorStore.addError({
+      type: 'error',
+      message: msg,
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// ==============================
+// متغیرهای مربوط به جستجوی برند
+// ==============================
+const brandSearchQuery = ref('')
+const searchedBrands = ref([])
+const isSearchingBrand = ref(false)
+let searchTimeout = null
+
+// گوش دادن به تغییرات اینپوت جستجو برای ارسال ریکوئست به بک‌اند
+watch(brandSearchQuery, (newQuery) => {
+  // اگر فیلد خالی شد، لیست نتایج را پاک کن
+  if (!newQuery || newQuery.trim() === '') {
+    searchedBrands.value = []
+    return
+  }
+
+  // پاک کردن تایمر قبلی (Debounce)
+  if (searchTimeout) clearTimeout(searchTimeout)
+
+  // تنظیم تایمر جدید (۵۰۰ میلی‌ثانیه تاخیر)
+  searchTimeout = setTimeout(async () => {
+    isSearchingBrand.value = true
+    try {
+      // ارسال درخواست به روتر جستجوی برند با پارامتر search
+      const response = await brandService.listBrands({
+        search: newQuery,
+      })
+
+      // استخراج لیست برندها دقیقاً بر اساس ساختار JSON شما
+      if (response && response.data && response.data.items) {
+        searchedBrands.value = response.data.items
+      } else {
+        searchedBrands.value = []
+      }
+    } catch (error) {
+      const errorStore = useErrorStore()
+      errorStore.addError({
+        type: 'error',
+        message: `خطا در جستجوی برند: ${error?.detail?.message}`,
+      })
+      searchedBrands.value = []
+    } finally {
+      isSearchingBrand.value = false
+    }
+  }, 500)
+})
+
+// انتخاب برند از لیست و پر کردن خودکار آیدی
+const selectBrand = (brand) => {
+  product.value.brand_id = brand.id
+  brandSearchQuery.value = brand.name // نمایش نام برند در فیلد جستجو
+  searchedBrands.value = [] // بستن منوی نتایج
+}
+
+// ==============================
+// پردازش‌های تصویر
+// ==============================
 const primaryImage = computed(() => {
   if (!product.value?.images) return null
   return product.value.images.find((img) => img.is_primary) || product.value.images[0]
@@ -524,25 +614,9 @@ const setPrimaryImage = async (imageId) => {
   }
 }
 
-// === توابع ویرایش پایه ===
-const refreshProductData = async () => {
-  const response = await productService.getProductFull(product.value.id)
-  product.value = response.data || response
-}
-
-// پچ کردن داینامیک اطلاعات. تمامی فیلدها با این تابع به بک‌اند ارسال می‌شوند
-async function patchField(fieldName, value) {
-  try {
-    await productService.patchProduct(product.value.id, { [fieldName]: value })
-    if (['price', 'discount_price', 'cost_price', 'tax_rate'].includes(fieldName)) {
-      await refreshProductData()
-    }
-  } catch (error) {
-    alert(`خطا در به‌روزرسانی آنی فیلد: ${fieldName}`)
-  }
-}
-
-// === اتصالات (Categories & Tags) ===
+// ==============================
+// اتصالات (Categories & Tags)
+// ==============================
 const isCategoryAttached = (catId) => product.value.categories?.some((c) => c.id === catId)
 const isTagAttached = (tagId) => product.value.tags?.some((t) => t.id === tagId)
 
@@ -572,7 +646,9 @@ const toggleTag = async (event, tagId) => {
   }
 }
 
-// === موجودی (Inventory) ===
+// ==============================
+// موجودی (Inventory)
+// ==============================
 async function patchVariant(inventoryId, subField, value) {
   try {
     await productService.updateInventory(inventoryId, { [subField]: value })
@@ -602,7 +678,9 @@ async function deleteInventory(inventoryId) {
   }
 }
 
-// === ویژگی‌ها (Attributes) ===
+// ==============================
+// ویژگی‌ها (Attributes)
+// ==============================
 async function patchAttribute(attributeId, value) {
   try {
     await productService.updateProductAttribute(product.value.id, attributeId, { value })
@@ -632,7 +710,9 @@ async function removeAttribute(attributeId) {
   }
 }
 
-// === نظرات (Comments) ===
+// ==============================
+// نظرات (Comments)
+// ==============================
 async function deleteComment(commentId) {
   if (!confirm('آیا از حذف این نظر اطمینان دارید؟')) return
   try {
@@ -643,7 +723,9 @@ async function deleteComment(commentId) {
   }
 }
 
-// === عملیات اصلی محصول ===
+// ==============================
+// عملیات اصلی محصول
+// ==============================
 async function handlePublish() {
   try {
     await productService.publishProduct(product.value.id)
@@ -1108,5 +1190,53 @@ async function handleHardDelete() {
 }
 .mt-3 {
   margin-top: 1rem;
+}
+
+.brand-search-results {
+  list-style: none;
+  padding: 0;
+  margin: 5px 0 0 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: #fff;
+  position: absolute; /* برای قرارگیری روی سایر المان‌ها در صورت نیاز */
+  z-index: 10;
+}
+
+.clickable-brand-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.clickable-brand-item:hover {
+  background-color: #f0f0f0;
+}
+
+.no-results {
+  font-size: 0.9em;
+  color: #888;
+  margin-top: 5px;
+}
+
+.form-actions {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.btn-save {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-save:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>

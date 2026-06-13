@@ -85,27 +85,27 @@ export const imageService = {
 export const brandService = {
   // ۱. ایجاد برند جدید
   async createBrand(brandData) {
-    return await axiosClient.post(`${BASE_URL}/`, brandData)
+    return await axiosClient.post(`/v1/brands/`, brandData)
   },
 
   // ۲. دریافت لیست تمامی برندها
-  async listBrands() {
-    return await axiosClient.get(`${BASE_URL}/`)
+  async listBrands(search) {
+    return await axiosClient.get(`/v1/brands/`, search)
   },
 
   // ۳. دریافت اطلاعات یک برند خاص
   async getBrand(brandId) {
-    return await axiosClient.get(`${BASE_URL}/${brandId}`)
+    return await axiosClient.get(`/v1/brands/${brandId}`)
   },
 
   // ۴. به‌روزرسانی اطلاعات برند
   async updateBrand(brandId, updateData) {
-    return await axiosClient.put(`${BASE_URL}/${brandId}`, updateData)
+    return await axiosClient.put(`/v1/brands/${brandId}`, updateData)
   },
 
   // ۵. حذف برند
   async deleteBrand(brandId) {
-    return await axiosClient.delete(`${BASE_URL}/${brandId}`)
+    return await axiosClient.delete(`/v1/brands/${brandId}`)
   },
 }
 
