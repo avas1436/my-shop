@@ -285,7 +285,7 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key(product_id)
 
             return ok
 
