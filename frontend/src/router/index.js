@@ -147,11 +147,54 @@ const routes = [
         component: () => import('@/views/admin/AdminProduct.vue'),
         props: true,
       },
+
+      // تب محصولات
       {
         path: 'products/:product_id/full',
-        name: ROUTES.ADMIN_PRODUCT_DETAIL,
         component: () => import('@/views/admin/AdminProductDetailView.vue'),
         props: true,
+        children: [
+          {
+            path: '',
+            redirect: (to) => `${to.path}/general`, // ریدایرکت خودکار به اطلاعات پایه
+          },
+          {
+            path: 'general',
+            name: 'AdminProductGeneral',
+            component: () => import('@/views/admin/product-tabs/GeneralTab.vue'),
+            props: true,
+          },
+          {
+            path: 'images',
+            name: 'AdminProductImages',
+            component: () => import('@/views/admin/product-tabs/ImagesTab.vue'),
+            props: true,
+          },
+          {
+            path: 'inventory',
+            name: 'AdminProductInventory',
+            component: () => import('@/views/admin/product-tabs/InventoryTab.vue'),
+            props: true,
+          },
+          {
+            path: 'relations',
+            name: 'AdminProductRelations',
+            component: () => import('@/views/admin/product-tabs/RelationsTab.vue'),
+            props: true,
+          },
+          {
+            path: 'comments',
+            name: 'AdminProductComments',
+            component: () => import('@/views/admin/product-tabs/CommentsTab.vue'),
+            props: true,
+          },
+          {
+            path: 'actions',
+            name: 'AdminProductActions',
+            component: () => import('@/views/admin/product-tabs/ActionsTab.vue'),
+            props: true,
+          },
+        ],
       },
       {
         path: 'orders',
