@@ -35,20 +35,35 @@
         <div class="form-grid">
           <div class="form-group">
             <label>وضعیت انتشار (Status):</label>
-            <select v-model="product.status">
-              <option value="draft">پیش‌نویس</option>
-              <option value="active">منتشر شده</option>
-              <option value="inactive">غیر فعال</option>
-              <option value="archived">بایگانی شده</option>
-            </select>
+            <div class="single-input-wrapper">
+              <select
+                :value="product.status"
+                @change="updateField('status', $event.target.value)"
+                class="base-input-field"
+                :class="{ 'has-value': product.status }"
+              >
+                <option value="draft">پیش‌نویس</option>
+                <option value="active">منتشر شده</option>
+                <option value="inactive">غیر فعال</option>
+                <option value="archived">بایگانی شده</option>
+              </select>
+            </div>
           </div>
           <div class="form-group toggle-group">
             <label class="toggle-label">
-              <input type="checkbox" v-model="product.is_featured" />
+              <input
+                type="checkbox"
+                :checked="product.is_featured"
+                @change="updateField('is_featured', $event.target.checked)"
+              />
               کالای ویژه (Featured)
             </label>
             <label class="toggle-label">
-              <input type="checkbox" v-model="product.is_digital" />
+              <input
+                type="checkbox"
+                :checked="product.is_digital"
+                @change="updateField('is_digital', $event.target.checked)"
+              />
               کالای دیجیتال
             </label>
           </div>
@@ -60,21 +75,63 @@
         <div class="form-grid">
           <div class="form-group">
             <label>نام محصول:</label>
-            <input v-model="product.name" type="text" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.name"
+                @input="updateField('name', $event.target.value)"
+                type="text"
+                class="base-input-field"
+                :class="{ 'has-value': product.name }"
+              />
+              <button
+                v-if="product.name"
+                type="button"
+                class="clear-btn"
+                @click="updateField('name', '')"
+                title="پاک کردن"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
-            <label>جستجوی نام برند:</label>
+            <label>برند محصول:</label>
             <div class="brand-search-container">
-              <input
-                v-model="brandSearchQuery"
-                type="text"
-                placeholder="بخشی از نام برند را تایپ کنید..."
-              />
-              <p v-if="isSearchingBrand" class="search-loading">در حال جستجو...</p>
+              <div class="single-input-wrapper">
+                <input
+                  :value="
+                    product.brand && product.brand.name ? product.brand.name : brandSearchQuery
+                  "
+                  @input="(e) => (brandSearchQuery = e.target.value)"
+                  type="text"
+                  placeholder="بخشی از نام برند را تایپ کنید..."
+                  :readonly="product.brand && product.brand.name"
+                  class="base-input-field"
+                  :class="{ 'has-value': product.brand && product.brand.name }"
+                />
+                <button
+                  v-if="product.brand && product.brand.name"
+                  type="button"
+                  class="clear-btn"
+                  @click="removeCurrentBrand"
+                  title="حذف برند و جستجوی مجدد"
+                >
+                  ×
+                </button>
+              </div>
+
+              <p v-if="isSearchingBrand && !product.brand_id" class="search-loading">
+                در حال جستجو...
+              </p>
 
               <ul
-                v-if="brandSearchQuery && searchedBrands.length && !isSearchingBrand"
+                v-if="
+                  brandSearchQuery &&
+                  searchedBrands.length &&
+                  !isSearchingBrand &&
+                  !product.brand_id
+                "
                 class="brand-search-results"
               >
                 <li
@@ -83,12 +140,17 @@
                   @click="selectBrand(brand)"
                   class="clickable-brand-item"
                 >
-                  {{ brand.name }} (ID: {{ brand.id }})
+                  {{ brand.name }}
                 </li>
               </ul>
 
               <p
-                v-if="brandSearchQuery && !searchedBrands.length && !isSearchingBrand"
+                v-if="
+                  brandSearchQuery &&
+                  !searchedBrands.length &&
+                  !isSearchingBrand &&
+                  !product.brand_id
+                "
                 class="no-results"
               >
                 برندی یافت نشد.
@@ -97,21 +159,47 @@
           </div>
 
           <div class="form-group">
-            <label>آیدی برند:</label>
-            <input
-              v-model.number="product.brand_id"
-              type="number"
-              placeholder="وارد کردن مستقیم آیدی"
-            />
+            <label>کد کالا (SKU):</label>
+            <div class="single-input-wrapper">
+              <input
+                :value="product.sku"
+                @input="updateField('sku', $event.target.value)"
+                type="text"
+                class="base-input-field"
+                :class="{ 'has-value': product.sku }"
+              />
+              <button
+                v-if="product.sku"
+                type="button"
+                class="clear-btn"
+                @click="updateField('sku', '')"
+                title="پاک کردن"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label>کد کالا (SKU):</label>
-            <input v-model="product.sku" type="text" />
-          </div>
           <div class="form-group full-width">
             <label>توضیحات (Description):</label>
-            <textarea v-model="product.description" rows="4"></textarea>
+            <div class="single-input-wrapper">
+              <textarea
+                :value="product.description"
+                @input="updateField('description', $event.target.value)"
+                rows="4"
+                class="base-input-field"
+                :class="{ 'has-value': product.description }"
+              ></textarea>
+              <button
+                v-if="product.description"
+                type="button"
+                class="clear-btn textarea-clear"
+                @click="updateField('description', '')"
+                title="پاک کردن"
+              >
+                ×
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -121,23 +209,126 @@
         <div class="form-grid">
           <div class="form-group">
             <label>قیمت اصلی (Price):</label>
-            <input v-model.number="product.price" type="number" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.price"
+                @input="
+                  updateField(
+                    'price',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.price !== null && product.price !== '' }"
+              />
+              <button
+                v-if="product.price !== null && product.price !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('price', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>قیمت با تخفیف (Discount Price):</label>
-            <input v-model.number="product.discount_price" type="number" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.discount_price"
+                @input="
+                  updateField(
+                    'discount_price',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{
+                  'has-value': product.discount_price !== null && product.discount_price !== '',
+                }"
+              />
+              <button
+                v-if="product.discount_price !== null && product.discount_price !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('discount_price', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>قیمت خرید (Cost Price):</label>
-            <input v-model.number="product.cost_price" type="number" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.cost_price"
+                @input="
+                  updateField(
+                    'cost_price',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.cost_price !== null && product.cost_price !== '' }"
+              />
+              <button
+                v-if="product.cost_price !== null && product.cost_price !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('cost_price', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>نرخ مالیات (Tax Rate %):</label>
-            <input v-model.number="product.tax_rate" type="number" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.tax_rate"
+                @input="
+                  updateField(
+                    'tax_rate',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.tax_rate !== null && product.tax_rate !== '' }"
+              />
+              <button
+                v-if="product.tax_rate !== null && product.tax_rate !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('tax_rate', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>واحد پول (Currency Code):</label>
-            <input v-model="product.currency_code" type="text" placeholder="مثال: IRI یا IRT" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.currency_code"
+                @input="updateField('currency_code', $event.target.value)"
+                type="text"
+                placeholder="مثال: IRI یا IRT"
+                class="base-input-field"
+                :class="{ 'has-value': product.currency_code }"
+              />
+              <button
+                v-if="product.currency_code"
+                type="button"
+                class="clear-btn"
+                @click="updateField('currency_code', '')"
+              >
+                ×
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -147,23 +338,123 @@
         <div class="form-grid">
           <div class="form-group">
             <label>وزن (Weight):</label>
-            <input type="number" v-model.number="product.weight" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.weight"
+                @input="
+                  updateField(
+                    'weight',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.weight !== null && product.weight !== '' }"
+              />
+              <button
+                v-if="product.weight !== null && product.weight !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('weight', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>عرض (Width):</label>
-            <input type="number" v-model.number="product.width" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.width"
+                @input="
+                  updateField(
+                    'width',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.width !== null && product.width !== '' }"
+              />
+              <button
+                v-if="product.width !== null && product.width !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('width', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>ارتفاع (Height):</label>
-            <input type="number" v-model.number="product.height" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.height"
+                @input="
+                  updateField(
+                    'height',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.height !== null && product.height !== '' }"
+              />
+              <button
+                v-if="product.height !== null && product.height !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('height', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>عمق/طول (Depth):</label>
-            <input type="number" v-model.number="product.depth" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.depth"
+                @input="
+                  updateField(
+                    'depth',
+                    $event.target.value === '' ? null : Number($event.target.value),
+                  )
+                "
+                type="number"
+                class="base-input-field"
+                :class="{ 'has-value': product.depth !== null && product.depth !== '' }"
+              />
+              <button
+                v-if="product.depth !== null && product.depth !== ''"
+                type="button"
+                class="clear-btn"
+                @click="updateField('depth', null)"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label>بارکد جهانی (GTIN):</label>
-            <input type="text" v-model="product.gtin" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.gtin"
+                @input="updateField('gtin', $event.target.value)"
+                type="text"
+                class="base-input-field"
+                :class="{ 'has-value': product.gtin }"
+              />
+              <button
+                v-if="product.gtin"
+                type="button"
+                class="clear-btn"
+                @click="updateField('gtin', '')"
+              >
+                ×
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -173,15 +464,63 @@
         <div class="form-grid">
           <div class="form-group full-width">
             <label>نامک (Slug):</label>
-            <input type="text" v-model="product.slug" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.slug"
+                @input="updateField('slug', $event.target.value)"
+                type="text"
+                class="base-input-field"
+                :class="{ 'has-value': product.slug }"
+              />
+              <button
+                v-if="product.slug"
+                type="button"
+                class="clear-btn"
+                @click="updateField('slug', '')"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group full-width">
             <label>عنوان متا (Meta Title):</label>
-            <input type="text" v-model="product.meta_title" />
+            <div class="single-input-wrapper">
+              <input
+                :value="product.meta_title"
+                @input="updateField('meta_title', $event.target.value)"
+                type="text"
+                class="base-input-field"
+                :class="{ 'has-value': product.meta_title }"
+              />
+              <button
+                v-if="product.meta_title"
+                type="button"
+                class="clear-btn"
+                @click="updateField('meta_title', '')"
+              >
+                ×
+              </button>
+            </div>
           </div>
           <div class="form-group full-width">
             <label>توضیحات متا (Meta Description):</label>
-            <textarea v-model="product.meta_description" rows="3"></textarea>
+            <div class="single-input-wrapper">
+              <textarea
+                :value="product.meta_description"
+                @input="updateField('meta_description', $event.target.value)"
+                rows="3"
+                class="base-input-field"
+                :class="{ 'has-value': product.meta_description }"
+              ></textarea>
+              <button
+                v-if="product.meta_description"
+                type="button"
+                class="clear-btn textarea-clear"
+                @click="updateField('meta_description', '')"
+              >
+                ×
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -375,7 +714,7 @@
         <div class="status-indicator-large">
           <span>وضعیت فعلی کالا در سیستم:</span>
           <strong :class="product.status === 'active' ? 'text-success' : 'text-warning'">
-            {{ product.status === 'active' ? '🟢 منتشر شده (Active)' : '🟡 پیش‌نویس (Draft)' }}
+            {{ product.status === 'active' ? ' منتشر شده (Active)' : ' پیش‌نویس (Draft)' }}
           </strong>
         </div>
         <p class="text-small muted mt-2">
@@ -394,7 +733,7 @@
             @click="handlePublish"
             class="w-100 mb-2"
           >
-            🚀 انتشار نهایی محصول در سایت
+            انتشار نهایی محصول در سایت
           </BaseButton>
 
           <div class="separator" v-if="product && product.status !== 'active'"></div>
@@ -404,7 +743,7 @@
             خواهد شد.
           </p>
           <button class="btn-delete-hard-large" @click="handleHardDelete">
-            🗑️ حذف دائمی و قطعی محصول
+            حذف دائمی و قطعی محصول
           </button>
         </div>
       </div>
@@ -437,38 +776,26 @@ import { formatPrsianDate } from '@/utils/format'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute() // اطلاعات مسیر فعلی
-const router = useRouter() // رفتن به مسیر های دیگه
+const route = useRoute()
+const router = useRouter()
 
 const isLoading = ref(true)
 const product = ref(null)
-
-// کنترل تب فعلی
 const currentTab = ref('general')
 
-// استیت‌های فرم‌های ایجاد سریع
 const newVariant = ref({ quantity: 0, final_price: null, sku: '' })
 const newAttribute = ref({ id: '', value: '' })
 
-// ==============================
-// واکشی تمامی اطلاعات مورد نیاز
-// ==============================
 const loadAllAdminData = async () => {
   try {
     isLoading.value = true
     const pId = route.params.product_id
-
-    // واکشی دیتای محصول
     const response = await productService.getProductFull(pId)
     product.value = response
   } catch (error) {
     const errorStore = useErrorStore()
     const msg = getErrorMessage(error.code) || 'خطایی رخ داده است'
-
-    errorStore.addError({
-      type: 'error',
-      message: msg,
-    })
+    errorStore.addError({ type: 'error', message: msg })
   } finally {
     isLoading.value = false
   }
@@ -479,41 +806,49 @@ onMounted(() => {
 })
 
 // ==============================
-// توابع ویرایش پایه
+// مدیریت مقادیر تغییر یافته
 // ==============================
 const productUpdate = ref({})
+
+// این تابع جدید وظیفه دارد هم UI را آپدیت کند و هم فیلد تغییر یافته را به productUpdate برای ارسال به بک‌اند اضافه کند
+const updateField = (key, value) => {
+  if (product.value) {
+    product.value[key] = value
+  }
+  productUpdate.value[key] = value
+}
 
 const refreshProductData = async () => {
   const response = await productService.getProductFull(product.value.id)
   product.value = response
 }
 
-// ذخیره تمامی اطلاعات در یک درخواست واحد (جایگزین patchField)
 const saveAllChanges = async () => {
   try {
     isLoading.value = true
 
-    // ارسال کل آبجکت محصول به بک‌اند
+    // بررسی اینکه آیا اصلاً دیتایی تغییر کرده است یا خیر
+    if (Object.keys(productUpdate.value).length === 0) {
+      const errorStore = useErrorStore()
+      errorStore.addError({ type: 'warning', message: 'تغییری برای ذخیره‌سازی یافت نشد' })
+      isLoading.value = false
+      return
+    }
+
+    // ارسال فقط تغییرات به بک‌اند
     await productService.updateProduct(product.value.id, productUpdate.value)
 
-    // فراخوانی مجدد اطلاعات برای اطمینان از صحت دیتا
+    // پاک کردن آبجکت تغییرات پس از ذخیره موفق
+    productUpdate.value = {}
+
     await refreshProductData()
 
-    // نمایش پیام موفقیت
     const errorStore = useErrorStore()
-    errorStore.addError({
-      type: 'success',
-      message: 'تغییرات با موفقیت ذخیره شد',
-    })
+    errorStore.addError({ type: 'success', message: 'تغییرات با موفقیت ذخیره شد' })
   } catch (error) {
-    // استفاده از الگوی ارور هندلینگ اختصاصی
     const errorStore = useErrorStore()
     const msg = getErrorMessage(error.code) || 'خطایی در به‌روزرسانی محصول رخ داده است'
-
-    errorStore.addError({
-      type: 'error',
-      message: msg,
-    })
+    errorStore.addError({ type: 'error', message: msg })
   } finally {
     isLoading.value = false
   }
@@ -527,27 +862,17 @@ const searchedBrands = ref([])
 const isSearchingBrand = ref(false)
 let searchTimeout = null
 
-// گوش دادن به تغییرات اینپوت جستجو برای ارسال ریکوئست به بک‌اند
 watch(brandSearchQuery, (newQuery) => {
-  // اگر فیلد خالی شد، لیست نتایج را پاک کن
   if (!newQuery || newQuery.trim() === '') {
     searchedBrands.value = []
     return
   }
-
-  // پاک کردن تایمر قبلی (Debounce)
   if (searchTimeout) clearTimeout(searchTimeout)
 
-  // تنظیم تایمر جدید (۵۰۰ میلی‌ثانیه تاخیر)
   searchTimeout = setTimeout(async () => {
     isSearchingBrand.value = true
     try {
-      // ارسال درخواست به روتر جستجوی برند با پارامتر search
-      const response = await brandService.listBrands({
-        search: newQuery,
-      })
-
-      // استخراج لیست برندها دقیقاً بر اساس ساختار JSON شما
+      const response = await brandService.listBrands({ search: newQuery })
       if (response && response.data && response.data.items) {
         searchedBrands.value = response.data.items
       } else {
@@ -566,11 +891,19 @@ watch(brandSearchQuery, (newQuery) => {
   }, 500)
 })
 
-// انتخاب برند از لیست و پر کردن خودکار آیدی
 const selectBrand = (brand) => {
   product.value.brand_id = brand.id
-  brandSearchQuery.value = brand.name // نمایش نام برند در فیلد جستجو
-  searchedBrands.value = [] // بستن منوی نتایج
+  product.value.brand = { id: brand.id, name: brand.name }
+  productUpdate.value.brand_id = brand.id // اضافه کردن تغییرات برند به productUpdate
+  brandSearchQuery.value = ''
+  searchedBrands.value = []
+}
+
+const removeCurrentBrand = () => {
+  product.value.brand = null
+  product.value.brand_id = null
+  productUpdate.value.brand_id = null // ثبت حذف برند در productUpdate
+  brandSearchQuery.value = ''
 }
 
 // ==============================
@@ -586,7 +919,6 @@ const handleImageUpload = async (event) => {
   if (!file) return
   const formData = new FormData()
   formData.append('image', file)
-
   try {
     await productService.uploadProductImage(product.value.id, formData)
     await refreshProductData()
@@ -758,7 +1090,6 @@ async function handleHardDelete() {
   direction: rtl;
 }
 
-/* ساختار هدر تب‌ها برای قرار گرفتن دکمه بازگشت در کنار آن */
 .tabs-header-wrapper {
   display: flex;
   justify-content: space-between;
@@ -769,7 +1100,6 @@ async function handleHardDelete() {
   gap: 1rem;
 }
 
-/* استایل‌های مربوط به سیستم تب‌ها */
 .tabs-navigation {
   display: flex;
   gap: 0.5rem;
@@ -822,7 +1152,6 @@ async function handleHardDelete() {
   padding-bottom: 0.5rem;
 }
 
-/* استایل‌های تب عملیات نهایی */
 .admin-actions-tab {
   display: flex;
   flex-direction: column;
@@ -878,21 +1207,7 @@ async function handleHardDelete() {
 .btn-delete-hard-large:hover {
   background: #b91c1c;
 }
-.btn-back {
-  background: #475569;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: background 0.2s;
-}
-.btn-back:hover {
-  background: #334155;
-}
 
-/* استایل‌های فرم تب اول */
 .form-section {
   margin-bottom: 2rem;
 }
@@ -914,24 +1229,108 @@ async function handleHardDelete() {
   color: #475569;
   font-weight: 600;
 }
-.form-group input,
-.form-group select,
-.form-group textarea {
+
+/* ==================
+   استایل‌های یکپارچه جدید فیلدها 
+   ================== */
+.single-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.base-input-field {
+  width: 100%;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
   font-family: inherit;
   font-size: 0.95rem;
   background: #fff;
-  transition: border-color 0.2s;
-  width: 100%;
+  transition: all 0.2s;
+  box-sizing: border-box;
 }
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+
+.base-input-field:focus {
   border-color: #5b3df5;
   outline: none;
   box-shadow: 0 0 0 2px rgba(91, 61, 245, 0.1);
+}
+
+.base-input-field.has-value {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+  padding-left: 2rem; /* فضا برای دکمه حذف */
+}
+
+.clear-btn {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.clear-btn:hover {
+  color: #ef4444;
+}
+
+.clear-btn.textarea-clear {
+  top: 12px;
+  transform: none;
+}
+
+.brand-search-container {
+  position: relative;
+  width: 100%;
+}
+
+.brand-search-results {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 10;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.clickable-brand-item {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.2s;
+}
+.clickable-brand-item:last-child {
+  border-bottom: none;
+}
+.clickable-brand-item:hover {
+  background: #f1f5f9;
+  color: #5b3df5;
+}
+.search-loading,
+.no-results {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
 }
 
 .toggle-group {
@@ -957,7 +1356,6 @@ async function handleHardDelete() {
   color: #d97706;
 }
 
-/* نگهداری استایل‌های دیگر پنل‌ها */
 .page-panel {
   background: var(--surface, #fff);
   padding: 1.5rem;
@@ -985,13 +1383,11 @@ async function handleHardDelete() {
   align-items: center;
   justify-content: center;
 }
-
 .main-image-holder img {
   max-width: 100%;
   max-height: 340px;
   object-fit: contain;
 }
-
 .image-overlay-info {
   position: absolute;
   bottom: 10px;
@@ -1073,20 +1469,17 @@ async function handleHardDelete() {
   border-radius: 12px;
   border: 1px solid #bbf7d0;
 }
-
 .inventory-title {
   font-size: 1rem;
   color: #166534;
   margin-bottom: 1rem;
 }
-
 .admin-variant-grid {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
-
 .variant-row-card {
   display: flex;
   justify-content: space-between;
@@ -1160,7 +1553,6 @@ async function handleHardDelete() {
 
 .timestamps-footer {
   display: flex;
-  /* flex-direction: column; */
   gap: 1.5rem;
   font-size: 0.85rem;
   color: #94a3b8;
@@ -1191,52 +1583,8 @@ async function handleHardDelete() {
 .mt-3 {
   margin-top: 1rem;
 }
-
-.brand-search-results {
-  list-style: none;
-  padding: 0;
-  margin: 5px 0 0 0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  max-height: 150px;
-  overflow-y: auto;
-  background-color: #fff;
-  position: absolute; /* برای قرارگیری روی سایر المان‌ها در صورت نیاز */
-  z-index: 10;
-}
-
-.clickable-brand-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-}
-
-.clickable-brand-item:hover {
-  background-color: #f0f0f0;
-}
-
-.no-results {
-  font-size: 0.9em;
-  color: #888;
-  margin-top: 5px;
-}
-
 .form-actions {
   margin-top: 20px;
   text-align: left;
-}
-
-.btn-save {
-  padding: 10px 20px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-save:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
 }
 </style>
