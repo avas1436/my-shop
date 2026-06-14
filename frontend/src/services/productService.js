@@ -53,27 +53,27 @@ export const productService = {
 export const imageService = {
   // ۱. آپلود تصویر برای محصول
   async uploadImage(productId, imageData) {
-    return await axiosClient.post(`${BASE_URL}/products/${productId}`, imageData)
+    return await axiosClient.post(`/v1/images/admin/products/${productId}`, imageData)
   },
 
   // ۲. دریافت لیست تصاویر یک محصول
   async listImages(productId) {
-    return await axiosClient.get(`${BASE_URL}/product/${productId}`)
+    return await axiosClient.get(`/v1/images/admin/product/${productId}`)
   },
 
   // ۳. دریافت اطلاعات یک تصویر خاص
   async getImage(imageId) {
-    return await axiosClient.get(`${BASE_URL}/image/${imageId}`)
+    return await axiosClient.get(`/v1/images/admin/image/${imageId}`)
   },
 
   // ۴. به‌روزرسانی تصویر
   async updateImage(imageId, updateData) {
-    return await axiosClient.patch(`${BASE_URL}/images/${imageId}`, updateData)
+    return await axiosClient.patch(`/v1/images/admin/images/${imageId}`, updateData)
   },
 
   // ۵. حذف تصویر
   async deleteImage(imageId) {
-    return await axiosClient.delete(`${BASE_URL}/images/${imageId}`)
+    return await axiosClient.delete(`/v1/images/admin/images/${imageId}`)
   },
 }
 
