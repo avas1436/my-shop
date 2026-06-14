@@ -779,6 +779,8 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 
+const errorStore = useErrorStore()
+
 const isLoading = ref(true)
 const product = ref(null)
 const currentTab = ref('general')
@@ -793,7 +795,6 @@ const loadAllAdminData = async () => {
     const response = await productService.getProductFull(pId)
     product.value = response
   } catch (error) {
-    const errorStore = useErrorStore()
     const msg = getErrorMessage(error.code) || 'خطایی رخ داده است'
     errorStore.addError({ type: 'error', message: msg })
   } finally {
@@ -810,7 +811,7 @@ onMounted(() => {
 // ==============================
 const productUpdate = ref({})
 
-// این تابع جدید وظیفه دارد هم UI را آپدیت کند و هم فیلد تغییر یافته را به productUpdate برای ارسال به بک‌اند اضافه کند
+// این تابع وظیفه دارد هم UI را آپدیت کند و هم فیلد تغییر یافته را به productUpdate برای ارسال به بک‌اند اضافه کند
 const updateField = (key, value) => {
   if (product.value) {
     product.value[key] = value
@@ -829,24 +830,22 @@ const saveAllChanges = async () => {
 
     // بررسی اینکه آیا اصلاً دیتایی تغییر کرده است یا خیر
     if (Object.keys(productUpdate.value).length === 0) {
-      const errorStore = useErrorStore()
       errorStore.addError({ type: 'warning', message: 'تغییری برای ذخیره‌سازی یافت نشد' })
       isLoading.value = false
       return
     }
 
     // ارسال فقط تغییرات به بک‌اند
-    await productService.updateProduct(product.value.id, productUpdate.value)
+    await productService.patchProduct(product.value.id, productUpdate.value)
 
     // پاک کردن آبجکت تغییرات پس از ذخیره موفق
     productUpdate.value = {}
 
     await refreshProductData()
 
-    const errorStore = useErrorStore()
     errorStore.addError({ type: 'success', message: 'تغییرات با موفقیت ذخیره شد' })
   } catch (error) {
-    const errorStore = useErrorStore()
+    console.log(error)
     const msg = getErrorMessage(error.code) || 'خطایی در به‌روزرسانی محصول رخ داده است'
     errorStore.addError({ type: 'error', message: msg })
   } finally {
@@ -873,13 +872,12 @@ watch(brandSearchQuery, (newQuery) => {
     isSearchingBrand.value = true
     try {
       const response = await brandService.listBrands({ search: newQuery })
-      if (response && response.data && response.data.items) {
-        searchedBrands.value = response.data.items
+      if (response && response.items) {
+        searchedBrands.value = response.items
       } else {
         searchedBrands.value = []
       }
     } catch (error) {
-      const errorStore = useErrorStore()
       errorStore.addError({
         type: 'error',
         message: `خطا در جستجوی برند: ${error?.detail?.message}`,
