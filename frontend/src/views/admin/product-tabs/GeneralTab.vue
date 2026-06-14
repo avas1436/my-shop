@@ -277,22 +277,15 @@
         <div class="form-group">
           <label>واحد پول (Currency Code):</label>
           <div class="single-input-wrapper">
-            <input
+            <select
               :value="product.currency_code"
-              @input="updateField('currency_code', $event.target.value)"
-              type="text"
-              placeholder="مثال: IRI یا IRT"
+              @change="updateField('currency_code', $event.target.value)"
               class="base-input-field"
               :class="{ 'has-value': product.currency_code }"
-            />
-            <button
-              v-if="product.currency_code"
-              type="button"
-              class="clear-btn"
-              @click="updateField('currency_code', '')"
             >
-              ×
-            </button>
+              <option value="IRR">ریال</option>
+              <option value="IRT">تومان</option>
+            </select>
           </div>
         </div>
       </div>
