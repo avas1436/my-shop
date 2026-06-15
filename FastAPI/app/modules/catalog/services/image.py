@@ -145,6 +145,16 @@ class ImageService:
                 code="IMAGE_NOT_FOUND",
             )
 
+        # در این حالت اگر این محصول عکس اصلی داشته باشد حذفش میکنه و عکس جدید جایگزین میشه
+        if data.is_primary:
+            # پیدا کردن تمام تصاویر دیگر این محصول که در حال حاضر اصلی هستند
+            current_images = await self.repo.list_by_product(image.product_id)
+            for img in current_images:
+                if img.is_primary and img.id != image.id:
+                    # تغییر وضعیت بقیه تصاویر به غیر اصلی
+                    img.is_primary = False
+                    await self.repo.update(obj=img)
+
         for k, v in data.model_dump(exclude_unset=True).items():
             setattr(image, k, v)
 
