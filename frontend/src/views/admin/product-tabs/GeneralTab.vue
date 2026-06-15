@@ -539,7 +539,6 @@ const saveAllChanges = async () => {
 
     errorStore.addError({ type: 'success', message: 'تغییرات با موفقیت ذخیره شد' })
   } catch (error) {
-    console.log(error)
     const msg = getErrorMessage(error.code) || 'خطایی در به‌روزرسانی محصول رخ داده است'
     errorStore.addError({ type: 'error', message: msg })
   } finally {

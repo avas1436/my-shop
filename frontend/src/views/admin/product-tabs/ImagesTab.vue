@@ -76,7 +76,6 @@ import { getErrorMessage } from '@/utils/errorMessages'
 // دریافت دیتای اصلی از پوسته والد (Inject)
 // ==============================
 const product = inject('product')
-const refreshProductData = inject('refreshProductData')
 const errorStore = inject('errorStore')
 
 // State های داخلی
@@ -113,7 +112,9 @@ const primaryImage = computed(() => {
   return images.value.find((img) => img.is_primary) || images.value[0]
 })
 
-// ۱. آپلود تصویر
+// ==============================
+// آپلود تصویر
+// ==============================
 const handleImageUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
@@ -125,41 +126,45 @@ const handleImageUpload = async (event) => {
   try {
     await imageService.uploadImage(product.value.id, formData)
     await fetchImages() // دریافت مجدد تصاویر
-    await refreshProductData() // آپدیت اطلاعات پرنت در صورت نیاز
   } catch (error) {
-    alert('خطا در آپلود تصویر جدید')
-    console.error(error)
+    const msg = getErrorMessage(error.code) || 'خطا در آپلود تصویر جدید'
+    errorStore.addError({ type: 'error', message: msg })
   } finally {
     isUploading.value = false
     event.target.value = '' // ریست کردن اینپوت
   }
 }
 
-// ۵. حذف تصویر
+// ==============================
+// حذف تصویر
+// ==============================
 const deleteImage = async (imageId) => {
   if (!confirm('آیا از حذف این تصویر اطمینان دارید؟')) return
   try {
     await imageService.deleteImage(imageId)
     await fetchImages()
-    await refreshProductData()
   } catch (error) {
-    console.error('خطا در حذف تصویر:', error)
-    alert('حذف تصویر با خطا مواجه شد.')
+    const msg = getErrorMessage(error.code) || 'حذف تصویر با خطا مواجه شد.'
+    errorStore.addError({ type: 'error', message: msg })
   }
 }
 
-// ۴. به‌روزرسانی تصویر (تنظیم به عنوان اصلی)
+// ==============================
+// انتخاب یک عکس به عنوان عکس اصلی
+// ==============================
 const setPrimaryImage = async (imageId) => {
   try {
     await imageService.updateImage(imageId, { is_primary: true })
     await fetchImages()
-    await refreshProductData()
   } catch (error) {
-    console.error('خطا در تنظیم تصویر اصلی:', error)
+    const msg = getErrorMessage(error.code) || 'خطا در تنظیم تصویر اصلی'
+    errorStore.addError({ type: 'error', message: msg })
   }
 }
 
-// ۴. به‌روزرسانی تصویر (ویرایش Alt Text)
+// ==============================
+// ویرایش متن توضیحی عکس
+// ==============================
 const editAltText = async (img) => {
   const currentAlt = img.alt_text || ''
   const newAlt = prompt('متن جایگزین (Alt Text) مناسب برای سئو را وارد کنید:', currentAlt)
@@ -169,8 +174,8 @@ const editAltText = async (img) => {
       await imageService.updateImage(img.id, { alt_text: newAlt })
       await fetchImages()
     } catch (error) {
-      console.error('خطا در ویرایش متن جایگزین:', error)
-      alert('خطا در ذخیره متن جایگزین.')
+      const msg = getErrorMessage(error.code) || 'خطا در ذخیره متن جایگزین.'
+      errorStore.addError({ type: 'error', message: msg })
     }
   }
 }
