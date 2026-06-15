@@ -40,9 +40,9 @@
         </template>
       </div>
 
-      <div v-if="images.length > 0" class="thumb-grid mt-4">
+      <div v-if="sortedImages.length > 0" class="thumb-grid">
         <div
-          v-for="img in images"
+          v-for="img in sortedImages"
           :key="img.id"
           class="thumb-container"
           :class="{ active: img.is_primary }"
@@ -214,6 +214,22 @@ const editAltText = async (img) => {
     }
   }
 }
+
+// =========================================================
+// مرتب‌سازی تصاویر بر اساس فیلد
+// =========================================================
+const sortedImages = computed(() => {
+  if (!images.value) return []
+
+  return [...images.value].sort((a, b) => {
+    // تصویر اصلی همیشه در ابتدای لیست قرار بگیرد
+    if (a.is_primary && !b.is_primary) return -1
+    if (!a.is_primary && b.is_primary) return 1
+
+    // مرتب‌سازی صعودی بر اساس sort_order
+    return (a.sort_order || 0) - (b.sort_order || 0)
+  })
+})
 </script>
 
 <style scoped>
@@ -311,10 +327,13 @@ const editAltText = async (img) => {
   cursor: not-allowed;
 }
 
+/* شبکه تصاویر کوچک در سمت چپ */
 .thumb-grid {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 100px));
   gap: 1rem;
+  margin-top: 0 !important;
 }
 
 .thumb-container {
@@ -415,6 +434,16 @@ const editAltText = async (img) => {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ریسپانسیو برای موبایل */
+@media (max-width: 768px) {
+  .admin-gallery-wrapper {
+    flex-direction: column; /* زیر هم قرار گرفتن در نمایشگرهای کوچک */
+  }
+  .main-image-holder {
+    max-width: 100%;
   }
 }
 </style>
