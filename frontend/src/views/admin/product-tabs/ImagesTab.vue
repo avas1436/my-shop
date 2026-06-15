@@ -162,7 +162,6 @@ const handleImageUpload = async (event) => {
     await imageService.uploadImage(product.value.id, formData)
     await fetchImages() // دریافت مجدد تصاویر
   } catch (error) {
-    console.log(error)
     const msg = getErrorMessage(error.code) || 'خطا در آپلود تصویر جدید'
     errorStore.addError({ type: 'error', message: msg })
   } finally {
