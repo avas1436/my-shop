@@ -74,40 +74,135 @@
 </template>
 
 <script setup>
-import { productService } from '@/services/productService'
+import { inventoryService, variantService } from '@/services/productService'
+import { useErrorStore } from '@/stores/errorStore'
+import { getErrorMessage } from '@/utils/errorMessages'
 import { inject, ref } from 'vue'
 
+const isSubmittingInventory = ref(false)
+const isSubmittingVariant = ref(false)
+const errorStore = useErrorStore()
+
+// ==============================
+// دریافت دیتای اصلی از پوسته والد (Inject)
+// ==============================
 const product = inject('product')
 const refreshProductData = inject('refreshProductData')
 
 const newVariant = ref({ quantity: 0, final_price: null, sku: '' })
 
-async function patchVariant(inventoryId, subField, value) {
+// ==============================
+// اضافه کردن یک واریانت
+// ==============================
+const handleCreateVariant = async (variantFormData) => {
+  if (!variantFormData) return
+
+  isSubmittingVariant.value = true
   try {
-    await productService.updateInventory(inventoryId, { [subField]: value })
+    // ارسال مستقیم داده‌ها به بک‌اند
+    await variantService.createVariant(variantFormData)
+
+    await refreshProductData()
   } catch (error) {
-    console.error('خطا در پچ داده انبار')
+    const msg = getErrorMessage(error.code) || 'خطا در ایجاد متغیر جدید'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingVariant.value = false
   }
 }
 
-async function addInventory() {
-  if (newVariant.value.quantity === null || newVariant.value.quantity < 0) return
+// ==============================
+// ویرایش واریانت
+// ==============================
+const handleUpdateVariant = async (variantId, updateData) => {
+  if (!variantId || !updateData) return
+
+  isSubmittingVariant.value = true
   try {
-    await productService.createInventory(product.value.id, newVariant.value)
-    newVariant.value = { quantity: 0, final_price: null, sku: '' }
+    await variantService.updateVariant(variantId, updateData)
     await refreshProductData()
   } catch (error) {
-    alert('خطا در ثبت موجودی جدید')
+    const msg = getErrorMessage(error.code) || 'خطا در به‌روزرسانی متغیر'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingVariant.value = false
   }
 }
 
-async function deleteInventory(inventoryId) {
-  if (!confirm('آیا مایل به حذف این قلم تنوع هستید؟')) return
+// ==============================
+// حذف یک واریانت
+// ==============================
+const handleDeleteVariant = async (variantId) => {
+  if (!variantId) return
+
+  // یک تاییدیه ساده قبل از حذف
+  if (!confirm('آیا از حذف این متغیر مطمئن هستید؟')) return
+
+  isSubmittingVariant.value = true
   try {
-    await productService.deleteInventory(inventoryId)
+    await variantService.deleteVariant(variantId)
     await refreshProductData()
   } catch (error) {
-    console.error(error)
+    const msg = getErrorMessage(error.code) || 'خطا در حذف متغیر'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingVariant.value = false
+  }
+}
+
+// ==============================
+// ایجاد رکورد موجودی جدید
+// ==============================
+const handleCreateInventory = async (inventoryFormData) => {
+  if (!inventoryFormData) return
+
+  isSubmittingInventory.value = true
+  try {
+    await inventoryService.createInventory(inventoryFormData)
+    await refreshProductData()
+  } catch (error) {
+    const msg = getErrorMessage(error.code) || 'خطا در ثبت موجودی جدید'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingInventory.value = false
+  }
+}
+
+// ==============================
+// به‌روزرسانی موجودی
+// ==============================
+const handleUpdateInventory = async (inventoryId, updateData) => {
+  if (!inventoryId || !updateData) return
+
+  isSubmittingInventory.value = true
+  try {
+    await inventoryService.updateInventory(inventoryId, updateData)
+    await refreshProductData()
+  } catch (error) {
+    const msg = getErrorMessage(error.code) || 'خطا در به‌روزرسانی موجودی'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingInventory.value = false
+  }
+}
+
+// ==============================
+// حذف موجودی
+// ==============================
+const handleDeleteInventory = async (inventoryId) => {
+  if (!inventoryId) return
+
+  if (!confirm('آیا از حذف این رکورد موجودی مطمئن هستید؟')) return
+
+  isSubmittingInventory.value = true
+  try {
+    await inventoryService.deleteInventory(inventoryId)
+    await refreshProductData()
+  } catch (error) {
+    const msg = getErrorMessage(error.code) || 'خطا در حذف رکورد موجودی'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingInventory.value = false
   }
 }
 </script>

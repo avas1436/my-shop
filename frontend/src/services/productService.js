@@ -316,14 +316,14 @@ export const variantService = {
   },
 
   // ۲. دریافت لیست متغیرها
-  async listVariants() {
-    return await axiosClient.get(`/v1/variants/list`)
-  },
+  // async listVariants() {
+  //   return await axiosClient.get(`/v1/variants/list`)
+  // },
 
   // ۳. دریافت یک متغیر خاص
-  async getVariant(variantId) {
-    return await axiosClient.get(`/v1/variants/${variantId}`)
-  },
+  // async getVariant(variantId) {
+  //   return await axiosClient.get(`/v1/variants/${variantId}`)
+  // },
 
   // ۴. به‌روزرسانی متغیر
   async updateVariant(variantId, updateData) {
@@ -344,27 +344,27 @@ export const variantService = {
 export const inventoryService = {
   // ۱. ایجاد رکورد موجودی جدید
   async createInventory(inventoryData) {
-    return await axiosClient.post(`${BASE_URL}/`, inventoryData)
+    return await axiosClient.post(`/v1/inventory/`, inventoryData)
   },
 
   // ۲. دریافت لیست موجودی‌ها
-  async listInventories() {
-    return await axiosClient.get(`${BASE_URL}/list`)
-  },
+  // async listInventories() {
+  //   return await axiosClient.get(`/v1/inventory/list`)
+  // },
 
   // ۳. دریافت یک موجودی خاص
-  async getInventory(inventoryId) {
-    return await axiosClient.get(`${BASE_URL}/${inventoryId}`)
-  },
+  // async getInventory(inventoryId) {
+  //   return await axiosClient.get(`/v1/inventory/${inventoryId}`)
+  // },
 
   // ۴. به‌روزرسانی موجودی
   async updateInventory(inventoryId, updateData) {
-    return await axiosClient.put(`${BASE_URL}/${inventoryId}`, updateData)
+    return await axiosClient.put(`/v1/inventory/${inventoryId}`, updateData)
   },
 
   // ۵. حذف موجودی
   async deleteInventory(inventoryId) {
-    return await axiosClient.delete(`${BASE_URL}/${inventoryId}`)
+    return await axiosClient.delete(`/v1/inventory/${inventoryId}`)
   },
 }
 
