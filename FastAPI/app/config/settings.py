@@ -108,6 +108,10 @@ class Settings(BaseSettings):
     secure: bool
     samesite: str
 
+    # Images
+    allowed_extensions: tuple = Field(default={"jpg", "jpeg", "png", "webp"})
+    max_file_size: int = 5 * 1024 * 1024  # ۵ مگابایت
+
     # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
     @property
     def refresh_token_ttl(self) -> int:

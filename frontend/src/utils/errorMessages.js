@@ -32,6 +32,12 @@ export const ERROR_MESSAGES = {
   PRODUCT_IDENTIFIER_REQUIRED: 'ارسال شناسه (ID) یا نامک (Slug) برای دریافت کالا الزامی است.',
   PAGINATION_INVALID_VALUES: 'مقادیر ارسالی برای صفحه‌بندی کالاها نامعتبر است.',
 
+  // Image Service Error Codes
+  IMAGE_NOT_FOUND: 'تصویر مورد نظر یافت نشد.',
+  PRODUCT_IMAGES_NOT_FOUND: 'هیچ تصویری برای این محصول ثبت نشده است.',
+  IMAGE_INVALID_FORMAT: 'فرمت تصویر نامعتبر است. لطفاً از فرمت‌های png ،jpg یا webp استفاده کنید.',
+  IMAGE_TOO_LARGE: 'حجم تصویر بیش از حد مجاز (حداکثر ۵ مگابایت) است.',
+
   // Business Logic
   USER_NOT_FOUND: 'کاربر یافت نشد.',
   INVALID_OTP: 'کد وارد شده نامعتبر است.',

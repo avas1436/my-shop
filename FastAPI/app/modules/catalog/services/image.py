@@ -1,12 +1,16 @@
 # app/modules/catalog/services/image.py
 import uuid
 
+from FastAPI.app.config import get_settings
+
 from app.cache.cache import RedisCache
 from app.core.storage import get_storage
-from app.errors.errors import NotFound
+from app.errors.errors import BadRequest, NotFound
 from app.modules.catalog.models.image import ProductImage
 from app.modules.catalog.repository.image import ImageRepository
 from app.modules.catalog.schemas.image import GetImage, ImageUpdate
+
+settings = get_settings()
 
 
 class ImageService:
@@ -28,9 +32,25 @@ class ImageService:
     ):
 
         ext = file.filename.split(".")[-1]
-        file_key = f"products/{product_id}/{uuid.uuid4()}.{ext}"
+
+        # بررسی فرمت فایل برای امنیت
+        if ext not in settings.allowed_extensions:
+            raise BadRequest(
+                message="Invalid image format. Allowed formats are jpg, jpeg, png, webp.",
+                code="IMAGE_INVALID_FORMAT",
+            )
 
         data = await file.read()
+
+        # بررسی حجم فایل
+        if len(data) > settings.max_file_size:
+            raise BadRequest(
+                message="Image size exceeds the maximum limit of 5MB.",
+                code="IMAGE_TOO_LARGE",
+            )
+
+        file_key = f"products/{product_id}/{uuid.uuid4()}.{ext}"
+
         saved_key = await self.storage.save(data, file_key, file.content_type)
 
         obj = ProductImage(
@@ -57,7 +77,10 @@ class ImageService:
 
         image = await self.repo.get(image_id)
         if not image:
-            raise NotFound("image not found.")
+            raise NotFound(
+                message="image not found.",
+                code="IMAGE_NOT_FOUND",
+            )
 
         payload = GetImage.model_validate(image).model_dump(mode="json")
 
@@ -87,7 +110,10 @@ class ImageService:
         images = await self.repo.list_by_product(product_id)
 
         if not images:
-            raise NotFound("images not found.")
+            raise NotFound(
+                message="No images found for this product.",
+                code="PRODUCT_IMAGES_NOT_FOUND",
+            )
 
         payload = [
             GetImage.model_validate(img).model_dump(mode="json") for img in images
@@ -115,7 +141,10 @@ class ImageService:
 
         image = await self.repo.get(image_id)
         if not image:
-            raise NotFound("image not found.")
+            raise NotFound(
+                message="image not found for update.",
+                code="IMAGE_NOT_FOUND",
+            )
 
         for k, v in data.model_dump(exclude_unset=True).items():
             setattr(image, k, v)
@@ -135,7 +164,10 @@ class ImageService:
 
         image = await self.repo.get(image_id)
         if not image:
-            raise NotFound("image not found.")
+            raise NotFound(
+                message="image not found for deletion.",
+                code="IMAGE_NOT_FOUND",
+            )
 
         await self.storage.delete(image.url)
         await self.repo.delete(image)
