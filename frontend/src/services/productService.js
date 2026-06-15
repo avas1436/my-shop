@@ -312,27 +312,27 @@ export const attributeService = {
 export const variantService = {
   // ۱. ایجاد متغیر جدید
   async createVariant(variantData) {
-    return await axiosClient.post(`${BASE_URL}/`, variantData)
+    return await axiosClient.post(`/v1/variants/`, variantData)
   },
 
   // ۲. دریافت لیست متغیرها
   async listVariants() {
-    return await axiosClient.get(`${BASE_URL}/list`)
+    return await axiosClient.get(`/v1/variants/list`)
   },
 
   // ۳. دریافت یک متغیر خاص
   async getVariant(variantId) {
-    return await axiosClient.get(`${BASE_URL}/${variantId}`)
+    return await axiosClient.get(`/v1/variants/${variantId}`)
   },
 
   // ۴. به‌روزرسانی متغیر
   async updateVariant(variantId, updateData) {
-    return await axiosClient.put(`${BASE_URL}/${variantId}`, updateData)
+    return await axiosClient.put(`/v1/variants/${variantId}`, updateData)
   },
 
   // ۵. حذف متغیر
   async deleteVariant(variantId) {
-    return await axiosClient.delete(`${BASE_URL}/${variantId}`)
+    return await axiosClient.delete(`/v1/variants/${variantId}`)
   },
 }
 

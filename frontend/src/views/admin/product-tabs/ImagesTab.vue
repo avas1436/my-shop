@@ -46,7 +46,7 @@
           :key="img.id"
           class="thumb-container"
           :class="{ active: img.is_primary }"
-          @click="selectedImage = img"
+          @click.stop="selectedImage = img"
           style="cursor: pointer"
         >
           <img :src="img.real_url" :alt="img.alt_text" />
@@ -60,19 +60,23 @@
             <button
               v-if="!img.is_primary"
               class="action-btn btn-star"
-              @click="setPrimaryImage(img.id)"
+              @click.stop="setPrimaryImage(img.id)"
               title="انتخاب به عنوان تصویر اصلی"
             >
               <StarIcon class="w-4 h-4" />
             </button>
             <button
               class="action-btn btn-edit"
-              @click="editAltText(img)"
+              @click.stop="editAltText(img)"
               title="ویرایش متن جایگزین (Alt Text)"
             >
               <PencilIcon class="w-4 h-4" />
             </button>
-            <button class="action-btn btn-delete" @click="deleteImage(img.id)" title="حذف تصویر">
+            <button
+              class="action-btn btn-delete"
+              @click.stop="deleteImage(img.id)"
+              title="حذف تصویر"
+            >
               <Trash2Icon class="w-4 h-4" />
             </button>
           </div>
@@ -346,18 +350,22 @@ const sortedImages = computed(() => {
 
 .thumb-container {
   position: relative;
-  aspect-ratio: 1;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
   overflow: hidden;
-  background: #fff;
-  transition: all 0.2s ease;
+  border-radius: 12px;
+
+  transition: all 0.25s ease;
 }
 
 .thumb-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.thumb-container:hover img {
+  transform: scale(1.05);
+}
+
+.thumb-container:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
 }
 
 .thumb-container.active {
@@ -377,51 +385,79 @@ const sortedImages = computed(() => {
   font-weight: bold;
 }
 
-/* افکت Hover برای نمایش دکمه‌های روی تصویر کوچک */
 .thumb-actions {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+
+  color: #fff;
+  cursor: pointer;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transform: translateY(8px) scale(0.96);
+
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    backdrop-filter 0.3s ease;
 }
 
 .thumb-container:hover .thumb-actions {
   opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.thumb-actions button:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px) scale(1.08);
 }
 
 .action-btn {
-  background: white;
+  width: 24px;
+  height: 24px;
+
   border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
+  border-radius: 6px;
+
+  background: transparent;
+  color: #e2e8f0;
+
+  display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition:
-    transform 0.2s ease,
-    background 0.2s;
+
+  transition: all 0.2s ease;
+}
+
+.action-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .action-btn:hover {
   transform: scale(1.1);
 }
 
-.btn-delete:hover {
-  background: #fee2e2;
-}
-.btn-edit:hover {
-  background: #e0f2fe;
-}
 .btn-star:hover {
-  background: #fef08a;
+  background: rgba(250, 204, 21, 0.15);
+  color: #facc15;
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
 }
 
 .mt-4 {
