@@ -1,10 +1,10 @@
 import math
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache.cache import RedisCache
 from app.common.pagination import PageMeta, PageResponse
+from app.errors.errors import BadRequest, Conflict, NotFound
 from app.modules.catalog.models.inventory import Inventory
 from app.modules.catalog.repository.inventory import InventoryRepository
 from app.modules.catalog.schemas.inventory import (
@@ -25,16 +25,16 @@ class InventoryService:
 
     async def create_inventory(self, data: InventoryCreate) -> Inventory:
         if not await self.repo.variant_exists(data.variant_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Variant not found.",
+            raise NotFound(
+                message="Variant not found.",
+                code="VARIANT_NOT_FOUND",
             )
 
         exists = await self.repo.get_by_variant_id(data.variant_id)
         if exists:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Inventory for this variant already exists.",
+            raise Conflict(
+                message="Inventory for this variant already exists.",
+                code="INVENTORY_ALREADY_EXISTS",
             )
 
         inventory = Inventory(**data.model_dump())
@@ -43,9 +43,9 @@ class InventoryService:
     async def get_inventory(self, inventory_id: int) -> Inventory:
         inventory = await self.repo.get_by_id(inventory_id)
         if not inventory:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Inventory not found.",
+            raise NotFound(
+                message="Inventory not found.",
+                code="INVENTORY_NOT_FOUND",
             )
         return inventory
 
@@ -56,6 +56,12 @@ class InventoryService:
         page: int,
         size: int,
     ) -> PageResponse[dict]:
+        if page < 1 or size < 1 or size > 100:
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="PAGINATION_INVALID_VALUES",
+            )
+
         items, total = await self.repo.list_filtered(
             variant_id=variant_id,
             in_stock=in_stock,
@@ -75,9 +81,9 @@ class InventoryService:
     ) -> Inventory:
         inventory = await self.repo.get_by_id(inventory_id)
         if not inventory:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Inventory not found.",
+            raise NotFound(
+                message="Inventory not found.",
+                code="INVENTORY_NOT_FOUND",
             )
 
         update_data = data.model_dump(exclude_unset=True)
@@ -89,9 +95,9 @@ class InventoryService:
     async def delete_inventory(self, inventory_id: int) -> None:
         inventory = await self.repo.get_by_id(inventory_id)
         if not inventory:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Inventory not found.",
+            raise NotFound(
+                message="Inventory not found.",
+                code="INVENTORY_NOT_FOUND",
             )
 
         await self.repo.delete(inventory)

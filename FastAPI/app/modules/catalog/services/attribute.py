@@ -40,11 +40,17 @@ class AttributeService:
 
     async def create_attribute(self, data: AttributeCreate) -> Attribute:
         if await self.repo.get_by_name(data.name):
-            raise Conflict("Attribute name already exists.")
+            raise Conflict(
+                message="Attribute name already exists.",
+                code="ATTRIBUTE_NAME_DUPLICATE",
+            )
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise Conflict("Attribute slug already exists.")
+            raise Conflict(
+                message="Attribute slug already exists.",
+                code="ATTRIBUTE_SLUG_DUPLICATE",
+            )
 
         attribute = Attribute(name=data.name, slug=slug)
         attribute = await self.repo.create(attribute)
@@ -62,7 +68,10 @@ class AttributeService:
 
         attribute = await self.repo.get_by_id(attribute_id)
         if not attribute:
-            raise NotFound("Attribute not found.")
+            raise NotFound(
+                message="Attribute not found.",
+                code="ATTRIBUTE_NOT_FOUND",
+            )
 
         payload = AttributeRead.model_validate(attribute).model_dump(mode="json")
 
@@ -80,7 +89,10 @@ class AttributeService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="PAGINATION_INVALID_VALUES",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -125,16 +137,22 @@ class AttributeService:
     ) -> Attribute:
         attribute = await self.repo.get_by_id(attribute_id)
         if not attribute:
-            raise NotFound("Attribute not found.")
+            raise NotFound(message="Attribute not found.", code="ATTRIBUTE_NOT_FOUND")
 
         if data.name and data.name != attribute.name:
             if await self.repo.get_by_name(data.name):
-                raise Conflict("Attribute name already exists.")
+                raise Conflict(
+                    message="Attribute name already exists.",
+                    code="ATTRIBUTE_NAME_DUPLICATE",
+                )
             attribute.name = data.name
 
         if data.slug:
             if data.slug != attribute.slug and await self.repo.get_by_slug(data.slug):
-                raise Conflict("Attribute slug already exists.")
+                raise Conflict(
+                    message="Attribute slug already exists.",
+                    code="ATTRIBUTE_SLUG_DUPLICATE",
+                )
             attribute.slug = data.slug
 
         attribute = await self.repo.update(attribute)
@@ -148,7 +166,7 @@ class AttributeService:
     async def delete_attribute(self, attribute_id: int) -> None:
         attribute = await self.repo.get_by_id(attribute_id)
         if not attribute:
-            raise NotFound("Attribute not found.")
+            raise NotFound(message="Attribute not found.", code="ATTRIBUTE_NOT_FOUND")
 
         await self.repo.delete(attribute)
 
@@ -169,11 +187,14 @@ class ProductAttributeService:
         self, data: ProductAttributeCreate
     ) -> ProductAttribute:
         if not await self.repo.product_exists(data.product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(message="Product not found.", code="PRODUCT_NOT_FOUND")
         if not await self.repo.attribute_exists(data.attribute_id):
-            raise NotFound("Attribute not found.")
+            raise NotFound(message="Attribute not found.", code="ATTRIBUTE_NOT_FOUND")
         if await self.repo.get_by_pair(data.product_id, data.attribute_id):
-            raise Conflict("Attribute already exists for product.")
+            raise Conflict(
+                message="Attribute already exists for product.",
+                code="PRODUCT_ATTRIBUTE_DUPLICATE",
+            )
 
         pa = ProductAttribute(
             product_id=data.product_id,
@@ -196,7 +217,10 @@ class ProductAttributeService:
 
         pa = await self.repo.get_by_id(pa_id)
         if not pa:
-            raise NotFound("Product attribute not found.")
+            raise NotFound(
+                message="Product attribute not found.",
+                code="PRODUCT_ATTRIBUTE_NOT_FOUND",
+            )
 
         payload = ProductAttributeRead.model_validate(pa).model_dump(mode="json")
 
@@ -214,7 +238,10 @@ class ProductAttributeService:
         size: int,
     ) -> PageResponse[dict]:
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="PAGINATION_INVALID_VALUES",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -268,7 +295,10 @@ class ProductAttributeService:
     ) -> ProductAttribute:
         pa = await self.repo.get_by_id(pa_id)
         if not pa:
-            raise NotFound("Product attribute not found.")
+            raise NotFound(
+                message="Product attribute not found.",
+                code="PRODUCT_ATTRIBUTE_NOT_FOUND",
+            )
 
         pa.value = data.value
         pa = await self.repo.update(pa)
@@ -283,7 +313,10 @@ class ProductAttributeService:
     async def delete_product_attribute(self, pa_id: int) -> None:
         pa = await self.repo.get_by_id(pa_id)
         if not pa:
-            raise NotFound("Product attribute not found.")
+            raise NotFound(
+                message="Product attribute not found.",
+                code="PRODUCT_ATTRIBUTE_NOT_FOUND",
+            )
 
         await self.repo.delete(pa)
 
@@ -305,11 +338,14 @@ class ProductVariantAttributeService:
         self, data: ProductVariantAttributeCreate
     ) -> ProductVariantAttribute:
         if not await self.repo.variant_exists(data.variant_id):
-            raise NotFound("Variant not found.")
+            raise NotFound(message="Variant not found.", code="VARIANT_NOT_FOUND")
         if not await self.repo.attribute_exists(data.attribute_id):
-            raise NotFound("Attribute not found.")
+            raise NotFound(message="Attribute not found.", code="ATTRIBUTE_NOT_FOUND")
         if await self.repo.get_by_pair(data.variant_id, data.attribute_id):
-            raise Conflict("Attribute already exists for variant.")
+            raise Conflict(
+                message="Attribute already exists for variant.",
+                code="VARIANT_ATTRIBUTE_DUPLICATE",
+            )
 
         pva = ProductVariantAttribute(
             variant_id=data.variant_id,
@@ -332,7 +368,10 @@ class ProductVariantAttributeService:
 
         pva = await self.repo.get_by_id(pva_id)
         if not pva:
-            raise NotFound("Variant attribute not found.")
+            raise NotFound(
+                message="Variant attribute not found.",
+                code="VARIANT_ATTRIBUTE_NOT_FOUND",
+            )
 
         payload = ProductVariantAttributeRead.model_validate(pva).model_dump(
             mode="json"
@@ -352,7 +391,10 @@ class ProductVariantAttributeService:
         size: int,
     ) -> PageResponse[dict]:
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="PAGINATION_INVALID_VALUES",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -406,7 +448,10 @@ class ProductVariantAttributeService:
     ) -> ProductVariantAttribute:
         pva = await self.repo.get_by_id(pva_id)
         if not pva:
-            raise NotFound("Variant attribute not found.")
+            raise NotFound(
+                message="Variant attribute not found.",
+                code="VARIANT_ATTRIBUTE_NOT_FOUND",
+            )
 
         pva.value = data.value
         pva = await self.repo.update(pva)
@@ -421,7 +466,10 @@ class ProductVariantAttributeService:
     async def delete_product_variant_attribute(self, pva_id: int) -> None:
         pva = await self.repo.get_by_id(pva_id)
         if not pva:
-            raise NotFound("Variant attribute not found.")
+            raise NotFound(
+                message="Variant attribute not found.",
+                code="VARIANT_ATTRIBUTE_NOT_FOUND",
+            )
 
         await self.repo.delete(pva)
 

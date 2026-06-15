@@ -18,7 +18,7 @@ export const ERROR_MESSAGES = {
   DEFAULT_429: 'درخواست‌های شما خیلی سریع ارسال شده‌اند. لطفاً چند لحظه دیگر دوباره تلاش کنید.',
   ECONNABORTED: 'پاسخی از سرور دریافت نشد. لطفا مجددا تلاش کنید.',
 
-  // Product & Catalog Error Codes
+  // Product & Catalog
   PRODUCT_INVALID_ID: 'شناسه محصول وارد شده نامعتبر است.',
   PRODUCT_NOT_FOUND: 'محصول مورد نظر یافت نشد یا حذف شده است.',
   PRODUCT_DATA_CONFLICT: 'تداخل در اطلاعات کالا؛ نام کالا یا نامک (Slug) تکراری است.',
@@ -32,11 +32,26 @@ export const ERROR_MESSAGES = {
   PRODUCT_IDENTIFIER_REQUIRED: 'ارسال شناسه (ID) یا نامک (Slug) برای دریافت کالا الزامی است.',
   PAGINATION_INVALID_VALUES: 'مقادیر ارسالی برای صفحه‌بندی کالاها نامعتبر است.',
 
-  // Image Service Error Codes
+  // Image Service
   IMAGE_NOT_FOUND: 'تصویر مورد نظر یافت نشد.',
   PRODUCT_IMAGES_NOT_FOUND: 'هیچ تصویری برای این محصول ثبت نشده است.',
   IMAGE_INVALID_FORMAT: 'فرمت تصویر نامعتبر است. لطفاً از فرمت‌های png ،jpg یا webp استفاده کنید.',
   IMAGE_TOO_LARGE: 'حجم تصویر بیش از حد مجاز (حداکثر ۵ مگابایت) است.',
+
+  // Variant & Inventory & Attribute
+  VARIANT_NOT_FOUND: 'متغیر (Variant) مورد نظر یافت نشد.',
+  INVENTORY_NOT_FOUND: 'رکورد موجودی مورد نظر در سیستم یافت نشد.',
+  INVENTORY_ALREADY_EXISTS: 'برای این متغیر کالا، قبلاً رکورد موجودی ایجاد شده است.',
+
+  ATTRIBUTE_NOT_FOUND: 'ویژگی (Attribute) مورد نظر یافت نشد.',
+  ATTRIBUTE_NAME_DUPLICATE: 'نام ویژگی وارد شده تکراری است و از قبل وجود دارد.',
+  ATTRIBUTE_SLUG_DUPLICATE: 'نامک (Slug) ویژگی وارد شده تکراری است.',
+
+  PRODUCT_ATTRIBUTE_NOT_FOUND: 'ویژگی متصل به محصول یافت نشد.',
+  PRODUCT_ATTRIBUTE_DUPLICATE: 'این ویژگی از قبل برای این محصول ثبت شده است.',
+
+  VARIANT_ATTRIBUTE_NOT_FOUND: 'ویژگی متصل به متغیر کالا یافت نشد.',
+  VARIANT_ATTRIBUTE_DUPLICATE: 'این ویژگی از قبل برای این متغیر کالا ثبت شده است.',
 
   // Business Logic
   USER_NOT_FOUND: 'کاربر یافت نشد.',
