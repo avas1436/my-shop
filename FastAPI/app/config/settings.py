@@ -109,8 +109,8 @@ class Settings(BaseSettings):
     samesite: str
 
     # Images
-    allowed_extensions: tuple = Field(default={"jpg", "jpeg", "png", "webp"})
-    max_file_size: int = 5 * 1024 * 1024  # ۵ مگابایت
+    allowed_extensions: list[str]
+    max_file_size: int
 
     # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
     @property

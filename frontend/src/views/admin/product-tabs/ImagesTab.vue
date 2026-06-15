@@ -4,6 +4,11 @@
     <div class="header-section">
       <h2 class="tab-title">مدیریت تصاویر محصول</h2>
       <label class="btn-upload" :class="{ 'is-loading': isUploading }">
+        <component
+          :is="isUploading ? Loader2Icon : UploadIcon"
+          class="w-4 h-4 icon-left"
+          :class="{ 'animate-spin': isUploading }"
+        />
         {{ isUploading ? 'در حال آپلود...' : 'آپلود تصویر جدید' }}
         <input
           type="file"
@@ -17,14 +22,20 @@
 
     <div class="admin-gallery-wrapper">
       <div class="main-image-holder">
-        <div v-if="isLoadingImages" class="loading-state">در حال دریافت تصاویر...</div>
+        <div v-if="isLoadingImages" class="loading-state">
+          <Loader2Icon class="w-5 h-5 animate-spin mx-auto mb-2" />
+          در حال دریافت تصاویر...
+        </div>
         <template v-else>
           <img
             v-if="primaryImage"
             :src="primaryImage.real_url"
             :alt="primaryImage.alt_text || 'تصویر محصول'"
           />
-          <div v-else class="no-image">هیچ تصویری برای این محصول آپلود نشده است</div>
+          <div v-else class="no-image">
+            <ImageMinusIcon class="w-12 h-12 text-gray-400 mb-2 mx-auto" />
+            <p>هیچ تصویری برای این محصول آپلود نشده است</p>
+          </div>
           <div class="image-overlay-info">گالری تصاویر ({{ images.length }} عکس)</div>
         </template>
       </div>
@@ -38,7 +49,10 @@
         >
           <img :src="img.real_url" :alt="img.alt_text" />
 
-          <div v-if="img.is_primary" class="primary-badge">اصلی</div>
+          <div v-if="img.is_primary" class="primary-badge">
+            <StarIcon class="w-3 h-3 fill-current icon-left" />
+            اصلی
+          </div>
 
           <div class="thumb-actions">
             <button
@@ -47,17 +61,17 @@
               @click="setPrimaryImage(img.id)"
               title="انتخاب به عنوان تصویر اصلی"
             >
-              ⭐
+              <StarIcon class="w-4 h-4" />
             </button>
             <button
               class="action-btn btn-edit"
               @click="editAltText(img)"
               title="ویرایش متن جایگزین (Alt Text)"
             >
-              ✏️
+              <PencilIcon class="w-4 h-4" />
             </button>
             <button class="action-btn btn-delete" @click="deleteImage(img.id)" title="حذف تصویر">
-              🗑️
+              <Trash2Icon class="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -71,6 +85,16 @@ import { computed, inject, onMounted, ref } from 'vue'
 
 import { imageService } from '@/services/productService'
 import { getErrorMessage } from '@/utils/errorMessages'
+
+// آیکون‌های مورد نیاز از Lucide
+import {
+  ImageMinus as ImageMinusIcon,
+  Loader2 as Loader2Icon,
+  Pencil as PencilIcon,
+  Star as StarIcon,
+  Trash2 as Trash2Icon,
+  Upload as UploadIcon,
+} from '@lucide/vue'
 
 // ==============================
 // دریافت دیتای اصلی از پوسته والد (Inject)
@@ -338,7 +362,7 @@ const editAltText = async (img) => {
   border-radius: 50%;
   width: 32px;
   height: 32px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -364,5 +388,22 @@ const editAltText = async (img) => {
 
 .mt-4 {
   margin-top: 1rem;
+}
+
+.icon-left {
+  margin-left: 0.5rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

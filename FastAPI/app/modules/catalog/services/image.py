@@ -1,9 +1,8 @@
 # app/modules/catalog/services/image.py
 import uuid
 
-from FastAPI.app.config import get_settings
-
 from app.cache.cache import RedisCache
+from app.config import get_settings
 from app.core.storage import get_storage
 from app.errors.errors import BadRequest, NotFound
 from app.modules.catalog.models.image import ProductImage
