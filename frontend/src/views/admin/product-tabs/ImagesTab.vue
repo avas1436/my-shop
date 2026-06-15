@@ -46,6 +46,8 @@
           :key="img.id"
           class="thumb-container"
           :class="{ active: img.is_primary }"
+          @click="selectedImage = img"
+          style="cursor: pointer"
         >
           <img :src="img.real_url" :alt="img.alt_text" />
 
@@ -123,6 +125,7 @@ const fetchImages = async () => {
     errorStore.addError({ type: 'error', message: msg })
   } finally {
     isLoadingImages.value = false
+    selectedImage.value = null
   }
 }
 
@@ -133,8 +136,13 @@ onMounted(() => {
 // ==============================
 // انتخاب تصویر اصلی محصول
 // ==============================
+const selectedImage = ref(null)
+
 const primaryImage = computed(() => {
+  if (selectedImage.value) return selectedImage.value
+
   if (!images.value || images.value.length === 0) return null
+
   return images.value.find((img) => img.is_primary) || images.value[0]
 })
 
