@@ -87,6 +87,7 @@ import { imageService } from '@/services/productService'
 import { getErrorMessage } from '@/utils/errorMessages'
 
 // آیکون‌های مورد نیاز از Lucide
+import { useErrorStore } from '@/stores/errorStore'
 import {
   ImageMinus as ImageMinusIcon,
   Loader2 as Loader2Icon,
@@ -96,11 +97,12 @@ import {
   Upload as UploadIcon,
 } from '@lucide/vue'
 
+const errorStore = useErrorStore()
+
 // ==============================
 // دریافت دیتای اصلی از پوسته والد (Inject)
 // ==============================
 const product = inject('product')
-const errorStore = inject('errorStore')
 
 // State های داخلی
 const images = ref([])
@@ -144,13 +146,23 @@ const handleImageUpload = async (event) => {
   if (!file) return
 
   isUploading.value = true
+
+  // ایجاد فروم دیتا دقیقاً مطابق با ورودی‌های Form در بک‌اند
   const formData = new FormData()
-  formData.append('image', file)
+
+  // کلید فایل باید 'file' باشد چون در بک‌اند نوشتی file: UploadFile
+  formData.append('file', file)
+
+  // ارسال بقیه موارد به صورت خالی
+  formData.append('alt_text', '')
+  formData.append('is_primary', '')
+  formData.append('sort_order', '')
 
   try {
     await imageService.uploadImage(product.value.id, formData)
     await fetchImages() // دریافت مجدد تصاویر
   } catch (error) {
+    console.log(error)
     const msg = getErrorMessage(error.code) || 'خطا در آپلود تصویر جدید'
     errorStore.addError({ type: 'error', message: msg })
   } finally {

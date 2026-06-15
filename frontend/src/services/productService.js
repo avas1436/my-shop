@@ -52,8 +52,21 @@ export const productService = {
  */
 export const imageService = {
   // ۱. آپلود تصویر برای محصول
+  // async uploadImage(productId, imageData) {
+  //   return await axiosClient.post(`/v1/images/admin/products/${productId}/images`, imageData)
+  // },
   async uploadImage(productId, imageData) {
-    return await axiosClient.post(`/v1/images/admin/products/${productId}`, imageData)
+    const response = await axiosClient.post(
+      `/v1/images/admin/products/${productId}/images`,
+      imageData,
+      {
+        headers: {
+          // این هدر به اکسایوس می‌گوید که داده‌ها از نوع فرم و فایل هستند
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+    return response.data
   },
 
   // ۲. دریافت لیست تصاویر یک محصول

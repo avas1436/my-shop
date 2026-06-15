@@ -30,12 +30,13 @@ router = APIRouter(route_class=SuccessAPIRoute)
 # Add Image
 # =========================================================
 @router.post(
-    "/admin/products/{product_id}",
+    "/admin/products/{product_id}/images",
     status_code=status.HTTP_201_CREATED,
     response_model=GetImage,
 )
 async def upload_image(
     request: Request,
+    product_id: int,
     service: Annotated[ImageService, Depends(get_image_service)],
     _: Annotated[
         User,
@@ -43,14 +44,13 @@ async def upload_image(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
             ),
         ),
     ],
-    product_id: int,
     file: Annotated[UploadFile, File(...)],
     alt_text: str | None = Form(None),
     is_primary: bool = Form(False),
