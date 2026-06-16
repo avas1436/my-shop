@@ -62,6 +62,10 @@ class ImageService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
+            await self.cache.invalidate_key("admin", "full", product_id)
+            await self.cache.invalidate_key("user", "full", product_id)
+            await self.cache.invalidate_key("user", product_id)
+            await self.cache.invalidate_key("homepage")
 
         return await self.repo.create(obj)
 
@@ -163,6 +167,10 @@ class ImageService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("image", image_id)
+            await self.cache.invalidate_key("admin", "full", image.product_id)
+            await self.cache.invalidate_key("user", "full", image.product_id)
+            await self.cache.invalidate_key("user", image.product_id)
+            await self.cache.invalidate_key("homepage")
 
         return image
 
@@ -184,3 +192,7 @@ class ImageService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("image", image_id)
+            await self.cache.invalidate_key("admin", "full", image.product_id)
+            await self.cache.invalidate_key("user", "full", image.product_id)
+            await self.cache.invalidate_key("user", image.product_id)
+            await self.cache.invalidate_key("homepage")

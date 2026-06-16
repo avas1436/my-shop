@@ -191,7 +191,10 @@ class ProductTagService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product", product_id)
+            await self.cache.invalidate_key("admin", "full", product_id)
+            await self.cache.invalidate_key("user", "full", product_id)
+            await self.cache.invalidate_key("user", product_id)
+            await self.cache.invalidate_key("homepage")
 
         return ProductTagResult(
             product_id=product_id,
@@ -214,7 +217,10 @@ class ProductTagService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product", product_id)
+            await self.cache.invalidate_key("admin", "full", product_id)
+            await self.cache.invalidate_key("user", "full", product_id)
+            await self.cache.invalidate_key("user", product_id)
+            await self.cache.invalidate_key("homepage")
 
         return ProductTagResult(
             product_id=product_id,
@@ -243,7 +249,10 @@ class ProductTagService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product", product_id)
+            await self.cache.invalidate_key("admin", "full", product_id)
+            await self.cache.invalidate_key("user", "full", product_id)
+            await self.cache.invalidate_key("user", product_id)
+            await self.cache.invalidate_key("homepage")
 
         return ProductTagResult(
             product_id=product_id,

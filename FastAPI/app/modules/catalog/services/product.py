@@ -85,7 +85,7 @@ class AdminProductService:
             )
 
         if self.cache.is_available():
-            cached = await self.cache.get(product_id)
+            cached = await self.cache.get("admin", "full", product_id)
             if cached is not None:
                 return cached
 
@@ -104,7 +104,7 @@ class AdminProductService:
         payload = ProductAdminRead.model_validate(product).model_dump(mode="json")
 
         if self.cache.is_available():
-            await self.cache.set(product_id, payload=payload)
+            await self.cache.set("admin", "full", product_id, payload=payload)
 
         obj = ProductAdminRead(**payload)
 
@@ -203,7 +203,12 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return ok
 
@@ -239,7 +244,12 @@ class AdminProductService:
 
             if self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return True
 
@@ -285,7 +295,12 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key(product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return ok
 
@@ -356,7 +371,12 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return ok
 
@@ -404,13 +424,11 @@ class UserProductService:
                 code="PRODUCT_IDENTIFIER_REQUIRED",
             )
 
-        if product_id is not None:
-            cache_key = f"product:{product_id}"
-        elif slug is not None:
-            cache_key = f"product:{slug}"
-
         if self.cache.is_available():
-            cached = await self.cache.get(cache_key)
+            if product_id is not None:
+                cached = await self.cache.get("user", "full", product_id)
+            elif slug is not None:
+                cached = await self.cache.get("user", "full", slug)
 
             if cached is not None:
                 return ProductFullUserRead(**cached)
@@ -429,7 +447,22 @@ class UserProductService:
         payload = ProductFullUserRead.model_validate(product).model_dump(mode="json")
 
         if self.cache.is_available():
-            await self.cache.set(cache_key, payload=payload, ttl=500)
+            if product_id is not None:
+                await self.cache.set(
+                    "user",
+                    "full",
+                    product_id,
+                    payload=payload,
+                    ttl=500,
+                )
+            elif slug is not None:
+                await self.cache.set(
+                    "user",
+                    "full",
+                    slug,
+                    payload=payload,
+                    ttl=500,
+                )
 
         return ProductFullUserRead(**payload)
 
