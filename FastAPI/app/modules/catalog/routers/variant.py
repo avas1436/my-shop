@@ -35,7 +35,7 @@ async def create_variant(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -92,7 +92,7 @@ async def update_variant(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -118,7 +118,7 @@ async def delete_variant(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
