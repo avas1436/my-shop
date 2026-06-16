@@ -16,7 +16,7 @@ from app.modules.catalog.services.image import ImageService
 # --------------------------------------------------
 def get_image_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("image"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> ImageService:
 
     repo = ImageRepository(db)

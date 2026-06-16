@@ -18,7 +18,7 @@ from app.modules.catalog.services.category import (
 # --------------------------------------------------
 def get_category_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("category"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> CategoryService:
 
     return CategoryService(db=db, cache=cache)
@@ -29,7 +29,7 @@ def get_category_service(
 # --------------------------------------------------
 def get_product_category_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("product_category"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> ProductCategoryService:
 
     return ProductCategoryService(db=db, cache=cache)

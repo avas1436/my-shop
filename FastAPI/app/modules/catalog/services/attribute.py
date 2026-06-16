@@ -160,6 +160,7 @@ class AttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("attribute", attribute_id)
+            await self.cache.invalidate_key("admin", "full")
 
         return attribute
 
@@ -173,6 +174,7 @@ class AttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("attribute", attribute_id)
+            await self.cache.invalidate_key("admin", "full")
 
 
 # --------------------------------------------------
@@ -205,7 +207,7 @@ class ProductAttributeService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product", data.product_id)
+            await self.cache.invalidate_key("admin", "full", data.product_id)
 
         return pa
 
@@ -306,7 +308,7 @@ class ProductAttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_attribute", pa_id)
-            await self.cache.invalidate_key("product", pa.product_id)
+            await self.cache.invalidate_key("admin", "full", pa.product_id)
 
         return pa
 
@@ -323,7 +325,7 @@ class ProductAttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_attribute", pa_id)
-            await self.cache.invalidate_key("product", pa.product_id)
+            await self.cache.invalidate_key("admin", "full", pa.product_id)
 
 
 # --------------------------------------------------
@@ -357,6 +359,7 @@ class ProductVariantAttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_variant", data.variant_id)
+            await self.cache.invalidate_key("admin", "full")
 
         return pva
 
@@ -460,6 +463,7 @@ class ProductVariantAttributeService:
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_variant_attribute", pva_id)
             await self.cache.invalidate_key("product_variant", pva.variant_id)
+            await self.cache.invalidate_key("admin", "full")
 
         return pva
 
@@ -477,3 +481,4 @@ class ProductVariantAttributeService:
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_variant_attribute", pva_id)
             await self.cache.invalidate_key("product_variant", pva.variant_id)
+            await self.cache.invalidate_key("admin", "full")

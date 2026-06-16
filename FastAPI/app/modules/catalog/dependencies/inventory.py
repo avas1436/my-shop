@@ -14,7 +14,7 @@ from app.modules.catalog.services.inventory import InventoryService
 # --------------------------------------------------
 def get_inventory_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("inventory"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> InventoryService:
 
     return InventoryService(db=db, cache=cache)

@@ -15,7 +15,7 @@ from app.modules.catalog.services.brand import BrandService
 # --------------------------------------------------
 def get_brand_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("brand"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> BrandService:
 
     return BrandService(db=db, cache=cache)
