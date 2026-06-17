@@ -25,7 +25,7 @@
         موجودی‌های ثبت شده در انبار
       </h3>
 
-      <div v-if="product.inventory?.length" class="admin-variant-grid">
+      <template v-if="product.inventory?.length">
         <div
           v-for="item in product.inventory"
           :key="item.id"
@@ -39,28 +39,25 @@
               item.quantity > item.low_stock_alert,
           }"
         >
-          <div class="variant-info">
-            <div class="sku-badge">
-              <Tag class="icon-xs" />
-              SKU: {{ item.sku || 'ثبت نشده' }}
+          <div class="variant-top-bar">
+            <div class="variant-info">
+              <div class="attributes-group">
+                <div class="attributes-wrapper">
+                  <span v-for="attr in item.attributes" :key="attr.attribute_id" class="attr-badge">
+                    {{ attr.name }}: <strong>{{ attr.value }}</strong>
+                  </span>
+                </div>
+                <div
+                  v-if="item.is_active !== false && item.quantity <= item.low_stock_alert"
+                  class="low-stock-warning"
+                >
+                  <AlertTriangle class="icon-xs" />
+                  توجه: موجودی به محدوده خطر رسیده است!
+                </div>
+              </div>
             </div>
-            <div class="attributes-wrapper">
-              <span v-for="attr in item.attributes" :key="attr.attribute_id" class="attr-badge">
-                {{ attr.name }}: <strong>{{ attr.value }}</strong>
-              </span>
-            </div>
-            <div
-              v-if="item.is_active !== false && item.quantity <= item.low_stock_alert"
-              class="low-stock-warning"
-            >
-              <AlertTriangle class="icon-xs" />
-              توجه: موجودی به محدوده خطر رسیده است!
-            </div>
-          </div>
 
-          <div class="variant-actions-wrapper">
             <div class="toggle-wrapper">
-              <!-- تعیین مجاز به فروش بیش از موجودی -->
               <label class="modern-toggle">
                 <input
                   type="checkbox"
@@ -74,59 +71,87 @@
               </label>
               <span class="toggle-label-text">فروش بیش از موجودی</span>
             </div>
-
-            <!--  تعیین کف محصول که در آن مقدار ارور داریم -->
-            <div class="variant-inputs">
-              <div class="input-group">
-                <label><Activity class="icon-xs text-muted" /> کف موجودی:</label>
-                <div class="single-input-wrapper">
-                  <input
-                    v-model.number="item.low_stock_alert"
-                    type="number"
-                    min="0"
-                    class="modern-input small-input"
-                    @change="
-                      handleUpdateInventory(item.id, { low_stock_alert: item.low_stock_alert })
-                    "
-                    :disabled="!item.is_active || isSubmittingInventory"
-                  />
-                </div>
+          </div>
+          <div class="variant-inputs-grid">
+            <div class="input-group sku-group">
+              <label><Tag class="icon-xs text-muted" /> کد کالا (SKU):</label>
+              <div class="single-input-wrapper">
+                <input
+                  v-model="item.sku"
+                  type="text"
+                  placeholder="ثبت نشده"
+                  class="modern-input"
+                  @change="handleUpdateVariant(item.variant_id, { sku: item.sku })"
+                  :disabled="!item.is_active || isSubmittingInventory"
+                />
               </div>
+            </div>
 
-              <!-- ویرایش موجودی -->
-              <div class="input-group">
-                <label><Box class="icon-xs text-muted" /> موجودی:</label>
-                <div class="single-input-wrapper">
-                  <input
-                    v-model.number="item.quantity"
-                    type="number"
-                    min="0"
-                    class="modern-input small-input"
-                    :class="{
-                      'input-error':
-                        item.is_active !== false && item.quantity <= item.low_stock_alert,
-                    }"
-                    @change="handleUpdateInventory(item.id, { quantity: item.quantity })"
-                    :disabled="!item.is_active || isSubmittingInventory"
-                  />
-                </div>
+            <div class="input-group">
+              <label><Banknote class="icon-xs text-muted" /> قیمت واریانت (ریال):</label>
+              <div class="single-input-wrapper">
+                <input
+                  v-model.number="item.price"
+                  type="number"
+                  min="0"
+                  class="modern-input"
+                  @change="handleUpdateVariant(item.variant_id, { price: item.price })"
+                  :disabled="!item.is_active || isSubmittingInventory"
+                />
               </div>
+            </div>
 
-              <div class="input-group">
-                <label><Banknote class="icon-xs text-muted" /> قیمت نهایی (ریال):</label>
-                <div class="single-input-wrapper">
-                  <input
-                    v-model.number="item.final_price"
-                    type="number"
-                    min="0"
-                    class="modern-input medium-input"
-                    @change="handleUpdateInventory(item.id, { final_price: item.final_price })"
-                    :disabled="!item.is_active || isSubmittingInventory"
-                  />
-                </div>
+            <div class="input-group text-center-input">
+              <label><Box class="icon-xs text-muted" /> موجودی:</label>
+              <div class="single-input-wrapper">
+                <input
+                  v-model.number="item.quantity"
+                  type="number"
+                  min="0"
+                  class="modern-input"
+                  :class="{
+                    'input-error':
+                      item.is_active !== false && item.quantity <= item.low_stock_alert,
+                  }"
+                  @change="handleUpdateInventory(item.id, { quantity: item.quantity })"
+                  :disabled="!item.is_active || isSubmittingInventory"
+                />
               </div>
+            </div>
 
-              <!-- غیر فعال کردن -->
+            <div class="input-group text-center-input">
+              <label><Activity class="icon-xs text-muted" /> کف موجودی:</label>
+              <div class="single-input-wrapper">
+                <input
+                  v-model.number="item.low_stock_alert"
+                  type="number"
+                  min="0"
+                  class="modern-input"
+                  @change="
+                    handleUpdateInventory(item.id, { low_stock_alert: item.low_stock_alert })
+                  "
+                  :disabled="!item.is_active || isSubmittingInventory"
+                />
+              </div>
+            </div>
+
+            <div class="input-group readonly-group">
+              <label>
+                <Calculator class="icon-xs text-muted" />
+                قیمت نهایی:
+              </label>
+
+              <div class="final-price-display">
+                <span class="price-value">
+                  {{ Number(item.final_price || product.final_price).toLocaleString('fa-IR') }}
+                </span>
+
+                <span class="price-unit">ریال</span>
+              </div>
+            </div>
+
+            <div class="input-group action-buttons-wrapper">
+              <label class="invisible-label">عملیات</label>
               <div class="action-buttons">
                 <button
                   :class="
@@ -141,8 +166,6 @@
                   <PowerOff v-if="item.is_active !== false" class="icon-sm" />
                   <Power v-else class="icon-sm" />
                 </button>
-
-                <!-- حذف -->
                 <button
                   class="btn-icon btn-icon-danger"
                   @click="handleDeleteInventory(item.id)"
@@ -155,7 +178,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </template>
 
       <div v-else class="empty-state">
         <Box class="icon-xl text-muted mb-3 opacity-50" />
@@ -170,21 +193,57 @@
       </h4>
       <div class="form-grid align-center mt-3">
         <div class="form-group">
-          <label>تعداد موجودی:</label>
+          <label>رنگ:</label>
           <div class="single-input-wrapper">
             <input
-              v-model.number="newVariant.quantity"
-              type="number"
-              placeholder="مثلاً: 10"
+              v-model="newVariant.color"
+              type="text"
+              placeholder="مثلاً: مشکی"
               class="modern-input"
-              min="0"
+              :disabled="isSubmittingInventory"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>سایز:</label>
+          <div class="single-input-wrapper">
+            <input
+              v-model="newVariant.size"
+              type="text"
+              placeholder="مثلاً: XL"
+              class="modern-input"
+              :disabled="isSubmittingInventory"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>جنس:</label>
+          <div class="single-input-wrapper">
+            <input
+              v-model="newVariant.material"
+              type="text"
+              placeholder="مثلاً: چرم"
+              class="modern-input"
               :disabled="isSubmittingInventory"
             />
           </div>
         </div>
 
         <div class="form-group">
-          <label>قیمت نهایی (ریال):</label>
+          <label>تعداد موجودی:</label>
+          <div class="single-input-wrapper">
+            <input
+              v-model.number="newVariant.quantity"
+              type="number"
+              placeholder="مثلاً: 25"
+              class="modern-input"
+              min="0"
+              :disabled="isSubmittingInventory"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>قیمت (ریال):</label>
           <div class="single-input-wrapper">
             <input
               v-model.number="newVariant.final_price"
@@ -196,7 +255,6 @@
             />
           </div>
         </div>
-
         <div class="form-group">
           <label>کد کالا SKU (اختیاری):</label>
           <div class="single-input-wrapper">
@@ -219,7 +277,7 @@
           >
             <Save class="icon-sm" v-if="!isSubmittingInventory" />
             <Loader2 class="icon-sm spinner" v-else />
-            {{ isSubmittingInventory ? 'در حال ثبت...' : 'ثبت موجودی' }}
+            {{ isSubmittingInventory ? 'در حال ثبت...' : 'ثبت موجودی جدید' }}
           </button>
         </div>
       </div>
@@ -239,6 +297,7 @@ import {
   AlertTriangle,
   Banknote,
   Box,
+  Calculator,
   Layers,
   Loader2,
   Package,
@@ -263,46 +322,100 @@ const product = inject('product')
 const refreshProductData = inject('refreshProductData')
 
 // فرم‌های ایجاد دیتا
-const newVariant = ref({ quantity: 0, final_price: null, sku: '' })
-const newVariantDef = ref({ name: '', value: '' })
+const newVariant = ref({
+  quantity: 0,
+  final_price: null,
+  sku: '',
+  color: '',
+  size: '',
+  material: '',
+  low_stock_alert: 5,
+})
+// const newVariantDef = ref({ name: '', value: '' })
 
 // ==============================
-// سابمیت متغیر (Variant) جدید
+// سابمیت زنجیره‌ای: ساخت واریانت و سپس ثبت موجودی
 // ==============================
-const submitNewVariant = async () => {
-  if (!newVariantDef.value.name) return
-  await handleCreateVariant(newVariantDef.value)
-  if (!isSubmittingVariant.value && !errorStore.hasError) {
-    newVariantDef.value = { name: '', value: '' }
+const submitNewInventory = async () => {
+  // گرفتن آیدی محصول
+  const productId = product.value?.id || product.id
+  if (!productId) {
+    errorStore.addError({ type: 'error', message: 'اطلاعات محصول معتبر یافت نشد.' })
+    return
+  }
+
+  isSubmittingInventory.value = true
+  try {
+    // مرحله اول: ایجاد واریانت (تنوع کالا)
+    const variantPayload = {
+      price: Number(newVariant.value.final_price || 0),
+      is_active: true,
+      product_id: productId,
+      color: newVariant.value.color || null,
+      size: newVariant.value.size || null,
+      material: newVariant.value.material || null,
+    }
+
+    // فرستادن درخواست به سرویس واریانت
+    const variantResponse = await variantService.createVariant(variantPayload)
+
+    // استخراج آیدی واریانت ساخته شده از خروجی
+    const createdVariantId = variantResponse?.id
+
+    if (!createdVariantId) {
+      throw new Error('واریانت با موفقیت ساخته شد اما آیدی آن در پاسخ سرور یافت نشد.')
+    }
+
+    // مرحله دوم: ایجاد رکورد موجودی با استفاده از آیدی مرحله قبل
+    const inventoryPayload = {
+      variant_id: createdVariantId,
+      quantity: Number(newVariant.value.quantity || 0),
+      reserved_quantity: 0,
+      low_stock_alert: Number(newVariant.value.low_stock_alert || 5),
+      allow_backorder: false,
+    }
+
+    // فرستادن درخواست به سرویس موجودی
+    await inventoryService.createInventory(inventoryPayload)
+
+    // مرحله سوم: به‌روزرسانی کل دیتای کامپوننت
+    await refreshProductData()
+
+    // پاکسازی فرم پس از موفقیت
+    newVariant.value = {
+      quantity: 0,
+      final_price: null,
+      sku: '',
+      color: '',
+      size: '',
+      material: '',
+      low_stock_alert: 5,
+    }
+  } catch (error) {
+    // مدیریت و نمایش خطا در هر کدام از مراحل بالا
+    const msg = getErrorMessage(error.code) || error.message || 'خطا در ثبت همزمان ویژگی و موجودی'
+    errorStore.addError({ type: 'error', message: msg })
+  } finally {
+    isSubmittingInventory.value = false
   }
 }
 
 // ==============================
 // اضافه کردن یک واریانت (تنوع)
 // ==============================
-const handleCreateVariant = async (variantFormData) => {
-  if (!variantFormData) return
-  isSubmittingVariant.value = true
-  try {
-    await variantService.createVariant(variantFormData)
-    await refreshProductData()
-  } catch (error) {
-    const msg = getErrorMessage(error.code) || 'خطا در ایجاد متغیر جدید'
-    errorStore.addError({ type: 'error', message: msg })
-  } finally {
-    isSubmittingVariant.value = false
-  }
-}
-
-// ==============================
-// درخواست آپدیت واریانت (Prompt ساده)
-// ==============================
-const promptUpdateVariant = async (variant) => {
-  const newValue = prompt(`مقدار جدید برای "${variant.name}" را وارد کنید:`, variant.value)
-  if (newValue !== null && newValue !== variant.value) {
-    await handleUpdateVariant(variant.id, { value: newValue })
-  }
-}
+// const handleCreateVariant = async (variantFormData) => {
+//   if (!variantFormData) return
+//   isSubmittingVariant.value = true
+//   try {
+//     await variantService.createVariant(variantFormData)
+//     await refreshProductData()
+//   } catch (error) {
+//     const msg = getErrorMessage(error.code) || 'خطا در ایجاد متغیر جدید'
+//     errorStore.addError({ type: 'error', message: msg })
+//   } finally {
+//     isSubmittingVariant.value = false
+//   }
+// }
 
 // ==============================
 // ویرایش واریانت
@@ -324,47 +437,47 @@ const handleUpdateVariant = async (variantId, updateData) => {
 // ==============================
 // حذف یک واریانت
 // ==============================
-const handleDeleteVariant = async (variantId) => {
-  if (!variantId) return
-  if (!confirm('آیا از حذف این متغیر مطمئن هستید؟')) return
-  isSubmittingVariant.value = true
-  try {
-    await variantService.deleteVariant(variantId)
-    await refreshProductData()
-  } catch (error) {
-    const msg = getErrorMessage(error.code) || 'خطا در حذف متغیر'
-    errorStore.addError({ type: 'error', message: msg })
-  } finally {
-    isSubmittingVariant.value = false
-  }
-}
+// const handleDeleteVariant = async (variantId) => {
+//   if (!variantId) return
+//   if (!confirm('آیا از حذف این متغیر مطمئن هستید؟')) return
+//   isSubmittingVariant.value = true
+//   try {
+//     await variantService.deleteVariant(variantId)
+//     await refreshProductData()
+//   } catch (error) {
+//     const msg = getErrorMessage(error.code) || 'خطا در حذف متغیر'
+//     errorStore.addError({ type: 'error', message: msg })
+//   } finally {
+//     isSubmittingVariant.value = false
+//   }
+// }
 
 // ==============================
 // سابمیت و پاکسازی فرم موجودی جدید
 // ==============================
-const submitNewInventory = async () => {
-  await handleCreateInventory(newVariant.value)
-  if (!isSubmittingInventory.value && !errorStore.hasError) {
-    newVariant.value = { quantity: 0, final_price: null, sku: '' }
-  }
-}
+// const submitNewInventory = async () => {
+//   await handleCreateInventory(newVariant.value)
+//   if (!isSubmittingInventory.value && !errorStore.hasError) {
+//     newVariant.value = { quantity: 0, final_price: null, sku: '' }
+//   }
+// }
 
 // ==============================
 // ایجاد رکورد موجودی جدید
 // ==============================
-const handleCreateInventory = async (inventoryFormData) => {
-  if (!inventoryFormData) return
-  isSubmittingInventory.value = true
-  try {
-    await inventoryService.createInventory(inventoryFormData)
-    await refreshProductData()
-  } catch (error) {
-    const msg = getErrorMessage(error.code) || 'خطا در ثبت موجودی جدید'
-    errorStore.addError({ type: 'error', message: msg })
-  } finally {
-    isSubmittingInventory.value = false
-  }
-}
+// const handleCreateInventory = async (inventoryFormData) => {
+//   if (!inventoryFormData) return
+//   isSubmittingInventory.value = true
+//   try {
+//     await inventoryService.createInventory(inventoryFormData)
+//     await refreshProductData()
+//   } catch (error) {
+//     const msg = getErrorMessage(error.code) || 'خطا در ثبت موجودی جدید'
+//     errorStore.addError({ type: 'error', message: msg })
+//   } finally {
+//     isSubmittingInventory.value = false
+//   }
+// }
 
 // ==============================
 // به‌روزرسانی موجودی
@@ -404,7 +517,7 @@ const handleDeleteInventory = async (inventoryId) => {
 
 <style scoped>
 /* =========================
-   Base Styles (همان کدهای قبلی شما)
+   Base Styles
 ========================= */
 .form-container {
   font-family:
@@ -463,6 +576,7 @@ const handleDeleteInventory = async (inventoryId) => {
     transform: rotate(360deg);
   }
 }
+
 .header-section {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #e2e8f0;
@@ -495,6 +609,7 @@ const handleDeleteInventory = async (inventoryId) => {
 .bg-slate-50 {
   background-color: #f8fafc;
 }
+
 .specs-heading {
   display: flex;
   align-items: center;
@@ -507,7 +622,7 @@ const handleDeleteInventory = async (inventoryId) => {
   padding-bottom: 0.75rem;
 }
 
-/* Badges */
+/* Status Badges */
 .stock-status-badge {
   display: flex;
   align-items: center;
@@ -528,123 +643,64 @@ const handleDeleteInventory = async (inventoryId) => {
   border: 1px solid #fecaca;
 }
 
-/* Form Elements */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
-}
-.align-center {
-  align-items: center;
-}
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.form-group label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
-}
-.invisible-label {
-  visibility: hidden;
-}
-.single-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.modern-input {
-  width: 100%;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  outline: none;
-  background: #fff;
-  transition: all 0.2s ease;
-  color: #1e293b;
-}
-.modern-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-.modern-input:disabled {
-  background: #f1f5f9;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-.input-error {
-  border-color: #ef4444 !important;
-  background-color: #fef2f2;
-  color: #991b1b;
-}
-
 /* =========================
-   Dynamic Variant Rows (جدید)
+   تغییرات ساختاری استایل ردیف‌ها (کارت جدید)
 ========================= */
 .admin-variant-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .variant-row-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   background: #ffffff;
   padding: 1.25rem;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  transition: all 0.3s ease;
-  border-right: 4px solid #cbd5e1; /* نوار رنگی کنار کارت */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s ease;
+  border-right: 4px solid #94a3b8;
+  gap: 1rem;
 }
 .variant-row-card:hover {
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  border-color: #cbd5e1;
 }
 
-/* حالت‌های داینامیک */
+/* وضعیت‌های داینامیک ردیف */
 .row-inactive {
-  opacity: 0.6;
+  opacity: 0.65;
   background: #f8fafc;
-  filter: grayscale(0.5);
-  border-right-color: #94a3b8;
+  border-right-color: #cbd5e1;
 }
 .row-low-stock {
-  background: #fffafa;
-  border-color: #fca5a5;
+  background: #fffbfb;
+  border-color: #fecaca;
   border-right-color: #ef4444;
 }
 .row-backorder {
-  background: #f8fafc;
-  border-color: #bfdbfe;
+  background: #fdfcff;
+  border-color: #dbeafe;
   border-right-color: #3b82f6;
 }
 
-.variant-info {
+/* نوار بالای هر کارت تنوع */
+.variant-top-bar {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 200px;
-}
-.sku-badge {
-  display: inline-flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.3rem;
-  color: #64748b;
-  font-size: 0.85rem;
-  background: #f1f5f9;
-  padding: 0.3rem 0.75rem;
-  border-radius: 6px;
-  width: fit-content;
+  border-bottom: 1px dashed #f1f5f9;
+  padding-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.attributes-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 .attributes-wrapper {
   display: flex;
@@ -652,42 +708,62 @@ const handleDeleteInventory = async (inventoryId) => {
   flex-wrap: wrap;
 }
 .attr-badge {
-  background: #f8fafc;
+  background: #f1f5f9;
   color: #334155;
   border: 1px solid #e2e8f0;
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 6px;
   font-size: 0.85rem;
 }
-
-/* هشدار موجودی کم */
 .low-stock-warning {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  color: #b91c1c;
+  color: #dc2626;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   background: #fef2f2;
-  padding: 0.2rem 0.6rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 6px;
-  width: fit-content;
-  border: 1px solid #fecaca;
+  border: 1px solid #fee2e2;
 }
 
-/* بخش سمت چپ کارت */
-.variant-actions-wrapper {
-  display: flex;
-  flex-direction: column;
+/* =========================
+   شبکه ورودی‌ها (تراز بندی خطی عالی)
+========================= */
+.variant-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 1rem;
   align-items: flex-end;
 }
-.variant-inputs {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  flex-wrap: wrap;
+
+@media (max-width: 1100px) {
+  .variant-inputs-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.25rem;
+  }
+  .action-buttons-wrapper {
+    grid-column: span 3;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+  .action-buttons-wrapper .invisible-label {
+    display: none;
+  }
 }
+@media (max-width: 768px) {
+  .variant-inputs-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .action-buttons-wrapper {
+    grid-column: span 2;
+  }
+}
+
+/* استایل فیلدها */
 .input-group {
   display: flex;
   flex-direction: column;
@@ -697,31 +773,80 @@ const handleDeleteInventory = async (inventoryId) => {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   color: #475569;
+  white-space: nowrap;
 }
-.small-input {
-  width: 100px;
+.single-input-wrapper {
+  width: 100%;
 }
-.medium-input {
-  width: 140px;
+.modern-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fff;
+  transition: all 0.2s ease;
+  color: #1e293b;
+}
+.modern-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.modern-input:disabled:not(.readonly-input) {
+  background: #f8fafc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fff5f5;
+  color: #b91c1c;
+}
+
+.sku-group {
+  grid-column: span 2;
+  min-width: 220px;
+}
+
+.sku-group .modern-input {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+/* شخصی‌سازی فیلد قیمت نهایی سیستمی */
+.readonly-input {
+  background-color: #f1f5f9 !important;
+  color: #64748b !important;
+  border-color: #e2e8f0 !important;
+  font-weight: 600;
+  cursor: help;
+}
+
+.text-center-input .modern-input {
+  text-align: center;
+}
+
+/* دکمه‌ها */
+.action-buttons-wrapper {
+  display: flex;
+  align-items: center;
 }
 .action-buttons {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 2px;
 }
 
-/* =========================
-   Modern Toggle Switch (جدید)
-========================= */
+/* سوییچ مدرن */
 .toggle-wrapper {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f1f5f9;
-  padding: 0.4rem 0.75rem;
+  background: #f8fafc;
+  padding: 0.35rem 0.75rem;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
 }
@@ -729,13 +854,12 @@ const handleDeleteInventory = async (inventoryId) => {
   font-size: 0.85rem;
   font-weight: 600;
   color: #475569;
-  cursor: pointer;
 }
 .modern-toggle {
   position: relative;
   display: inline-block;
-  width: 40px;
-  height: 22px;
+  width: 38px;
+  height: 20px;
 }
 .modern-toggle input {
   opacity: 0;
@@ -750,33 +874,51 @@ const handleDeleteInventory = async (inventoryId) => {
   right: 0;
   bottom: 0;
   background-color: #cbd5e1;
-  transition: 0.3s;
-  border-radius: 22px;
+  transition: 0.2s;
+  border-radius: 20px;
 }
 .toggle-slider:before {
   position: absolute;
   content: '';
-  height: 16px;
-  width: 16px;
+  height: 14px;
+  width: 14px;
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: 0.3s;
+  transition: 0.2s;
   border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .modern-toggle input:checked + .toggle-slider {
-  background-color: #3b82f6;
+  background-color: #22c55e;
+}
+.modern-toggle input:checked + .toggle-slider:before {
+  transform: translateX(18px);
 }
 .modern-toggle input:disabled + .toggle-slider {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.modern-toggle input:checked + .toggle-slider:before {
-  transform: translateX(18px);
+
+/* فرم ثبت جدید پایین صفحه */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+.invisible-label {
+  visibility: hidden;
 }
 
-/* Buttons */
 .btn-success {
   display: flex;
   align-items: center;
@@ -790,7 +932,7 @@ const handleDeleteInventory = async (inventoryId) => {
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s;
-  height: 42px;
+  height: 40px;
 }
 .btn-success:hover:not(:disabled) {
   background: #059669;
@@ -800,13 +942,12 @@ const handleDeleteInventory = async (inventoryId) => {
   cursor: not-allowed;
 }
 
-/* Icon Buttons */
 .btn-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
@@ -814,9 +955,6 @@ const handleDeleteInventory = async (inventoryId) => {
 }
 .btn-icon:hover:not(:disabled) {
   transform: translateY(-1px);
-}
-.btn-icon:active:not(:disabled) {
-  transform: translateY(0);
 }
 .btn-icon:disabled {
   opacity: 0.5;
@@ -853,7 +991,6 @@ const handleDeleteInventory = async (inventoryId) => {
   color: #ffffff;
 }
 
-/* Empty State */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -868,5 +1005,41 @@ const handleDeleteInventory = async (inventoryId) => {
   color: #64748b;
   font-size: 1rem;
   margin: 0;
+}
+
+.final-price-display {
+  height: 42px;
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  transition: all 0.2s ease;
+}
+
+.final-price-display:hover {
+  border-color: #60a5fa;
+}
+
+.price-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1d4ed8;
+  direction: ltr;
+}
+
+.price-unit {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
 }
 </style>
