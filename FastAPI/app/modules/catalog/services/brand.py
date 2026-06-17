@@ -140,10 +140,6 @@ class BrandService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("brand", brand_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
-            await self.cache.invalidate_key("homepage")
 
         return brand
 
@@ -160,7 +156,3 @@ class BrandService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("brand", brand_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
-            await self.cache.invalidate_key("homepage")

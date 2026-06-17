@@ -21,6 +21,8 @@ from app.modules.catalog.schemas.attribute import (
     AttributeCreate,
     AttributeRead,
     AttributeUpdate,
+    DeleteProductAttribute,
+    DeleteProductVariantAttribute,
     ProductAttributeCreate,
     ProductAttributeRead,
     ProductAttributeUpdate,
@@ -205,9 +207,9 @@ class ProductAttributeService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
+            await self.cache.invalidate_key("admin", "full", data.product_id)
+            await self.cache.invalidate_key("user", "full", data.product_id)
+            await self.cache.invalidate_key("user", data.product_id)
             await self.cache.invalidate_key("homepage")
 
         return pa
@@ -309,15 +311,15 @@ class ProductAttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_attribute", pa_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
+            await self.cache.invalidate_key("admin", "full", data.product_id)
+            await self.cache.invalidate_key("user", "full", data.product_id)
+            await self.cache.invalidate_key("user", data.product_id)
             await self.cache.invalidate_key("homepage")
 
         return pa
 
-    async def delete_product_attribute(self, pa_id: int) -> None:
-        pa = await self.repo.get_by_id(pa_id)
+    async def delete_product_attribute(self, data: DeleteProductAttribute) -> None:
+        pa = await self.repo.get_by_id(data.product_attribute_id)
         if not pa:
             raise NotFound(
                 message="Product attribute not found.",
@@ -328,10 +330,12 @@ class ProductAttributeService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product_attribute", pa_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
+            await self.cache.invalidate_key(
+                "product_attribute", data.product_attribute_id
+            )
+            await self.cache.invalidate_key("admin", "full", data.product_id)
+            await self.cache.invalidate_key("user", "full", data.product_id)
+            await self.cache.invalidate_key("user", data.product_id)
             await self.cache.invalidate_key("homepage")
 
 
@@ -366,9 +370,9 @@ class ProductVariantAttributeService:
         if self.cache.is_available():
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_variant", data.variant_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
+            await self.cache.invalidate_key("admin", "full", data.product_id)
+            await self.cache.invalidate_key("user", "full", data.product_id)
+            await self.cache.invalidate_key("user", data.product_id)
             await self.cache.invalidate_key("homepage")
 
         return pva
@@ -473,15 +477,20 @@ class ProductVariantAttributeService:
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("product_variant_attribute", pva_id)
             await self.cache.invalidate_key("product_variant", pva.variant_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
+            await self.cache.invalidate_key("admin", "full", data.product_id)
+            await self.cache.invalidate_key("user", "full", data.product_id)
+            await self.cache.invalidate_key("user", data.product_id)
             await self.cache.invalidate_key("homepage")
 
         return pva
 
-    async def delete_product_variant_attribute(self, pva_id: int) -> None:
-        pva = await self.repo.get_by_id(pva_id)
+    async def delete_product_variant_attribute(
+        self,
+        data: DeleteProductVariantAttribute,
+    ) -> None:
+        pva = await self.repo.get_by_id(
+            data.product_variant_attribute_id,
+        )
         if not pva:
             raise NotFound(
                 message="Variant attribute not found.",
@@ -492,9 +501,12 @@ class ProductVariantAttributeService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product_variant_attribute", pva_id)
+            await self.cache.invalidate_key(
+                "product_variant_attribute",
+                data.product_variant_attribute_id,
+            )
             await self.cache.invalidate_key("product_variant", pva.variant_id)
-            await self.cache.invalidate_key("admin", "full")
-            await self.cache.invalidate_key("user", "full")
-            await self.cache.invalidate_key("user")
+            await self.cache.invalidate_key("admin", "full", data.product_id)
+            await self.cache.invalidate_key("user", "full", data.product_id)
+            await self.cache.invalidate_key("user", data.product_id)
             await self.cache.invalidate_key("homepage")

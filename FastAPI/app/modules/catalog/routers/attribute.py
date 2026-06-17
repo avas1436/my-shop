@@ -17,6 +17,8 @@ from app.modules.catalog.schemas.attribute import (
     AttributeCreate,
     AttributeRead,
     AttributeUpdate,
+    DeleteProductAttribute,
+    DeleteProductVariantAttribute,
     ProductAttributeCreate,
     ProductAttributeRead,
     ProductAttributeUpdate,
@@ -252,7 +254,7 @@ async def update_product_attribute(
 )
 async def delete_product_attribute(
     request: Request,
-    pa_id: int,
+    data: DeleteProductAttribute,
     service: Annotated[ProductAttributeService, Depends(get_product_attribute_service)],
     _: Annotated[
         User,
@@ -269,7 +271,7 @@ async def delete_product_attribute(
     ],
 ):
 
-    await service.delete_product_attribute(pa_id)
+    await service.delete_product_attribute(data=data)
 
     return SuccessMessage(message="Product attribute deleted successfully.")
 
@@ -380,7 +382,7 @@ async def update_product_variant_attribute(
 )
 async def delete_product_variant_attribute(
     request: Request,
-    pva_id: int,
+    data: DeleteProductVariantAttribute,
     service: Annotated[
         ProductVariantAttributeService, Depends(get_product_variant_attribute_service)
     ],
@@ -399,6 +401,6 @@ async def delete_product_variant_attribute(
     ],
 ):
 
-    await service.delete_product_variant_attribute(pva_id)
+    await service.delete_product_variant_attribute(data=data)
 
     return SuccessMessage(message="Variant attribute deleted successfully.")
