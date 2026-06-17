@@ -172,7 +172,6 @@ class InventoryService:
             await self.cache.invalidate_key("inventory", inventory_id)
 
             product_id = await self._get_product_id_from_variant(inventory.variant_id)
-            print(product_id)
             if product_id:
                 await self.cache.invalidate_key("admin", "full", product_id)
                 await self.cache.invalidate_key("user", "full", product_id)

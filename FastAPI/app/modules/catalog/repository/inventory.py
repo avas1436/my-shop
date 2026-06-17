@@ -37,9 +37,6 @@ class InventoryRepository:
 
         product_id = await self.db.scalar(stmt)
 
-        print("variant_id =", variant_id)
-        print("result =", product_id)
-
         return product_id
 
     async def list_filtered(

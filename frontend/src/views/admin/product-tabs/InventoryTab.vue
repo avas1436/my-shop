@@ -26,7 +26,19 @@
       </h3>
 
       <div v-if="product.inventory?.length" class="admin-variant-grid">
-        <div v-for="item in product.inventory" :key="item.id" class="variant-row-card">
+        <div
+          v-for="item in product.inventory"
+          :key="item.id"
+          class="variant-row-card"
+          :class="{
+            'row-inactive': item.is_active === false,
+            'row-low-stock': item.is_active !== false && item.quantity <= item.low_stock_alert,
+            'row-backorder':
+              item.is_active !== false &&
+              item.allow_backorder &&
+              item.quantity > item.low_stock_alert,
+          }"
+        >
           <div class="variant-info">
             <div class="sku-badge">
               <Tag class="icon-xs" />
@@ -37,57 +49,110 @@
                 {{ attr.name }}: <strong>{{ attr.value }}</strong>
               </span>
             </div>
+            <div
+              v-if="item.is_active !== false && item.quantity <= item.low_stock_alert"
+              class="low-stock-warning"
+            >
+              <AlertTriangle class="icon-xs" />
+              توجه: موجودی به محدوده خطر رسیده است!
+            </div>
           </div>
 
-          <div class="variant-inputs">
-            <div class="input-group">
-              <label><Activity class="icon-xs text-muted" /> موجودی:</label>
-              <div class="single-input-wrapper">
+          <div class="variant-actions-wrapper">
+            <div class="toggle-wrapper">
+              <!-- تعیین مجاز به فروش بیش از موجودی -->
+              <label class="modern-toggle">
                 <input
-                  v-model.number="item.quantity"
-                  type="number"
-                  min="0"
-                  class="modern-input small-input"
-                  @change="handleUpdateInventory(item.id, { quantity: item.quantity })"
-                  :disabled="isSubmittingInventory"
+                  type="checkbox"
+                  :checked="item.allow_backorder"
+                  @change="
+                    handleUpdateInventory(item.id, { allow_backorder: !item.allow_backorder })
+                  "
+                  :disabled="!item.is_active || isSubmittingInventory"
                 />
-              </div>
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label-text">فروش بیش از موجودی</span>
             </div>
 
-            <div class="input-group">
-              <label><Banknote class="icon-xs text-muted" /> قیمت نهایی (ریال):</label>
-              <div class="single-input-wrapper">
-                <input
-                  v-model.number="item.final_price"
-                  type="number"
-                  min="0"
-                  class="modern-input medium-input"
-                  @change="handleUpdateInventory(item.id, { final_price: item.final_price })"
+            <!--  تعیین کف محصول که در آن مقدار ارور داریم -->
+            <div class="variant-inputs">
+              <div class="input-group">
+                <label><Activity class="icon-xs text-muted" /> کف موجودی:</label>
+                <div class="single-input-wrapper">
+                  <input
+                    v-model.number="item.low_stock_alert"
+                    type="number"
+                    min="0"
+                    class="modern-input small-input"
+                    @change="
+                      handleUpdateInventory(item.id, { low_stock_alert: item.low_stock_alert })
+                    "
+                    :disabled="!item.is_active || isSubmittingInventory"
+                  />
+                </div>
+              </div>
+
+              <!-- ویرایش موجودی -->
+              <div class="input-group">
+                <label><Box class="icon-xs text-muted" /> موجودی:</label>
+                <div class="single-input-wrapper">
+                  <input
+                    v-model.number="item.quantity"
+                    type="number"
+                    min="0"
+                    class="modern-input small-input"
+                    :class="{
+                      'input-error':
+                        item.is_active !== false && item.quantity <= item.low_stock_alert,
+                    }"
+                    @change="handleUpdateInventory(item.id, { quantity: item.quantity })"
+                    :disabled="!item.is_active || isSubmittingInventory"
+                  />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label><Banknote class="icon-xs text-muted" /> قیمت نهایی (ریال):</label>
+                <div class="single-input-wrapper">
+                  <input
+                    v-model.number="item.final_price"
+                    type="number"
+                    min="0"
+                    class="modern-input medium-input"
+                    @change="handleUpdateInventory(item.id, { final_price: item.final_price })"
+                    :disabled="!item.is_active || isSubmittingInventory"
+                  />
+                </div>
+              </div>
+
+              <!-- غیر فعال کردن -->
+              <div class="action-buttons">
+                <button
+                  :class="
+                    item.is_active !== false
+                      ? 'btn-icon btn-icon-warning'
+                      : 'btn-icon btn-icon-success'
+                  "
+                  @click="handleUpdateVariant(item.variant_id, { is_active: !item.is_active })"
+                  :title="item.is_active ? 'غیرفعال کردن موجودی' : 'فعال کردن موجودی'"
                   :disabled="isSubmittingInventory"
-                />
+                >
+                  <PowerOff v-if="item.is_active !== false" class="icon-sm" />
+                  <Power v-else class="icon-sm" />
+                </button>
+
+                <!-- حذف -->
+                <button
+                  class="btn-icon btn-icon-danger"
+                  @click="handleDeleteInventory(item.id)"
+                  title="حذف این رکورد موجودی"
+                  :disabled="isSubmittingInventory"
+                >
+                  <Trash2 class="icon-sm" />
+                </button>
               </div>
             </div>
-
-            <!-- غیر فعال کردن -->
-            <button
-              :class="item.is_active ? 'btn-icon btn-icon-warning' : 'btn-icon btn-icon-success'"
-              @click="handleUpdateVariant(item.variant_id, { is_active: !item.is_active })"
-              :title="item.is_active ? 'غیرفعال کردن موجودی' : 'فعال کردن موجودی'"
-              :disabled="isSubmittingInventory"
-            >
-              <PowerOff v-if="item.is_active" class="icon-sm" />
-              <Power v-else class="icon-sm" />
-            </button>
-
-            <!-- حذف -->
-            <button
-              class="btn-icon btn-icon-danger"
-              @click="handleDeleteInventory(item.id)"
-              title="حذف این رکورد موجودی"
-              :disabled="isSubmittingInventory"
-            >
-              <Trash2 class="icon-sm" />
-            </button>
           </div>
         </div>
       </div>
@@ -171,6 +236,7 @@ import { inject, ref } from 'vue'
 // Import Lucide Icons (Updated to support modern styling)
 import {
   Activity,
+  AlertTriangle,
   Banknote,
   Box,
   Layers,
@@ -337,7 +403,9 @@ const handleDeleteInventory = async (inventoryId) => {
 </script>
 
 <style scoped>
-/* Typography & Container */
+/* =========================
+   Base Styles (همان کدهای قبلی شما)
+========================= */
 .form-container {
   font-family:
     system-ui,
@@ -356,8 +424,6 @@ const handleDeleteInventory = async (inventoryId) => {
     transform: translateY(0);
   }
 }
-
-/* General Layout */
 .w-full {
   width: 100%;
 }
@@ -367,20 +433,12 @@ const handleDeleteInventory = async (inventoryId) => {
 .mb-3 {
   margin-bottom: 1rem;
 }
-.mb-4 {
-  margin-bottom: 1.5rem;
-}
 .text-muted {
   color: #64748b;
-}
-.text-primary {
-  color: #3b82f6;
 }
 .opacity-50 {
   opacity: 0.5;
 }
-
-/* Icons */
 .icon-xs {
   width: 16px;
   height: 16px;
@@ -405,8 +463,6 @@ const handleDeleteInventory = async (inventoryId) => {
     transform: rotate(360deg);
   }
 }
-
-/* Headers & Cards */
 .header-section {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #e2e8f0;
@@ -439,10 +495,6 @@ const handleDeleteInventory = async (inventoryId) => {
 .bg-slate-50 {
   background-color: #f8fafc;
 }
-.border-dashed {
-  border: 1px dashed #cbd5e1;
-}
-
 .specs-heading {
   display: flex;
   align-items: center;
@@ -476,19 +528,15 @@ const handleDeleteInventory = async (inventoryId) => {
   border: 1px solid #fecaca;
 }
 
-/* Form Grid */
+/* Form Elements */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.25rem;
 }
-.align-end {
-  align-items: flex-end;
-}
 .align-center {
   align-items: center;
 }
-
 .form-group {
   display: flex;
   flex-direction: column;
@@ -502,14 +550,13 @@ const handleDeleteInventory = async (inventoryId) => {
 .invisible-label {
   visibility: hidden;
 }
-
-/* Inputs */
 .single-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
 }
+
 .modern-input {
   width: 100%;
   padding: 0.6rem 0.75rem;
@@ -530,13 +577,21 @@ const handleDeleteInventory = async (inventoryId) => {
   cursor: not-allowed;
   opacity: 0.7;
 }
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2;
+  color: #991b1b;
+}
 
-/* Inventory Grid Rows */
+/* =========================
+   Dynamic Variant Rows (جدید)
+========================= */
 .admin-variant-grid {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
+
 .variant-row-card {
   display: flex;
   justify-content: space-between;
@@ -548,17 +603,37 @@ const handleDeleteInventory = async (inventoryId) => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   flex-wrap: wrap;
   gap: 1.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  border-right: 4px solid #cbd5e1; /* نوار رنگی کنار کارت */
 }
 .variant-row-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+}
+
+/* حالت‌های داینامیک */
+.row-inactive {
+  opacity: 0.6;
+  background: #f8fafc;
+  filter: grayscale(0.5);
+  border-right-color: #94a3b8;
+}
+.row-low-stock {
+  background: #fffafa;
+  border-color: #fca5a5;
+  border-right-color: #ef4444;
+}
+.row-backorder {
+  background: #f8fafc;
+  border-color: #bfdbfe;
+  border-right-color: #3b82f6;
 }
 
 .variant-info {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  flex: 1;
+  min-width: 200px;
 }
 .sku-badge {
   display: inline-flex;
@@ -585,10 +660,31 @@ const handleDeleteInventory = async (inventoryId) => {
   font-size: 0.85rem;
 }
 
-/* Inline Row Inputs */
+/* هشدار موجودی کم */
+.low-stock-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #fef2f2;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  width: fit-content;
+  border: 1px solid #fecaca;
+}
+
+/* بخش سمت چپ کارت */
+.variant-actions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-end;
+}
 .variant-inputs {
   display: flex;
-  gap: 1.25rem;
+  gap: 1rem;
   align-items: flex-end;
   flex-wrap: wrap;
 }
@@ -611,27 +707,76 @@ const handleDeleteInventory = async (inventoryId) => {
 .medium-input {
   width: 140px;
 }
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2px;
+}
 
-/* Buttons */
-.btn-primary {
+/* =========================
+   Modern Toggle Switch (جدید)
+========================= */
+.toggle-wrapper {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  background: #3b82f6;
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1.5rem;
+  background: #f1f5f9;
+  padding: 0.4rem 0.75rem;
   border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-  height: 42px; /* هم‌تراز با اینپوت‌ها */
+  border: 1px solid #e2e8f0;
 }
-.btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+.toggle-label-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+.modern-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+.modern-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s;
+  border-radius: 22px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.modern-toggle input:checked + .toggle-slider {
+  background-color: #3b82f6;
+}
+.modern-toggle input:disabled + .toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.modern-toggle input:checked + .toggle-slider:before {
+  transform: translateX(18px);
 }
 
+/* Buttons */
 .btn-success {
   display: flex;
   align-items: center;
@@ -650,48 +795,62 @@ const handleDeleteInventory = async (inventoryId) => {
 .btn-success:hover:not(:disabled) {
   background: #059669;
 }
-.btn-success:disabled,
-.btn-primary:disabled {
+.btn-success:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-/* Variants Management List */
-.variants-list-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px dashed #cbd5e1;
-}
-.variant-def-card {
-  display: flex;
+/* Icon Buttons */
+.btn-icon {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem 1rem;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
-  gap: 1rem;
-  min-width: 250px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-.variant-def-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
+.btn-icon:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
-.attr-name {
-  color: #64748b;
+.btn-icon:active:not(:disabled) {
+  transform: translateY(0);
 }
-.attr-value {
-  color: #0f172a;
-  font-weight: 600;
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.variant-def-actions {
-  display: flex;
-  gap: 0.5rem;
+
+.btn-icon-danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #ef4444;
+}
+.btn-icon-danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.btn-icon-warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #d97706;
+}
+.btn-icon-warning:hover:not(:disabled) {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.btn-icon-success {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #16a34a;
+}
+.btn-icon-success:hover:not(:disabled) {
+  background: #22c55e;
+  color: #ffffff;
 }
 
 /* Empty State */
@@ -709,94 +868,5 @@ const handleDeleteInventory = async (inventoryId) => {
   color: #64748b;
   font-size: 1rem;
   margin: 0;
-}
-
-/* =========================
-   Base Icon Button
-========================= */
-.btn-icon {
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  top: -6px;
-  justify-content: center;
-
-  width: 36px;
-  height: 36px;
-
-  border-radius: 8px;
-  border: 1px solid transparent;
-
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-icon:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.btn-icon:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.btn-icon:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* =========================
-   Danger (Delete)
-========================= */
-.btn-icon-danger {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #ef4444;
-}
-
-.btn-icon-danger:hover:not(:disabled) {
-  background: #ef4444;
-  color: #ffffff;
-}
-
-/* =========================
-   Warning (Disable)
-========================= */
-.btn-icon-warning {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #d97706;
-}
-
-.btn-icon-warning:hover:not(:disabled) {
-  background: #f59e0b;
-  color: #ffffff;
-}
-
-/* =========================
-   Success (Enable)
-========================= */
-.btn-icon-success {
-  background: #ecfdf5;
-  border-color: #bbf7d0;
-  color: #16a34a;
-}
-
-.btn-icon-success:hover:not(:disabled) {
-  background: #22c55e;
-  color: #ffffff;
-}
-
-/* =========================
-   Info (Edit/View)
-========================= */
-.btn-icon-primary {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #2563eb;
-}
-
-.btn-icon-primary:hover:not(:disabled) {
-  background: #3b82f6;
-  color: #ffffff;
 }
 </style>
