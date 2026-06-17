@@ -26,9 +26,10 @@ class InventoryService:
     # دریافت آیدی محصول برای حذف کلید ها
     async def _get_product_id_from_variant(
         self,
-        inventory_id: int,
+        variant_id: int,
     ) -> int | None:
-        product_id = await self.repo.get_product_id(inventory_id)
+
+        product_id = await self.repo.get_product_id(variant_id)
 
         if not product_id:
             return None
@@ -171,6 +172,7 @@ class InventoryService:
             await self.cache.invalidate_key("inventory", inventory_id)
 
             product_id = await self._get_product_id_from_variant(inventory.variant_id)
+            print(product_id)
             if product_id:
                 await self.cache.invalidate_key("admin", "full", product_id)
                 await self.cache.invalidate_key("user", "full", product_id)
