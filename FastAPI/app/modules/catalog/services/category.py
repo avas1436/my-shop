@@ -45,6 +45,10 @@ class CategoryService:
             parent = await self.repo.get_by_id(data.parent_id)
             if not parent:
                 raise NotFound("Parent category not found.")
+
+            if not parent.is_active:
+                raise BadRequest("Cannot assign a category to an inactive parent.")
+
             parent_id = data.parent_id
 
         category = Category(
@@ -113,7 +117,7 @@ class CategoryService:
             search, parent_id, is_active, page, size
         )
 
-        pages = math.ceil(total / size) if total else 1
+        pages = math.ceil(total / size) if total > 0 else 1
         response_items = []
         for c in items:
             response_items.append(
