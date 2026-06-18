@@ -77,7 +77,6 @@ class ProductCategoryRepository:
             {"product_id": product_id, "category_id": cid} for cid in category_ids
         ]
         await self.db.execute(insert(ProductCategory), values)
-        await self.db.commit()
 
     async def remove_links(self, product_id: int, category_ids: list[int]) -> None:
         if not category_ids:
@@ -87,4 +86,9 @@ class ProductCategoryRepository:
             ProductCategory.category_id.in_(category_ids),
         )
         await self.db.execute(q)
+
+    # ---------------------------
+    # Unit of Work helper
+    # ---------------------------
+    async def commit(self):
         await self.db.commit()

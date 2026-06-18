@@ -304,6 +304,7 @@ class ProductCategoryService:
 
         await self.repo.add_links(product_id, to_add)
         await self.repo.remove_links(product_id, to_remove)
+        await self.repo.commit()
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
