@@ -150,7 +150,7 @@
               </div>
             </div>
 
-            <div class="input-group action-buttons-wrapper">
+            <div class="input-group action-buttons-wrapper full-span">
               <label class="invisible-label">عملیات</label>
               <div class="action-buttons">
                 <button
@@ -268,17 +268,19 @@
           </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group submit-button-group">
           <label class="invisible-label">اکشن</label>
-          <button
+          <BaseButton
+            variant="success"
+            size="md"
+            :disabled="isSubmittingInventory"
             class="btn-success w-full"
             @click="submitNewInventory"
-            :disabled="isSubmittingInventory"
           >
             <Save class="icon-sm" v-if="!isSubmittingInventory" />
             <Loader2 class="icon-sm spinner" v-else />
             {{ isSubmittingInventory ? 'در حال ثبت...' : 'ثبت موجودی جدید' }}
-          </button>
+          </BaseButton>
         </div>
       </div>
     </div>
@@ -286,6 +288,7 @@
 </template>
 
 <script setup>
+import BaseButton from '@/components/base/BaseButton.vue'
 import { inventoryService, variantService } from '@/services/productService'
 import { useErrorStore } from '@/stores/errorStore'
 import { getErrorMessage } from '@/utils/errorMessages'
@@ -735,7 +738,6 @@ const handleDeleteInventory = async (inventoryId) => {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 1rem;
-  align-items: flex-end;
 }
 
 @media (max-width: 1100px) {
@@ -832,12 +834,16 @@ const handleDeleteInventory = async (inventoryId) => {
 
 /* دکمه‌ها */
 .action-buttons-wrapper {
-  display: flex;
-  align-items: center;
+  grid-column: span 1;
+  flex-direction: column;
+  gap: 0.4rem;
+  order: 6;
+  justify-content: flex-end;
 }
 .action-buttons {
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 /* سوییچ مدرن */
@@ -1041,5 +1047,58 @@ const handleDeleteInventory = async (inventoryId) => {
   font-size: 0.75rem;
   font-weight: 700;
   color: #64748b;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1.25rem;
+}
+
+.submit-button-group {
+  /* در دسکتاپ: رفتن به ردیف دوم، ستون ششم (سمت چپ‌ترین ستون) */
+  grid-column: 6;
+  grid-row: 2;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* برای مطمئن شدن از اینکه دکمه پهن نمی‌شود و متن داخلش جا می‌گیرد */
+.submit-button-group :deep(button),
+.submit-button-group .btn-success {
+  width: max-content !important; /* به اندازه متن داخلش کش بیاید، نه بیشتر */
+  min-width: 160px;
+  padding: 0.6rem 1.5rem;
+  align-self: flex-end; /* چسبیدن به لبه چپ در حالت RTL */
+}
+
+/* اصلاح تراز در حالت تبلت و موبایل */
+@media (max-width: 1100px) {
+  .form-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .submit-button-group {
+    grid-column: 1 / -1; /* در موبایل کل عرض را بگیرد */
+    grid-row: auto;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .submit-button-group {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .submit-button-group :deep(button),
+  .submit-button-group .btn-success {
+    width: 100% !important; /* فقط در موبایل تمام‌عرض شود */
+  }
 }
 </style>
