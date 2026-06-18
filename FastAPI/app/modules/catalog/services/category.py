@@ -175,18 +175,19 @@ class CategoryService:
         if data.parent_id is not None:
             if data.parent_id == category.id:
                 raise Conflict("Category cannot be its own parent.")
+
             parent = await self.repo.get_by_id(data.parent_id)
             if not parent:
                 raise NotFound("Parent category not found.")
 
-            # prevent cycles (parent cannot be a descendant)
-            current = parent
-            while current:
-                if current.id == category.id:
-                    raise Conflict("Parent category cannot be a descendant.")
-                if current.parent_id is None:
-                    break
-                current = await self.repo.get_by_id(current.parent_id)
+            # دریافت تمام والدهایِ دسته‌بندیِ والدِ جدید با یک کوئری
+            parent_ancestor_ids = await self.repo.get_all_parents_ids(data.parent_id)
+
+            # اگر شناسه دسته‌بندی فعلی در میان والدهای والدِ جدید باشد، یعنی چرخه رخ می‌دهد
+            if category.id in parent_ancestor_ids:
+                raise Conflict(
+                    "Parent category cannot be a descendant (creates a cycle)."
+                )
 
             category.parent_id = data.parent_id
 

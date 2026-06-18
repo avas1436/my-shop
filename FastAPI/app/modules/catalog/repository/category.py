@@ -87,6 +87,27 @@ class ProductCategoryRepository:
         )
         await self.db.execute(q)
 
+    async def get_all_parents_ids(self, category_id: int) -> set[int]:
+        # تعریف بخش بازگشتی
+        cte = (
+            select(Category.id, Category.parent_id)
+            .where(Category.id == category_id)
+            .cte(name="parent_tree", recursive=True)
+        )
+
+        # پیوند زدن لایه‌های بعدی درخت
+        cte_alias = cte.alias()
+        cte = cte.union_all(
+            select(Category.id, Category.parent_id).where(
+                Category.id == cte_alias.c.parent_id
+            )
+        )
+
+        # اجرای کوئری نهایی برای گرفتن تمام IDها
+        q = select(cte.c.id)
+        result = await self.db.execute(q)
+        return set(result.scalars().all())
+
     # ---------------------------
     # Unit of Work helper
     # ---------------------------
