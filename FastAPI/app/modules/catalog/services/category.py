@@ -34,20 +34,32 @@ class CategoryService:
     async def create_category(self, data: CategoryCreate) -> Category:
 
         if await self.repo.get_by_name(data.name):
-            raise Conflict("Category name already exists.")
+            raise Conflict(
+                message="Category name already exists.",
+                code="CATEGORY_NAME_DUPLICATE",
+            )
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise Conflict("Category slug already exists.")
+            raise Conflict(
+                message="Category slug already exists.",
+                code="CATEGORY_SLUG_DUPLICATE",
+            )
 
         parent_id = None
         if data.parent_id is not None:
             parent = await self.repo.get_by_id(data.parent_id)
             if not parent:
-                raise NotFound("Parent category not found.")
+                raise NotFound(
+                    message="Parent category not found.",
+                    code="CATEGORY_PARENT_NOT_FOUND",
+                )
 
             if not parent.is_active:
-                raise BadRequest("Cannot assign a category to an inactive parent.")
+                raise BadRequest(
+                    message="Cannot assign a category to an inactive parent.",
+                    code="CATEGORY_PARENT_INACTIVE",
+                )
 
             parent_id = data.parent_id
 
@@ -76,7 +88,10 @@ class CategoryService:
 
         category = await self.repo.get_by_id(category_id)
         if not category:
-            raise NotFound("Category not found.")
+            raise NotFound(
+                message="Category not found.",
+                code="CATEGORY_NOT_FOUND",
+            )
 
         payload = CategoryRead.model_validate(category).model_dump(mode="json")
 
@@ -98,7 +113,10 @@ class CategoryService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="CATEGORY_PAGINATION_INVALID",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -158,16 +176,25 @@ class CategoryService:
     async def update_category(self, category_id: int, data: CategoryUpdate) -> Category:
         category = await self.repo.get_by_id(category_id)
         if not category:
-            raise NotFound("Category not found.")
+            raise NotFound(
+                message="Category not found.",
+                code="CATEGORY_NOT_FOUND",
+            )
 
         if data.name and data.name != category.name:
             if await self.repo.get_by_name(data.name):
-                raise Conflict("Category name already exists.")
+                raise Conflict(
+                    message="Category name already exists.",
+                    code="CATEGORY_NAME_DUPLICATE",
+                )
             category.name = data.name
 
         if data.slug:
             if data.slug != category.slug and await self.repo.get_by_slug(data.slug):
-                raise Conflict("Category slug already exists.")
+                raise Conflict(
+                    message="Category slug already exists.",
+                    code="CATEGORY_SLUG_DUPLICATE",
+                )
             category.slug = data.slug
 
         if data.description is not None:
@@ -178,11 +205,22 @@ class CategoryService:
 
         if data.parent_id is not None:
             if data.parent_id == category.id:
-                raise Conflict("Category cannot be its own parent.")
+                raise Conflict(
+                    message="Category cannot be its own parent.",
+                    code="CATEGORY_SELF_PARENT",
+                )
 
             parent = await self.repo.get_by_id(data.parent_id)
             if not parent:
-                raise NotFound("Parent category not found.")
+                raise NotFound(
+                    message="Parent category not found.",
+                    code="CATEGORY_PARENT_NOT_FOUND",
+                )
+            if not parent.is_active:
+                raise BadRequest(
+                    message="Parent category is inactive.",
+                    code="CATEGORY_PARENT_INACTIVE",
+                )
 
             # دریافت تمام والدهایِ دسته‌بندیِ والدِ جدید با یک کوئری
             parent_ancestor_ids = await self.repo.get_all_parents_ids(data.parent_id)
@@ -190,7 +228,8 @@ class CategoryService:
             # اگر شناسه دسته‌بندی فعلی در میان والدهای والدِ جدید باشد، یعنی چرخه رخ می‌دهد
             if category.id in parent_ancestor_ids:
                 raise Conflict(
-                    "Parent category cannot be a descendant (creates a cycle)."
+                    message="Parent category cannot be a descendant (creates a cycle).",
+                    code="CATEGORY_CYCLE_DETECTED",
                 )
 
             category.parent_id = data.parent_id
@@ -209,10 +248,16 @@ class CategoryService:
     async def delete_category(self, category_id: int) -> None:
         category = await self.repo.get_by_id(category_id)
         if not category:
-            raise NotFound("Category not found.")
+            raise NotFound(
+                message="Category not found.",
+                code="CATEGORY_NOT_FOUND",
+            )
 
         if await self.repo.has_children(category_id):
-            raise Conflict("Cannot delete category with children.")
+            raise Conflict(
+                message="Cannot delete category with children.",
+                code="CATEGORY_HAS_CHILDREN",
+            )
 
         await self.repo.delete(category)
 
@@ -234,12 +279,18 @@ class ProductCategoryService:
     ) -> ProductCategoryResult:
 
         if not await self.repo.product_exists(product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         existing = await self.repo.existing_categories(category_ids)
         missing = set(category_ids) - existing
         if missing:
-            raise NotFound(f"Categories not found: {sorted(missing)}")
+            raise NotFound(
+                message=f"Categories not found: {sorted(missing)}",
+                code="PRODUCT_CATEGORY_MAPPED_NOT_FOUND",
+            )
 
         current = await self.repo.current_categories(product_id)
         to_add = list(set(category_ids) - current)
@@ -267,7 +318,10 @@ class ProductCategoryService:
     ) -> ProductCategoryResult:
 
         if not await self.repo.product_exists(product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         current = await self.repo.current_categories(product_id)
         to_remove = list(set(category_ids) & current)
@@ -295,12 +349,18 @@ class ProductCategoryService:
     ) -> ProductCategoryResult:
 
         if not await self.repo.product_exists(product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         existing = await self.repo.existing_categories(category_ids)
         missing = set(category_ids) - existing
         if missing:
-            raise NotFound(f"Categories not found: {sorted(missing)}")
+            raise NotFound(
+                message=f"Categories not found: {sorted(missing)}",
+                code="PRODUCT_CATEGORY_MAPPED_NOT_FOUND",
+            )
 
         current = await self.repo.current_categories(product_id)
 

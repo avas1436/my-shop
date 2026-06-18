@@ -53,6 +53,20 @@ export const ERROR_MESSAGES = {
   VARIANT_ATTRIBUTE_NOT_FOUND: 'ویژگی متصل به متغیر کالا یافت نشد.',
   VARIANT_ATTRIBUTE_DUPLICATE: 'این ویژگی از قبل برای این متغیر کالا ثبت شده است.',
 
+  // Category & Product-Category
+  CATEGORY_NOT_FOUND: 'دسته‌بندی مورد نظر یافت نشد.',
+  CATEGORY_NAME_DUPLICATE: 'دسته‌بندی با این نام از قبل وجود دارد.',
+  CATEGORY_SLUG_DUPLICATE: 'دسته‌بندی با این نامک (Slug) از قبل وجود دارد.',
+  CATEGORY_PARENT_NOT_FOUND: 'دسته‌بندی والد انتخاب شده، در سیستم یافت نشد.',
+  CATEGORY_SELF_PARENT: 'یک دسته‌بندی نمی‌تواند خودش را به عنوان والد انتخاب کند.',
+  CATEGORY_CYCLE_DETECTED:
+    'ساختار درختی نامعتبر؛ دسته‌بندی والد نمی‌تواند از فرزندان خودِ این دسته‌بندی باشد.',
+  CATEGORY_HAS_CHILDREN: 'امکان حذف این دسته‌بندی وجود ندارد، زیرا دارای زیرمجموعه (فرزند) است.',
+  CATEGORY_PARENT_INACTIVE: 'امکان انتخاب این والد وجود ندارد، زیرا دسته‌بندی والد غیرفعال است.',
+  PRODUCT_CATEGORY_MAPPED_NOT_FOUND:
+    'برخی از دسته‌بندی‌های ارسالی برای اتصال به محصول، در سیستم وجود ندارند.',
+  CATEGORY_PAGINATION_INVALID: 'مقادیر ارسالی برای صفحه‌بندی دسته‌بندی‌ها نامعتبر است.',
+
   // Business Logic
   USER_NOT_FOUND: 'کاربر یافت نشد.',
   INVALID_OTP: 'کد وارد شده نامعتبر است.',
