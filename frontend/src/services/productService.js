@@ -130,42 +130,42 @@ export const brandService = {
 export const categoryService = {
   // ۱. ایجاد دسته‌بندی جدید
   async createCategory(categoryData) {
-    return await axiosClient.post(`${BASE_URL}/`, categoryData)
+    return await axiosClient.post(`/v1/categories/`, categoryData)
   },
 
   // ۲. دریافت لیست دسته‌بندی‌ها
   async listCategories() {
-    return await axiosClient.get(`${BASE_URL}/`)
+    return await axiosClient.get(`/v1/categories/`)
   },
 
   // ۳. دریافت یک دسته‌بندی خاص
   async getCategory(categoryId) {
-    return await axiosClient.get(`${BASE_URL}/${categoryId}`)
+    return await axiosClient.get(`/v1/categories/${categoryId}`)
   },
 
   // ۴. به‌روزرسانی دسته‌بندی
   async updateCategory(categoryId, updateData) {
-    return await axiosClient.put(`${BASE_URL}/${categoryId}`, updateData)
+    return await axiosClient.put(`/v1/categories/${categoryId}`, updateData)
   },
 
   // ۵. حذف دسته‌بندی
   async deleteCategory(categoryId) {
-    return await axiosClient.delete(`${BASE_URL}/${categoryId}`)
+    return await axiosClient.delete(`/v1/categories/${categoryId}`)
   },
 
   // ۶. متصل کردن دسته‌بندی‌ها به یک محصول
   async attachCategories(productId, data) {
-    return await axiosClient.post(`${BASE_URL}/${productId}/categories/attach`, data)
+    return await axiosClient.post(`/v1/categories/${productId}/categories/attach`, data)
   },
 
   // ۷. جدا کردن دسته‌بندی‌ها از یک محصول
   async detachCategories(productId, data) {
-    return await axiosClient.post(`${BASE_URL}/${productId}/categories/detach`, data)
+    return await axiosClient.post(`/v1/categories/${productId}/categories/detach`, data)
   },
 
   // ۸. همگام‌سازی (سینک) دسته‌بندی‌های یک محصول
   async syncCategories(productId, data) {
-    return await axiosClient.put(`${BASE_URL}/${productId}/categories/sync`, data)
+    return await axiosClient.put(`/v1/categories/${productId}/categories/sync`, data)
   },
 }
 

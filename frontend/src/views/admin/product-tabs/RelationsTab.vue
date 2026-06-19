@@ -65,10 +65,12 @@
 
 <script setup>
 import { productService } from '@/services/productService'
-import { inject, onMounted, ref } from 'vue'
+import { inject, ref } from 'vue'
 
 const product = inject('product')
 const refreshProductData = inject('refreshProductData')
+const router = useRouter()
+const errorStore = useErrorStore()
 
 // متغیرها برای ذخیره کل دیتای دریافتی جهت چک‌باکس‌ها
 const allCategories = ref([])
@@ -79,21 +81,6 @@ const newAttribute = ref({ id: '', value: '' })
 
 const isCategoryAttached = (catId) => product.value?.categories?.some((c) => c.id === catId)
 const isTagAttached = (tagId) => product.value?.tags?.some((t) => t.id === tagId)
-
-// بارگذاری مقادیر اولیه برای لیست‌ها در زمان بالا آمدن تب
-onMounted(async () => {
-  try {
-    // نکته: متدهای مربوط به دریافت کل دسته‌ها و برچسب‌ها را بر اساس ساختار پروژه خود صدا بزنید
-    const cats = (await productService.getCategoriesList?.()) || { items: [] }
-    allCategories.value = cats.items
-    const tags = (await productService.getTagsList?.()) || { items: [] }
-    allTags.value = tags.items
-    const attrs = (await productService.getAvailableAttributes?.()) || { items: [] }
-    availableAttributesList.value = attrs.items
-  } catch (err) {
-    console.error('خطا در بارگذاری موجودیت‌های ارتباطی', err)
-  }
-})
 
 const toggleCategory = async (event, catId) => {
   try {
