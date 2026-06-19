@@ -265,6 +265,39 @@ class CategoryService:
             await self.cache.invalidate_lists()
             await self.cache.invalidate_key("category", category_id)
 
+    # -------------------------
+    # list parents of a category
+    # -------------------------
+    async def get_category_parents(self, category_id: int) -> list[dict]:
+        # ۱. ابتدا مطمئن می‌شویم که خود این دسته‌بندی وجود دارد
+        category = await self.repo.get_by_id(category_id)
+        if not category:
+            raise NotFound(
+                message="Category not found.",
+                code="CATEGORY_NOT_FOUND",
+            )
+
+        # ۲. واکشی لیست والدها از دیتابیس
+        parents = await self.repo.get_all_parents(category_id)
+
+        # ۳. تبدیل به دایرکتوری جهت مطابقت با ساختار خروجی شما
+        response_items = []
+        for p in parents:
+            response_items.append(
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "slug": p.slug,
+                    "description": p.description,
+                    "is_active": p.is_active,
+                    "parent_id": p.parent_id,
+                    "created_at": p.created_at,
+                    "updated_at": p.updated_at,
+                }
+            )
+
+        return response_items
+
 
 # --------------------------------------------------
 # Product Category Service
