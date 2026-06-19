@@ -181,58 +181,76 @@ class CategoryService:
                 code="CATEGORY_NOT_FOUND",
             )
 
-        if data.name and data.name != category.name:
-            if await self.repo.get_by_name(data.name):
-                raise Conflict(
-                    message="Category name already exists.",
-                    code="CATEGORY_NAME_DUPLICATE",
-                )
-            category.name = data.name
+        update_data = data.model_dump(exclude_unset=True)
 
-        if data.slug:
-            if data.slug != category.slug and await self.repo.get_by_slug(data.slug):
-                raise Conflict(
-                    message="Category slug already exists.",
-                    code="CATEGORY_SLUG_DUPLICATE",
-                )
-            category.slug = data.slug
+        # 1. بررسی و آپدیت Name
+        if "name" in update_data:
+            new_name = update_data["name"]
+            if new_name and new_name != category.name:
+                if await self.repo.get_by_name(new_name):
+                    raise Conflict(
+                        message="Category name already exists.",
+                        code="CATEGORY_NAME_DUPLICATE",
+                    )
+                category.name = new_name
 
-        if data.description is not None:
-            category.description = data.description
+        # 2. بررسی و آپدیت Slug
+        if "slug" in update_data:
+            new_slug = update_data["slug"]
+            if new_slug and new_slug != category.slug:
+                if await self.repo.get_by_slug(new_slug):
+                    raise Conflict(
+                        message="Category slug already exists.",
+                        code="CATEGORY_SLUG_DUPLICATE",
+                    )
+                category.slug = new_slug
 
-        if data.is_active is not None:
-            category.is_active = data.is_active
+        # 3. آپدیت Description (حتی اگر None یا همان null باشد)
+        if "description" in update_data:
+            category.description = update_data["description"]
 
-        if data.parent_id is not None:
-            if data.parent_id == category.id:
-                raise Conflict(
-                    message="Category cannot be its own parent.",
-                    code="CATEGORY_SELF_PARENT",
-                )
+        # 4. آپدیت Is Active
+        if "is_active" in update_data:
+            category.is_active = update_data["is_active"]
 
-            parent = await self.repo.get_by_id(data.parent_id)
-            if not parent:
-                raise NotFound(
-                    message="Parent category not found.",
-                    code="CATEGORY_PARENT_NOT_FOUND",
-                )
-            if not parent.is_active:
-                raise BadRequest(
-                    message="Parent category is inactive.",
-                    code="CATEGORY_PARENT_INACTIVE",
-                )
+        # 5. بررسی و آپدیت Parent ID (مهم‌ترین بخش برای پشتیبانی از null شدن)
+        if "parent_id" in update_data:
+            new_parent_id = update_data["parent_id"]
 
-            # دریافت تمام والدهایِ دسته‌بندیِ والدِ جدید با یک کوئری
-            parent_ancestor_ids = await self.repo.get_all_parents_ids(data.parent_id)
+            if new_parent_id is None:
+                # اگر کاربر عمداً null فرستاده، دسته‌بندی تبدیل به ریشه می‌شود
+                category.parent_id = None
+            else:
+                # اگر فرستاده شده و null نیست، بررسی‌های منطقی انجام می‌شود
+                if new_parent_id == category.id:
+                    raise Conflict(
+                        message="Category cannot be its own parent.",
+                        code="CATEGORY_SELF_PARENT",
+                    )
 
-            # اگر شناسه دسته‌بندی فعلی در میان والدهای والدِ جدید باشد، یعنی چرخه رخ می‌دهد
-            if category.id in parent_ancestor_ids:
-                raise Conflict(
-                    message="Parent category cannot be a descendant (creates a cycle).",
-                    code="CATEGORY_CYCLE_DETECTED",
-                )
+                parent = await self.repo.get_by_id(new_parent_id)
+                if not parent:
+                    raise NotFound(
+                        message="Parent category not found.",
+                        code="CATEGORY_PARENT_NOT_FOUND",
+                    )
+                if not parent.is_active:
+                    raise BadRequest(
+                        message="Parent category is inactive.",
+                        code="CATEGORY_PARENT_INACTIVE",
+                    )
 
-            category.parent_id = data.parent_id
+                # دریافت تمام والدهایِ دسته‌بندیِ والدِ جدید با یک کوئری
+                parent_ancestor_ids = await self.repo.get_all_parents_ids(new_parent_id)
+
+                # جلوگیری از ایجاد چرخه
+                if category.id in parent_ancestor_ids:
+                    raise Conflict(
+                        message="Parent category cannot be a descendant (creates a cycle).",
+                        code="CATEGORY_CYCLE_DETECTED",
+                    )
+
+                category.parent_id = new_parent_id
 
         category = await self.repo.update(category)
 
