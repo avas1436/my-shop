@@ -167,6 +167,11 @@ export const categoryService = {
   async syncCategories(productId, data) {
     return await axiosClient.put(`/v1/categories/${productId}/categories/sync`, data)
   },
+
+  // ۹. دریافت لیست کتگوری های والد
+  async categoryParents(categoryId) {
+    return await axiosClient.get(`/v1/categories/parents/${categoryId}`)
+  },
 }
 
 /**
