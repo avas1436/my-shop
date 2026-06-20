@@ -153,19 +153,22 @@ export const categoryService = {
     return await axiosClient.delete(`/v1/categories/${categoryId}`)
   },
 
-  // ۶. متصل کردن دسته‌بندی‌ها به یک محصول
-  async attachCategories(productId, data) {
-    return await axiosClient.post(`/v1/categories/${productId}/categories/attach`, data)
-  },
+  // // ۶. متصل کردن دسته‌بندی‌ها به یک محصول
+  // async attachCategories(productId, data) {
+  //   return await axiosClient.post(`/v1/categories/${productId}/categories/attach`, data)
+  // },
 
-  // ۷. جدا کردن دسته‌بندی‌ها از یک محصول
-  async detachCategories(productId, data) {
-    return await axiosClient.post(`/v1/categories/${productId}/categories/detach`, data)
-  },
+  // // ۷. جدا کردن دسته‌بندی‌ها از یک محصول
+  // async detachCategories(productId, data) {
+  //   return await axiosClient.post(`/v1/categories/${productId}/categories/detach`, data)
+  // },
 
   // ۸. همگام‌سازی (سینک) دسته‌بندی‌های یک محصول
   async syncCategories(productId, data) {
-    return await axiosClient.put(`/v1/categories/${productId}/categories/sync`, data)
+    const payload = {
+      category_ids: data,
+    }
+    return await axiosClient.put(`/v1/categories/${productId}/categories/sync`, payload)
   },
 
   // ۹. دریافت لیست کتگوری های والد
