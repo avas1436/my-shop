@@ -1,33 +1,13 @@
 <template>
-  <div class="product-grid">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <ProductCard v-for="product in products" :key="product.id" :product="product" />
   </div>
 </template>
 
 <script setup>
-import ProductCard from './ProductCard.vue'
+import ProductCard from './ProductCard.vue';
 
 defineProps({
   products: { type: Array, default: () => [] },
 })
 </script>
-
-<style scoped>
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-@media (max-width: 980px) {
-  .product-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

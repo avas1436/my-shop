@@ -1,15 +1,7 @@
 <template>
-  <article class="base-card">
+  <article
+    class="bg-surface border border-border-light shadow-soft rounded-lg backdrop-blur-[18px]"
+  >
     <slot />
   </article>
 </template>
-
-<style scoped>
-.base-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-soft);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(18px);
-}
-</style>

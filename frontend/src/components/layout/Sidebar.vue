@@ -1,31 +1,52 @@
 <template>
-  <aside class="admin-sidebar">
-    <router-link to="/admin" class="admin-sidebar__brand">
-      <!-- <span class="admin-sidebar__logo">SV</span> -->
-      <img src="@/assets/images/logo.jpg" alt="لوگوی فروشگاه" class="brand__logo" />
+  <aside
+    class="lg:sticky lg:top-0 lg:h-screen p-5 grid content-start gap-5 border-l border-slate-900/10 bg-[#101828]/96 text-white/90 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+  >
+    <router-link
+      to="/admin"
+      class="flex items-center gap-3.5 p-4 rounded-3xl bg-white/10 hover:bg-white/15 transition-colors"
+    >
+      <img
+        src="@/assets/images/logo.jpg"
+        alt="لوگوی فروشگاه"
+        class="w-13 h-13 object-cover rounded-md shadow-soft"
+      />
       <div>
-        <!-- <strong>ShopVerse Admin</strong> -->
-        <span>مرکز کنترل فروشگاه</span>
+        <span class="block font-bold">مرکز کنترل فروشگاه</span>
+        <span class="block mt-1 text-[0.88rem] text-white/64">سیستم مدیریت</span>
       </div>
     </router-link>
 
-    <nav class="admin-sidebar__nav">
-      <router-link v-for="item in items" :key="item.to" :to="item.to">
-        <component :is="item.icon" class="sidebar-icon" />
+    <nav class="grid gap-1.5">
+      <router-link
+        v-for="item in items"
+        :key="item.to"
+        :to="item.to"
+        class="flex items-center gap-3 py-3.5 px-4 rounded-md text-white/75 transition-all duration-200 hover:text-white hover:bg-white/10 hover:-translate-x-1 [&.router-link-exact-active]:text-white [&.router-link-exact-active]:bg-white/12 [&.router-link-exact-active]:-translate-x-1"
+      >
+        <component :is="item.icon" class="w-5 h-5 stroke-2 shrink-0" />
         {{ item.label }}
       </router-link>
     </nav>
 
-    <div class="admin-sidebar__card">
-      <span class="pill">یادآوری امروز</span>
-      <strong>کمبود موجودی و سفارش‌های جدید را قبل از ظهر بررسی کنید.</strong>
-      <p>این بخش برای عملیات روزانه، مدیریت کمپین‌ها و پاسخ سریع به تیم فروش طراحی شده است.</p>
+    <div
+      class="p-4 rounded-[24px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_35%),linear-gradient(135deg,rgba(91,61,245,0.44),rgba(255,122,89,0.32))] mt-2"
+    >
+      <span
+        class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-white/20 text-white text-xs backdrop-blur-sm"
+        >یادآوری امروز</span
+      >
+      <strong class="block mt-3.5 text-[0.95rem]"
+        >کمبود موجودی و سفارش‌های جدید را بررسی کنید.</strong
+      >
+      <p class="block m-0 mt-2 text-white/75 text-[0.9rem] leading-relaxed">
+        این بخش برای عملیات روزانه و پاسخ سریع به تیم فروش طراحی شده است.
+      </p>
     </div>
   </aside>
 </template>
 
 <script setup>
-// آدرس ایمپورت جدید از اسکوپ @lucide/vue
 import {
   CircleDollarSign,
   FileText,
@@ -41,9 +62,7 @@ import {
   Warehouse,
 } from '@lucide/vue';
 
-defineOptions({
-  name: 'AdminSidebar',
-})
+defineOptions({ name: 'AdminSidebar' })
 
 const items = [
   { to: '/admin', label: 'داشبورد', icon: LayoutDashboard },
@@ -60,123 +79,3 @@ const items = [
   { to: '/admin/settings', label: 'تنظیمات پیشرفته سیستم', icon: Settings },
 ]
 </script>
-
-<style scoped>
-.sidebar-icon {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2px;
-  flex-shrink: 0;
-}
-.admin-sidebar {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  padding: 1.25rem;
-  display: grid;
-  align-content: start;
-  gap: 1.2rem;
-  border-left: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(16, 24, 40, 0.96);
-  color: rgba(255, 255, 255, 0.88);
-  overflow-y: auto;
-}
-.admin-sidebar::-webkit-scrollbar {
-  width: 4px;
-}
-.admin-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-.admin-sidebar__brand {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 1rem;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.admin-sidebar__brand strong,
-.admin-sidebar__brand span {
-  display: block;
-}
-
-.admin-sidebar__brand span:last-child {
-  margin-top: 0.2rem;
-  font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.64);
-}
-
-.admin-sidebar__logo {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #fff;
-  font-weight: 700;
-}
-.brand__logo {
-  width: 58px;
-  height: 58px;
-  object-fit: cover;
-  border-radius: 18px;
-  box-shadow: var(--shadow-soft);
-}
-.admin-sidebar__nav {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.admin-sidebar__nav a {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.95rem 1rem;
-  border-radius: 18px;
-  color: rgba(255, 255, 255, 0.74);
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.admin-sidebar__nav a:hover,
-.admin-sidebar__nav a.router-link-exact-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-  transform: translateX(-2px);
-}
-
-.admin-sidebar__card {
-  padding: 1rem;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.14), transparent 35%),
-    linear-gradient(135deg, rgba(91, 61, 245, 0.44), rgba(255, 122, 89, 0.32));
-}
-
-.admin-sidebar__card strong,
-.admin-sidebar__card p {
-  display: block;
-}
-
-.admin-sidebar__card strong {
-  margin-top: 0.85rem;
-}
-
-.admin-sidebar__card p {
-  margin: 0.55rem 0 0;
-  color: rgba(255, 255, 255, 0.76);
-  font-size: 0.9rem;
-}
-
-@media (max-width: 1080px) {
-  .admin-sidebar {
-    position: static;
-    height: auto;
-  }
-}
-</style>

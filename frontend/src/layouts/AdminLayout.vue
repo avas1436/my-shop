@@ -1,16 +1,32 @@
 <template>
-  <div class="admin-shell" :class="{ 'sidebar-open': isSidebarOpen }">
-    <div class="sidebar-backdrop" @click="isSidebarOpen = false"></div>
+  <div
+    class="min-h-screen grid grid-cols-1 lg:grid-cols-[290px_1fr] bg-[#eff3fb] relative overflow-hidden"
+    style="
+      background-image:
+        radial-gradient(circle at top right, rgba(91, 61, 245, 0.14), transparent 22%),
+        radial-gradient(circle at left bottom, rgba(255, 122, 89, 0.12), transparent 24%);
+    "
+  >
+    <div
+      class="fixed inset-0 z-998 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 lg:hidden"
+      :class="isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
+      @click="isSidebarOpen = false"
+    ></div>
 
-    <div class="admin-sidebar-wrapper">
+    <div
+      class="fixed inset-y-0 right-0 z-999 w-72.5 bg-white shadow-[-4px_0_24px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none"
+      :class="isSidebarOpen ? 'translate-x-0' : 'translate-x-full'"
+    >
       <Sidebar />
     </div>
 
-    <div class="admin-main">
-      <header class="admin-topbar">
-        <div class="topbar-right-zone">
+    <div class="p-3 lg:p-5 grid gap-4">
+      <header
+        class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 p-4 lg:py-[1.4rem] lg:px-6 rounded-lg border border-border bg-white/86 backdrop-blur-md shadow-soft"
+      >
+        <div class="flex items-start md:items-center gap-4">
           <button
-            class="menu-toggle-btn"
+            class="flex lg:hidden items-center justify-center p-2 border border-border rounded-md text-text-main bg-transparent cursor-pointer"
             @click="isSidebarOpen = !isSidebarOpen"
             aria-label="Toggle Menu"
           >
@@ -33,14 +49,21 @@
 
           <div>
             <span class="pill">پنل مدیریت</span>
-            <h1>مدیریت فروشگاه {{ admin.settings.storeName }}</h1>
+            <h1 class="m-0 mt-2.5 text-[clamp(1.5rem,3vw,2.2rem)] font-bold">
+              مدیریت فروشگاه {{ admin.settings.storeName }}
+            </h1>
           </div>
         </div>
 
-        <router-link to="/" class="admin-topbar__link">بازگشت به فروشگاه</router-link>
+        <router-link
+          to="/"
+          class="inline-flex items-center justify-center min-h-12 px-4 rounded-full bg-linear-to-br from-primary to-primary-dark text-white font-bold whitespace-nowrap w-full md:w-auto"
+        >
+          بازگشت به فروشگاه
+        </router-link>
       </header>
 
-      <section class="admin-content">
+      <section class="grid">
         <RouterView />
       </section>
     </div>
@@ -56,172 +79,3 @@ import { RouterView } from 'vue-router'
 const admin = useAdminStore()
 const isSidebarOpen = ref(false)
 </script>
-
-<style scoped>
-.admin-shell {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 290px 1fr;
-  background:
-    radial-gradient(circle at top right, rgba(91, 61, 245, 0.14), transparent 22%),
-    radial-gradient(circle at left bottom, rgba(255, 122, 89, 0.12), transparent 24%), #eff3fb;
-}
-
-.admin-main {
-  padding: 1.25rem;
-  display: grid;
-  gap: 1rem;
-}
-
-.admin-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.4rem 1.5rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-soft);
-}
-
-.admin-topbar h1,
-.admin-topbar p {
-  margin: 0;
-}
-
-.admin-topbar h1 {
-  margin-top: 0.6rem;
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-}
-
-.admin-topbar p {
-  margin-top: 0.45rem;
-  color: var(--text-muted);
-  max-width: 64ch;
-}
-
-.admin-topbar__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 1.1rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: #fff;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.admin-content {
-  display: grid;
-}
-
-@media (max-width: 1080px) {
-  .admin-shell {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .admin-topbar {
-    flex-direction: column;
-    align-items: start;
-    padding: 1.15rem;
-  }
-}
-.topbar-right-zone {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-/* دکمه منو در دسکتاپ مخفی است */
-.menu-toggle-btn {
-  display: none;
-  background: none;
-  border: 1px solid var(--border);
-  padding: 0.5rem;
-  border-radius: var(--radius-md, 8px);
-  cursor: pointer;
-  color: var(--text-main, #333);
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-backdrop {
-  display: none;
-}
-
-/* ===================================================
-   Media Queries (بهینه‌سازی برای تبلت و موبایل)
-   =================================================== */
-
-@media (max-width: 1080px) {
-  .admin-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .menu-toggle-btn {
-    display: flex;
-  }
-
-  .admin-sidebar-wrapper {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 290px;
-    z-index: 999;
-    background: #fff;
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
-    transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .sidebar-open .admin-sidebar-wrapper {
-    transform: translateX(0);
-  }
-
-  /* اصلاح این بخش: display: block فقط اینجا فعال میشه */
-  .sidebar-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(4px);
-    z-index: 998;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .sidebar-open .sidebar-backdrop {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .admin-main {
-    padding: 0.75rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .admin-topbar {
-    flex-direction: column;
-    align-items: stretch; /* دکمه بازگشت به فروشگاه عریض‌تر و خوش‌دست‌تر شود */
-    padding: 1rem;
-    gap: 1.25rem;
-  }
-
-  .admin-topbar__link {
-    width: 100%; /* دکمه در موبایل تمام‌عرض می‌شود تا تاچ‌تارگت بهتری داشته باشد */
-  }
-
-  .topbar-right-zone {
-    align-items: flex-start;
-  }
-}
-</style>

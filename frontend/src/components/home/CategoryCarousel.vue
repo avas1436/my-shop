@@ -1,22 +1,24 @@
 <template>
-  <section class="category-section">
-    <div class="section-head">
+  <section class="grid gap-4">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
       <div>
-        <h2 class="section-title">خرید بر اساس دسته‌بندی</h2>
-        <p class="section-subtitle">مسیر سریع برای رسیدن به انتخاب‌های محبوب و ترند</p>
+        <h2 class="m-0 text-[clamp(1.35rem,2vw,2rem)] font-bold">خرید بر اساس دسته‌بندی</h2>
+        <p class="mt-2 text-text-muted text-[0.98rem]">
+          مسیر سریع برای رسیدن به انتخاب‌های محبوب و ترند
+        </p>
       </div>
     </div>
 
-    <div class="category-grid">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <router-link
         v-for="category in categories"
         :key="category.id"
         :to="`/category/${category.id}`"
-        class="category-card"
+        class="grid gap-3 p-5 rounded-lg bg-surface border border-border-light shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-custom"
       >
-        <img :src="category.icon" :alt="category.title" />
-        <strong>{{ category.title }}</strong>
-        <p>{{ category.description }}</p>
+        <img :src="category.icon" :alt="category.title" class="w-21 h-10.5 object-contain" />
+        <strong class="m-0 text-text-main">{{ category.title }}</strong>
+        <p class="m-0 text-text-muted text-sm">{{ category.description }}</p>
       </router-link>
     </div>
   </section>
@@ -27,62 +29,3 @@ defineProps({
   categories: { type: Array, default: () => [] },
 })
 </script>
-
-<style scoped>
-.category-section {
-  display: grid;
-  gap: 1rem;
-}
-
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.category-card {
-  display: grid;
-  gap: 0.8rem;
-  padding: 1.2rem;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-soft);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.category-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow);
-}
-
-.category-card img {
-  width: 84px;
-  height: 42px;
-  object-fit: contain;
-}
-
-.category-card strong,
-.category-card p {
-  margin: 0;
-}
-
-.category-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-@media (max-width: 980px) {
-  .category-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .category-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

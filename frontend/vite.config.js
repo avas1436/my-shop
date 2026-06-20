@@ -6,6 +6,9 @@ import { fileURLToPath, URL } from 'node:url'
 // پلاگین وایت
 import vue from '@vitejs/plugin-vue'
 
+// ایمپورت تیلویند
+import tailwindcss from '@tailwindcss/vite'
+
 // TypeScript / IntelliSense
 import { defineConfig } from 'vite'
 
@@ -29,6 +32,7 @@ export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    tailwindcss(),
     visualizer({
       gzipSize: true,
       brotliSize: true,

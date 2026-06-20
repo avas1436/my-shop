@@ -1,8 +1,9 @@
 // src/main.js
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
+
+// وارد کردن فایل‌های استایل
 import './assets/font/font.css'
-import './assets/styles/admin-product-workflow.css'
 import './assets/styles/main.css'
 
 import App from './App.vue'

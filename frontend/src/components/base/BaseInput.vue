@@ -1,6 +1,6 @@
 <template>
-  <div class="base-input">
-    <label v-if="label" class="base-input__label">
+  <div class="w-full">
+    <label v-if="label" class="block mb-1.5 text-[0.92rem] font-bold text-text-main">
       {{ label }}
     </label>
 
@@ -8,10 +8,10 @@
       v-bind="$attrs"
       :value="modelValue"
       @input="$emit('update:modelValue', $event.target.value)"
-      class="base-input__control"
+      class="w-full min-h-[48px] rounded-lg border border-border-light bg-surface-strong text-text-main py-3.5 px-4 outline-none transition-all duration-200 placeholder:text-text-muted focus:border-primary/35 focus:ring-4 focus:ring-primary/10"
     />
 
-    <p v-if="error" class="base-input__error">
+    <p v-if="error" class="mt-1.5 text-danger text-[0.82rem]">
       {{ error }}
     </p>
   </div>
@@ -26,47 +26,3 @@ defineProps({
 
 defineEmits(['update:modelValue'])
 </script>
-
-<style scoped>
-.base-input {
-  width: 100%;
-}
-
-.base-input__label {
-  display: block;
-  margin-bottom: 0.45rem;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.base-input__control {
-  width: 100%;
-  min-height: 48px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--surface-strong);
-  color: var(--text);
-  padding: 0.85rem 1rem;
-  outline: none;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.base-input__control::placeholder {
-  color: var(--text-muted);
-}
-
-.base-input__control:focus {
-  border-color: rgba(91, 61, 245, 0.35);
-  box-shadow: 0 0 0 4px rgba(91, 61, 245, 0.12);
-}
-
-.base-input__error {
-  margin: 0.45rem 0 0;
-  color: var(--danger);
-  font-size: 0.82rem;
-}
-</style>

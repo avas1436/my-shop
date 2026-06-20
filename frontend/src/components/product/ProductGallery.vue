@@ -1,17 +1,25 @@
 <template>
-  <section class="product-gallery">
-    <img :src="activeImage" :alt="title" class="product-gallery__main" />
+  <section class="grid gap-4">
+    <img
+      :src="activeImage"
+      :alt="title"
+      class="w-full aspect-square object-cover rounded-[28px] bg-surface-strong"
+    />
 
-    <div class="product-gallery__thumbs">
+    <div class="grid grid-cols-3 gap-3">
       <button
         v-for="image in images"
         :key="image"
         type="button"
-        class="product-gallery__thumb"
-        :class="{ 'product-gallery__thumb--active': image === activeImage }"
+        class="p-1.5 rounded-[20px] border bg-surface-strong transition-all"
+        :class="[
+          image === activeImage
+            ? 'border-primary/40 shadow-[0_0_0_3px_rgba(91,61,245,0.12)]'
+            : 'border-border-light hover:border-primary/20',
+        ]"
         @click="activeImage = image"
       >
-        <img :src="image" :alt="title" />
+        <img :src="image" :alt="title" class="w-full aspect-square object-cover rounded-2xl" />
       </button>
     </div>
   </section>
@@ -35,43 +43,3 @@ watch(
   { immediate: true },
 )
 </script>
-
-<style scoped>
-.product-gallery {
-  display: grid;
-  gap: 1rem;
-}
-
-.product-gallery__main {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 28px;
-  background: var(--surface-strong);
-}
-
-.product-gallery__thumbs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.product-gallery__thumb {
-  padding: 0.35rem;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--surface-strong);
-}
-
-.product-gallery__thumb--active {
-  border-color: rgba(91, 61, 245, 0.38);
-  box-shadow: 0 0 0 3px rgba(91, 61, 245, 0.12);
-}
-
-.product-gallery__thumb img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  border-radius: 16px;
-}
-</style>

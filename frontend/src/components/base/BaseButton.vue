@@ -1,8 +1,12 @@
 <template>
   <component
     :is="tag"
-    class="base-button"
-    :class="[`base-button--${variant}`, `base-button--${size}`, { 'base-button--block': block }]"
+    :class="[
+      'inline-flex items-center justify-center gap-2 border-0 rounded-full font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55 disabled:transform-none disabled:shadow-none hover:-translate-y-px',
+      sizeClasses[size],
+      variantClasses[variant],
+      { 'w-full': block },
+    ]"
     v-bind="$attrs"
   >
     <slot />
@@ -10,102 +14,30 @@
 </template>
 
 <script setup>
-defineProps({
-  tag: { type: String, default: 'button' },
-  variant: { type: String, default: 'primary' },
-  size: { type: String, default: 'md' },
-  block: { type: Boolean, default: false },
-})
+// const props = defineProps({
+//   tag: { type: String, default: 'button' },
+//   variant: { type: String, default: 'primary' },
+//   size: { type: String, default: 'md' },
+//   block: { type: Boolean, default: false },
+// })
+
+const sizeClasses = {
+  sm: 'min-h-[40px] px-4 text-[0.9rem]',
+  md: 'min-h-[48px] px-[1.35rem] text-[0.96rem]',
+  lg: 'min-h-[56px] px-[1.7rem] text-base',
+}
+
+const variantClasses = {
+  primary:
+    'text-white bg-gradient-to-br from-primary to-primary-dark shadow-[0_16px_32px_rgba(91,61,245,0.22)] hover:shadow-[0_20px_36px_rgba(91,61,245,0.28)]',
+  secondary: 'text-text-main bg-bg-muted border border-border-light',
+  ghost: 'text-primary bg-transparent border border-primary/20',
+  success:
+    'text-white bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-[0_16px_32px_rgba(16,185,129,0.22)] hover:shadow-[0_20px_36px_rgba(16,185,129,0.28)]',
+  warning:
+    'text-white bg-gradient-to-br from-amber-500 to-amber-600 shadow-[0_16px_32px_rgba(245,158,11,0.22)] hover:shadow-[0_20px_36px_rgba(245,158,11,0.28)]',
+  danger:
+    'text-white bg-gradient-to-br from-danger to-red-600 shadow-[0_16px_32px_rgba(239,68,68,0.22)] hover:shadow-[0_20px_36px_rgba(239,68,68,0.28)]',
+  'danger-ghost': 'text-danger bg-transparent border border-danger/20 hover:bg-danger/10',
+}
 </script>
-
-<style scoped>
-.base-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 0;
-  border-radius: 999px;
-  font-weight: 700;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.base-button:hover {
-  transform: translateY(-1px);
-}
-
-.base-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-  transform: none;
-  box-shadow: none;
-}
-
-.base-button--block {
-  width: 100%;
-}
-
-.base-button--sm {
-  min-height: 40px;
-  padding: 0 1rem;
-  font-size: 0.9rem;
-}
-
-.base-button--md {
-  min-height: 48px;
-  padding: 0 1.35rem;
-  font-size: 0.96rem;
-}
-
-.base-button--lg {
-  min-height: 56px;
-  padding: 0 1.7rem;
-  font-size: 1rem;
-}
-
-.base-button--primary {
-  color: #fff;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  box-shadow: 0 16px 32px rgba(91, 61, 245, 0.22);
-}
-
-.base-button--primary:hover {
-  box-shadow: 0 20px 36px rgba(91, 61, 245, 0.28);
-}
-
-.base-button--secondary {
-  color: var(--text);
-  background: var(--bg-muted);
-  border: 1px solid var(--border);
-}
-
-.base-button--ghost {
-  color: var(--primary);
-  background: transparent;
-  border: 1px solid rgba(91, 61, 245, 0.18);
-}
-
-/* دکمه افزودن (مثلا افزودن آدرس) - رنگ سبز */
-.base-button--success {
-  color: #fff;
-  background: linear-gradient(135deg, #10b981, #059669);
-  box-shadow: 0 16px 32px rgba(16, 185, 129, 0.22);
-}
-
-.base-button--success:hover {
-  box-shadow: 0 20px 36px rgba(16, 185, 129, 0.28);
-}
-
-.base-button--warning {
-  color: #fff;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  box-shadow: 0 16px 32px rgba(245, 158, 11, 0.22);
-}
-
-.base-button--warning:hover {
-  box-shadow: 0 20px 36px rgba(245, 158, 11, 0.28);
-}
-</style>
