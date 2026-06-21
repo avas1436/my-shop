@@ -2,7 +2,7 @@
   <header class="sticky top-0 z-50 backdrop-blur-[18px] bg-bg/72 border-b border-slate-900/5">
     <div class="bg-linear-to-r from-primary/95 to-accent/92 text-white text-[0.84rem]">
       <div
-        class="container flex flex-col md:flex-row items-center justify-between gap-1 md:gap-4 min-h-10.5 py-1.5 md:py-0"
+        class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-1 md:gap-4 min-h-10.5 py-1.5 md:py-0"
       >
         <span>ارسال رایگان برای سفارش بالای ۳۰ میلیون تومان</span>
         <div class="flex flex-col md:flex-row md:gap-5 opacity-92 items-center">
@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="container">
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid grid-cols-1 md:grid-cols-[280px_1fr_auto] gap-4 items-center py-4">
         <router-link to="/" class="flex items-center gap-3.5">
           <img

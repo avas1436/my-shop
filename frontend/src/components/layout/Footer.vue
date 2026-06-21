@@ -1,6 +1,8 @@
 <template>
   <footer class="mt-12 py-10 pb-8 bg-[#101828] text-white/88">
-    <div class="container grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-6">
+    <div
+      class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-6"
+    >
       <section>
         <h3 class="m-0 mb-3.5 text-white">{{ admin.settings.storeName }}</h3>
         <p class="m-0 max-w-[42ch] text-white/72">
@@ -38,7 +40,7 @@
     </div>
 
     <div
-      class="container flex flex-col md:flex-row justify-between gap-4 mt-8 pt-4 border-t border-white/10 text-[0.88rem] text-white/60"
+      class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between gap-4 mt-8 pt-4 border-t border-white/10 text-[0.88rem] text-white/60"
     >
       <span>© ۱۴۰۵ {{ admin.settings.storeName }} — تمامی حقوق محفوظ است.</span>
       <span>{{ admin.settings.fulfillmentWindow }}</span>

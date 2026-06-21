@@ -1,9 +1,9 @@
 <!-- src/App.vue  -->
 <template>
-  <div class="w-full min-h-screen overflow-x-hidden">
+  <div class="min-h-screen bg-bg text-text-main overflow-x-hidden">
     <div
       v-if="!isAuthReady"
-      class="min-h-screen flex flex-col items-center justify-center bg-bg-muted gap-4"
+      class="flex-1 flex flex-col items-center justify-center bg-bg-muted gap-4"
     >
       <div
         class="w-12 h-12 border-4 border-border border-t-primary rounded-full animate-spin"
@@ -23,9 +23,9 @@
       >
         <component :is="Component" />
       </Transition>
-
-      <ToastContainer />
     </RouterView>
+
+    <ToastContainer />
   </div>
 </template>
 
