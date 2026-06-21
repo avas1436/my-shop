@@ -43,9 +43,47 @@ A comprehensive, high-performance e-commerce platform built with a microservices
 ## Project Structure
 
 ```text
-├── Axum/       # Rust-based service optimized for heavy get.
+├── Axum/       # Rust-based service optimized for performance-critical read operations.
 ├── FastAPI/    # Primary Python service managing user authentication, cart logic, product workflows, and background tasks.
 ├── frontend/   # Vue.js application containing both the storefront and the administrative control panel.
 ├── docker/     # Container configurations, Traefik dynamic routing, and middleware definitions.
-└── stack.yml   # Primary Docker Compose configuration file orchestrating the entire platform.
+└── stack.yml   # Primary Docker Swarm configuration file orchestrating the entire platform.
 ```
+
+## Prerequisites
+
+To run this project locally, ensure you have the following installed on your system (an Ubuntu/Linux environment is recommended):
+
+- Docker
+
+To run the services locally for development:
+
+- Cargo
+- UV
+- pnpm
+
+## Installation and Setup
+
+1. Clone the repository:
+   git clone <your-repository-url>
+   cd <your-project-directory>
+
+2. Configure Environment Variables:
+   Duplicate the provided settings files within their respective directories (FastAPI, Axum, frontend) and rename them to .env. Populate these files with your specific database credentials, secret keys, and API endpoints.
+
+3. Deploy the Infrastructure:
+   Initialize the containers using Docker Swarm:
+
+docker compose -f stack.yml up -d
+
+4. Access the Services:
+
+Frontend Application: http://localhost:3000 (or the port defined in your web server configuration)
+
+FastAPI Documentation (Swagger UI): http://localhost:8000/docs
+
+Axum API Endpoints: Refer to the docs/openapi.rs routing definitions.
+
+5. Author
+
+Developed by Amir Abbas Abbaszadeh
