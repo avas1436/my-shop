@@ -92,7 +92,3 @@ Axum API Endpoints: Refer to the docs/openapi.rs routing definitions.
 Developed by Amir Abbas Abbaszadeh
 
 ---
-
-```
-
-```
