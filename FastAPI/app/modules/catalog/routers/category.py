@@ -44,7 +44,7 @@ async def create_category(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -56,7 +56,9 @@ async def create_category(
 
 
 @router.get(
-    "/{category_id}", response_model=CategoryRead, status_code=status.HTTP_200_OK
+    "/{category_id}",
+    response_model=CategoryRead,
+    status_code=status.HTTP_200_OK,
 )
 async def get_category(
     request: Request,
@@ -64,6 +66,18 @@ async def get_category(
     service: Annotated[CategoryService, Depends(get_category_service)],
 ):
     return await service.get_category(category_id)
+
+
+@router.get(
+    "/parents/{category_id}",
+    response_model=list[CategoryRead],
+    status_code=status.HTTP_200_OK,
+)
+async def get_category_parents(
+    category_id: int,
+    service: Annotated[CategoryService, Depends(get_category_service)],
+):
+    return await service.get_category_parents(category_id)
 
 
 @router.get("/", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
@@ -93,7 +107,7 @@ async def update_category(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -117,7 +131,7 @@ async def delete_category(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -148,7 +162,7 @@ async def attach_categories(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -175,7 +189,7 @@ async def detach_categories(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -202,7 +216,7 @@ async def sync_categories(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),

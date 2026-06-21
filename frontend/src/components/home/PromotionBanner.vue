@@ -1,82 +1,32 @@
 <template>
-  <section class="promo-banner">
+  <section
+    class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center p-5 md:py-[1.6rem] md:px-[1.8rem] rounded-xl bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_24%),linear-gradient(135deg,#172033,rgba(91,61,245,0.96))] text-white"
+  >
     <div>
-      <span class="pill">تخفیف هفتگی</span>
-      <h2>تا ۲۵٪ تخفیف روی کالاهای منتخب دیجیتال و خانه</h2>
-      <p>
-        مجموعه‌ای از محصولات پرفروش با موجودی محدود و ارسال سریع؛ زمان خوبی برای
-        نهایی کردن خرید است.
+      <span
+        class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-white/10 text-white text-sm backdrop-blur-sm border border-white/10"
+        >تخفیف هفتگی</span
+      >
+      <h2 class="mt-3.5 m-0 text-[clamp(1.5rem,3vw,2.2rem)] font-bold">
+        تا ۲۵٪ تخفیف روی کالاهای منتخب دیجیتال و خانه
+      </h2>
+      <p class="mt-3 m-0 max-w-[52ch] text-white/80 leading-relaxed">
+        مجموعه‌ای از محصولات پرفروش با موجودی محدود و ارسال سریع؛ زمان خوبی برای نهایی کردن خرید
+        است.
       </p>
     </div>
 
-    <div class="promo-banner__actions">
-      <router-link to="/category/digital" class="promo-banner__primary">خرید دیجیتال</router-link>
-      <router-link to="/category/home" class="promo-banner__secondary">محصولات خانه</router-link>
+    <div class="flex flex-wrap gap-3 mt-4 md:mt-0">
+      <router-link
+        to="/category/digital"
+        class="inline-flex items-center justify-center min-h-12 px-5 rounded-full font-bold bg-white text-primary"
+        >خرید دیجیتال</router-link
+      >
+      <router-link
+        to="/category/home"
+        class="inline-flex items-center justify-center min-h-12 px-5 rounded-full font-bold border border-white/20 text-white"
+        >محصولات خانه</router-link
+      >
     </div>
   </section>
 </template>
-
-<style scoped>
-.promo-banner {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 1.6rem 1.8rem;
-  border-radius: var(--radius-xl);
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 24%),
-    linear-gradient(135deg, rgba(23, 32, 51, 1), rgba(91, 61, 245, 0.96));
-  color: #fff;
-}
-
-.promo-banner h2,
-.promo-banner p {
-  margin: 0;
-}
-
-.promo-banner h2 {
-  margin-top: 0.85rem;
-  font-size: clamp(1.5rem, 3vw, 2.2rem);
-}
-
-.promo-banner p {
-  margin-top: 0.75rem;
-  max-width: 52ch;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.promo-banner__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-}
-
-.promo-banner__primary,
-.promo-banner__secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 1.15rem;
-  border-radius: 999px;
-  font-weight: 700;
-}
-
-.promo-banner__primary {
-  background: #fff;
-  color: var(--primary);
-}
-
-.promo-banner__secondary {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
-
-@media (max-width: 768px) {
-  .promo-banner {
-    grid-template-columns: 1fr;
-    padding: 1.25rem;
-  }
-}
-</style>

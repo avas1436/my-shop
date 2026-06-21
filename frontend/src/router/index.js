@@ -144,8 +144,57 @@ const routes = [
       {
         path: 'products',
         name: ROUTES.ADMIN_PRODUCTS,
-        component: () => import('@/views/admin/AdminProductsView.vue'),
+        component: () => import('@/views/admin/AdminProduct.vue'),
         props: true,
+      },
+
+      // تب محصولات
+      {
+        path: 'products/:product_id/full',
+        component: () => import('@/views/admin/AdminProductDetailView.vue'),
+        props: true,
+        children: [
+          {
+            path: '',
+            redirect: (to) => `${to.path}/general`, // ریدایرکت خودکار به اطلاعات پایه
+          },
+          {
+            path: 'general',
+            name: 'AdminProductGeneral',
+            component: () => import('@/views/admin/product-tabs/GeneralTab.vue'),
+            props: true,
+          },
+          {
+            path: 'images',
+            name: 'AdminProductImages',
+            component: () => import('@/views/admin/product-tabs/ImagesTab.vue'),
+            props: true,
+          },
+          {
+            path: 'inventory',
+            name: 'AdminProductInventory',
+            component: () => import('@/views/admin/product-tabs/InventoryTab.vue'),
+            props: true,
+          },
+          {
+            path: 'relations',
+            name: 'AdminProductRelations',
+            component: () => import('@/views/admin/product-tabs/RelationsTab.vue'),
+            props: true,
+          },
+          {
+            path: 'comments',
+            name: 'AdminProductComments',
+            component: () => import('@/views/admin/product-tabs/CommentsTab.vue'),
+            props: true,
+          },
+          {
+            path: 'actions',
+            name: 'AdminProductActions',
+            component: () => import('@/views/admin/product-tabs/ActionsTab.vue'),
+            props: true,
+          },
+        ],
       },
       {
         path: 'orders',
@@ -159,12 +208,54 @@ const routes = [
         component: () => import('@/views/admin/AdminCustomersView.vue'),
         props: true,
       },
+      // {
+      //   path: 'inventory',
+      //   name: ROUTES.ADMIN_INVENTORY,
+      //   component: () => import('@/views/admin/AdminInventoryView.vue'),
+      //   props: true,
+      // },
+      // {
+      //   path: 'financials',
+      //   name: ROUTES.ADMIN_FINANCIALS,
+      //   component: () => import('@/views/admin/AdminFinancialsView.vue'),
+      //   props: true,
+      // },
+      // {
+      //   path: 'marketing',
+      //   name: ROUTES.ADMIN_MARKETING,
+      //   component: () => import('@/views/admin/AdminMarketingView.vue'),
+      //   props: true,
+      // },
+      // {
+      //   path: 'support',
+      //   name: ROUTES.ADMIN_SUPPORT,
+      //   component: () => import('@/views/admin/AdminSupportView.vue'),
+      //   props: true,
+      // },
+      // {
+      //   path: 'analytics',
+      //   name: ROUTES.ADMIN_ANALYTICS,
+      //   component: () => import('@/views/admin/AdminAnalyticsView.vue'),
+      //   props: true,
+      // },
+      // {
+      //   path: 'staff',
+      //   name: ROUTES.ADMIN_STAFF,
+      //   component: () => import('@/views/admin/AdminStaffView.vue'),
+      //   props: true,
+      // },
       {
         path: 'content',
         name: ROUTES.ADMIN_CONTENT,
         component: () => import('@/views/admin/AdminContentView.vue'),
         props: true,
       },
+      // {
+      //   path: 'settings',
+      //   name: ROUTES.ADMIN_SETTINGS,
+      //   component: () => import('@/views/admin/AdminSettingsView.vue'),
+      //   props: true,
+      // },
     ],
   },
 

@@ -47,6 +47,44 @@ class CategoryRepository(BaseRepository[Category]):
 
         return list(items), total
 
+    async def get_all_parents(self, category_id: int) -> list[Category]:
+        # تعریف بخش ابتدایی CTE با تمام ستون‌های مدل Category
+        cte = (
+            select(Category)
+            .where(Category.id == category_id)
+            .cte(name="parent_tree", recursive=True)
+        )
+
+        cte_alias = cte.alias()
+        # پیوند زدن لایه‌های والد با واکشی کل رکوردها
+        cte = cte.union_all(
+            select(Category).where(Category.id == cte_alias.c.parent_id)
+        )
+
+        # انتخاب نهایی از روی CTE و حذف خودِ دسته‌بندی اولیه از خروجی (فقط والدها)
+        query = select(Category).from_statement(
+            select(cte).where(cte.c.id != category_id)
+        )
+
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
+    async def get_all_parents_ids(self, category_id: int) -> set[int]:
+        cte = (
+            select(Category.id, Category.parent_id)
+            .where(Category.id == category_id)
+            .cte(name="parent_tree_ids", recursive=True)
+        )
+        cte_alias = cte.alias()
+        cte = cte.union_all(
+            select(Category.id, Category.parent_id).where(
+                Category.id == cte_alias.c.parent_id
+            )
+        )
+        q = select(cte.c.id)
+        result = await self.db.execute(q)
+        return set(result.scalars().all())
+
 
 class ProductCategoryRepository:
     def __init__(self, db: AsyncSession):
@@ -77,7 +115,6 @@ class ProductCategoryRepository:
             {"product_id": product_id, "category_id": cid} for cid in category_ids
         ]
         await self.db.execute(insert(ProductCategory), values)
-        await self.db.commit()
 
     async def remove_links(self, product_id: int, category_ids: list[int]) -> None:
         if not category_ids:
@@ -87,4 +124,9 @@ class ProductCategoryRepository:
             ProductCategory.category_id.in_(category_ids),
         )
         await self.db.execute(q)
+
+    # ---------------------------
+    # Unit of Work helper
+    # ---------------------------
+    async def commit(self):
         await self.db.commit()

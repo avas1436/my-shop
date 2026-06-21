@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     secret_key: str = Field(
         default="change-me", min_length=8, description="کلید محرمانه پروژه"
     )
+    timeout_duration_seconds: float = Field(default=10.0)
 
     # development urls
     docs_enable: bool = True
@@ -40,6 +41,9 @@ class Settings(BaseSettings):
     docs_url: str | None = None
     redoc_url: str | None = None
     api_v1_prefix: str = "/api/v1"
+    public_path: tuple = Field(
+        default={"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
+    )
 
     # cors middleware
     cors_origins: list[str] = ["https://myapp.com"]
@@ -104,16 +108,21 @@ class Settings(BaseSettings):
     secure: bool
     samesite: str
 
+    # Images
+    allowed_extensions: list[str]
+    max_file_size: int
+
     # محاسبه اتوماتیک مقدار زمان انقضای رفرش توکن به ثانیه
     @property
     def refresh_token_ttl(self) -> int:
         return self.refresh_token_expire_days * 24 * 60 * 60
 
     model_config = SettingsConfigDict(
-        env_file=".env.dev",
-        # env_file=".env.dev",
+        env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        # اضافه کردن این خط برای اولویت دادن به متغیرهای سیستم عامل
+        extra="ignore",
     )
 
 

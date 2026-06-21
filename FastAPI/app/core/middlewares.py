@@ -11,14 +11,13 @@ from app.common.request_meta import extract_real_ip
 from app.common.responses import create_raw_json_response
 from app.config.settings import get_settings
 from app.core.rate_limit import ASGIRateLimitMiddleware
+from app.core.timeout import request_timeout_middleware
 
 #  ---------- الگوهای Bot Detection ----------
 SUSPICIOUS_UA_RE = re.compile(
     r"(python-requests|go-http-client|sqlmap|nikto|masscan|zgrab|nmap|scrapy)",
     re.IGNORECASE,
 )
-
-PUBLIC_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
 
 
 settings = get_settings()
@@ -37,7 +36,7 @@ settings = get_settings()
 async def block_suspicious_bots(request: Request, call_next):
 
     # مسیرهای عمومی را بررسی نکن
-    if request.url.path in PUBLIC_PATHS:
+    if request.url.path in settings.public_path:
         return await call_next(request)
 
     user_agent = request.headers.get("user-agent", "")
@@ -82,7 +81,7 @@ async def block_suspicious_bots(request: Request, call_next):
 async def add_process_time(request: Request, call_next):
     """محاسبه زمان پردازش برای monitoring."""
     # مسیرهای عمومی را نادیده بگیر
-    if request.url.path in PUBLIC_PATHS:
+    if request.url.path in settings.public_path:
         return await call_next(request)
 
     start = time.perf_counter()
@@ -94,6 +93,9 @@ async def add_process_time(request: Request, call_next):
 
 # ---------- ثبت Middlewares ----------
 def register_middlewares(app: FastAPI, trusted_host: list[str]) -> None:
+    # 0. timeout middleware
+    app.middleware("http")(request_timeout_middleware)
+
     # 1. Process Time
     app.middleware("http")(add_process_time)
 

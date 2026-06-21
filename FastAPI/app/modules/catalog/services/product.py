@@ -79,10 +79,13 @@ class AdminProductService:
     # ---------------------------
     async def get_product_admin(self, product_id: int) -> ProductAdminRead | None:
         if product_id < 1:
-            raise BadRequest("Invalid product id.")
+            raise BadRequest(
+                message="Invalid product id.",
+                code="PRODUCT_INVALID_ID",
+            )
 
         if self.cache.is_available():
-            cached = await self.cache.get(product_id)
+            cached = await self.cache.get("admin", "full", product_id)
             if cached is not None:
                 return cached
 
@@ -92,13 +95,16 @@ class AdminProductService:
         )
 
         if not product:
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         # payload = ProductAdminRead.model_validate(product).model_dump()
         payload = ProductAdminRead.model_validate(product).model_dump(mode="json")
 
         if self.cache.is_available():
-            await self.cache.set(product_id, payload=payload)
+            await self.cache.set("admin", "full", product_id, payload=payload)
 
         obj = ProductAdminRead(**payload)
 
@@ -141,7 +147,10 @@ class AdminProductService:
 
         except IntegrityError as e:
             await self.repo.rollback()
-            raise Conflict(f"Data Validation Error: {e.orig}") from None
+            raise Conflict(
+                message=f"Data Validation Error: {e.orig}",
+                code="PRODUCT_DATA_CONFLICT",
+            ) from None
 
         except Conflict:
             await self.repo.rollback()
@@ -153,19 +162,28 @@ class AdminProductService:
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to create product.") from exc
+            raise InternalServerError(
+                message="Failed to create product.",
+                code="PRODUCT_CREATE_FAILED",
+            ) from exc
 
     # ---------------------------
     # Soft Delete a product
     # ---------------------------
     async def soft_delete_product(self, product_id: int) -> Product:
         if product_id < 1:
-            raise BadRequest("Invalid product id.")
+            raise BadRequest(
+                message="Invalid product id.",
+                code="PRODUCT_INVALID_ID",
+            )
 
         product = await self.repo.get_by_id_little(id=product_id)
 
         if not product:
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         now = datetime.now(UTC)
         payload = ProductSoftDelete(
@@ -174,7 +192,10 @@ class AdminProductService:
         )
 
         try:
-            ok = await self.repo.soflt_delete_product(product=product, updates=payload)
+            ok = await self.repo.soflt_delete_product(
+                product=product,
+                updates=payload,
+            )
 
             await self.repo.commit()
 
@@ -182,25 +203,39 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return ok
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError(f"Failed to delete product. {exc}") from exc
+            raise InternalServerError(
+                message=f"Failed to delete product. {exc}",
+                code="PRODUCT_DELETE_FAILED",
+            ) from exc
 
     # ---------------------------
     # Hard Delete a product
     # ---------------------------
     async def hard_delete_product(self, product_id: int) -> bool:
         if product_id < 1:
-            raise BadRequest("Invalid product id.")
+            raise BadRequest(
+                message="Invalid product id.",
+                code="PRODUCT_INVALID_ID",
+            )
 
         product = await self.repo.get_by_id_little(id=product_id)
 
         if not product:
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         try:
             await self.repo.hard_delete(product)
@@ -209,13 +244,21 @@ class AdminProductService:
 
             if self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return True
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to delete product.") from exc
+            raise InternalServerError(
+                message="Failed to delete product.",
+                code="PRODUCT_HARD_DELETE_FAILED",
+            ) from exc
 
     # ---------------------------
     # Update Product
@@ -227,15 +270,24 @@ class AdminProductService:
     ) -> Product:
 
         if product_id < 1:
-            raise BadRequest("Invalid product id.")
+            raise BadRequest(
+                message="Invalid product id.",
+                code="PRODUCT_INVALID_ID",
+            )
 
         product = await self.repo.get_by_id_little(id=product_id)
 
         if not product:
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         try:
-            ok = await self.repo.update_product(product=product, updates=updates)
+            ok = await self.repo.update_product(
+                product=product,
+                updates=updates,
+            )
 
             await self.repo.commit()
 
@@ -243,13 +295,21 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return ok
 
         except IntegrityError as e:
             await self.repo.rollback()
-            raise Conflict(f"Data Validation Error: {e.orig}") from None
+            raise Conflict(
+                message=f"Data Validation Error: {e.orig}",
+                code="PRODUCT_DATA_CONFLICT",
+            ) from None
 
         except Conflict:
             await self.repo.rollback()
@@ -261,7 +321,10 @@ class AdminProductService:
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to update product.") from exc
+            raise InternalServerError(
+                message="Failed to update product.",
+                code="PRODUCT_UPDATE_FAILED",
+            ) from exc
 
     # ---------------------------
     # Published Product
@@ -272,15 +335,24 @@ class AdminProductService:
     ) -> Product:
 
         if product_id < 1:
-            raise BadRequest("Invalid product id.")
+            raise BadRequest(
+                message="Invalid product id.",
+                code="PRODUCT_INVALID_ID",
+            )
 
         product = await self.repo.get_by_id_little(id=product_id)
 
         if not product:
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         if product.status == ProductStatus.INACTIVE or product.deleted_at is not None:
-            raise UnprocessableEntity("Product is inactive or deleted.")
+            raise UnprocessableEntity(
+                message="Product is inactive or deleted.",
+                code="PRODUCT_ALREADY_INACTIVE_OR_DELETED",
+            )
 
         updates = ProductPublish(
             status=ProductStatus.ACTIVE,
@@ -288,7 +360,10 @@ class AdminProductService:
         )
 
         try:
-            ok = await self.repo.published_product(product=product, updates=updates)
+            ok = await self.repo.published_product(
+                product=product,
+                updates=updates,
+            )
 
             await self.repo.commit()
 
@@ -296,13 +371,21 @@ class AdminProductService:
 
             if ok is not None and self.cache.is_available():
                 await self.cache.invalidate_lists()
-                await self.cache.invalidate_key("product", product_id)
+                await self.cache.invalidate_key("admin", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product_id)
+                await self.cache.invalidate_key("user", "full", product.slug)
+                await self.cache.invalidate_key("user", product_id)
+                await self.cache.invalidate_key("user", product.slug)
+                await self.cache.invalidate_key("homepage")
 
             return ok
 
         except IntegrityError as e:
             await self.repo.rollback()
-            raise Conflict(f"Data Validation Error: {e.orig}") from None
+            raise Conflict(
+                message=f"Data Validation Error: {e.orig}",
+                code="PRODUCT_DATA_CONFLICT",
+            ) from None
 
         except Conflict:
             await self.repo.rollback()
@@ -314,7 +397,10 @@ class AdminProductService:
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to publish product.") from exc
+            raise InternalServerError(
+                message="Failed to publish product.",
+                code="PRODUCT_PUBLISH_FAILED",
+            ) from exc
 
 
 # =========================================================
@@ -333,15 +419,16 @@ class UserProductService:
     ) -> ProductFullUserRead:
 
         if not product_id and not slug:
-            raise BadRequest("product_id or slug is required")
-
-        if product_id is not None:
-            cache_key = f"product:{product_id}"
-        elif slug is not None:
-            cache_key = f"product:{slug}"
+            raise BadRequest(
+                message="product_id or slug is required",
+                code="PRODUCT_IDENTIFIER_REQUIRED",
+            )
 
         if self.cache.is_available():
-            cached = await self.cache.get(cache_key)
+            if product_id is not None:
+                cached = await self.cache.get("user", "full", product_id)
+            elif slug is not None:
+                cached = await self.cache.get("user", "full", slug)
 
             if cached is not None:
                 return ProductFullUserRead(**cached)
@@ -352,12 +439,30 @@ class UserProductService:
         )
 
         if not product:
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         payload = ProductFullUserRead.model_validate(product).model_dump(mode="json")
 
         if self.cache.is_available():
-            await self.cache.set(cache_key, payload=payload, ttl=500)
+            if product_id is not None:
+                await self.cache.set(
+                    "user",
+                    "full",
+                    product_id,
+                    payload=payload,
+                    ttl=500,
+                )
+            elif slug is not None:
+                await self.cache.set(
+                    "user",
+                    "full",
+                    slug,
+                    payload=payload,
+                    ttl=500,
+                )
 
         return ProductFullUserRead(**payload)
 
@@ -384,7 +489,10 @@ class UserProductService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="PAGINATION_INVALID_VALUES",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list(

@@ -18,7 +18,7 @@ from app.modules.catalog.services.tag import (
 # --------------------------------------------------
 def get_tag_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("tag"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> TagService:
 
     return TagService(db=db, cache=cache)
@@ -29,7 +29,7 @@ def get_tag_service(
 # --------------------------------------------------
 def get_product_tag_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("product_tag"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> ProductTagService:
 
     return ProductTagService(db=db, cache=cache)

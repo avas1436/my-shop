@@ -16,7 +16,11 @@ from app.modules.users.models import User
 router = APIRouter(route_class=SuccessAPIRoute)
 
 
-@router.post("/", response_model=BrandRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=BrandRead,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_brand(
     request: Request,
     data: BrandCreate,
@@ -44,10 +48,15 @@ async def get_brand(
     brand_id: int,
     service: Annotated[BrandService, Depends(get_brand_service)],
 ):
+
     return await service.get_brand(brand_id)
 
 
-@router.get("/", response_model=PageResponse[dict], status_code=status.HTTP_200_OK)
+@router.get(
+    "/",
+    response_model=PageResponse[dict],
+    status_code=status.HTTP_200_OK,
+)
 async def list_brands(
     request: Request,
     service: Annotated[BrandService, Depends(get_brand_service)],

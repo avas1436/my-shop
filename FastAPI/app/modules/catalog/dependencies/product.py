@@ -21,7 +21,7 @@ from app.modules.catalog.services.product import AdminProductService, UserProduc
 # --------------------------------------------------
 def get_admin_product_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache(namespace="admin-product"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> AdminProductService:
 
     repo = AdminProductRepository(db)
@@ -33,7 +33,7 @@ def get_admin_product_service(
 # --------------------------------------------------
 def get_user_product_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache(namespace="product"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> UserProductService:
 
     repo = UserProductRepository(db)

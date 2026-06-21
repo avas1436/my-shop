@@ -1,54 +1,82 @@
 <template>
-  <header class="site-header">
-    <div class="header-top">
-      <div class="container header-top__inner">
+  <header class="sticky top-0 z-50 backdrop-blur-[18px] bg-bg/72 border-b border-slate-900/5">
+    <div class="bg-linear-to-r from-primary/95 to-accent/92 text-white text-[0.84rem]">
+      <div
+        class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-1 md:gap-4 min-h-10.5 py-1.5 md:py-0"
+      >
         <span>ارسال رایگان برای سفارش بالای ۳۰ میلیون تومان</span>
-        <div class="header-top__meta">
+        <div class="flex flex-col md:flex-row md:gap-5 opacity-92 items-center">
           <span>پشتیبانی {{ admin.settings.supportPhone }}</span>
           <span>ضمانت اصالت کالا</span>
         </div>
       </div>
     </div>
 
-    <div class="container">
-      <div class="header-main">
-        <router-link to="/" class="brand">
-          <img src="@/assets/images/logo.jpg" alt="لوگوی فروشگاه" class="brand__logo" />
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-[280px_1fr_auto] gap-4 items-center py-4">
+        <router-link to="/" class="flex items-center gap-3.5">
+          <img
+            src="@/assets/images/logo.jpg"
+            alt="لوگوی فروشگاه"
+            class="w-14.5 h-14.5 object-cover rounded-md shadow-soft"
+          />
           <div>
-            <strong class="brand__title">{{ admin.settings.storeName }}</strong>
-            <span class="brand__subtitle">{{ admin.settings.heroMessage }}</span>
+            <strong class="block text-[1.15rem]">{{ admin.settings.storeName }}</strong>
+            <span class="block text-[0.82rem] text-text-muted line-clamp-2">{{
+              admin.settings.heroMessage
+            }}</span>
           </div>
         </router-link>
 
-        <form class="header-search" @submit.prevent="submitSearch">
-          <span class="header-search__icon">⌕</span>
+        <form
+          class="relative [&_input]:min-h-14 [&_input]:pr-12 [&_input]:bg-white/80"
+          @submit.prevent="submitSearch"
+        >
+          <span
+            class="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-text-muted z-10"
+            >⌕</span
+          >
           <BaseInput v-model="searchQuery" placeholder="جستجوی کالای مورد نظر ..." />
         </form>
 
-        <div class="header-actions">
-          <router-link to="/auth" class="header-action header-action--link">
+        <div class="flex justify-between md:justify-start items-center gap-2 md:gap-3">
+          <router-link
+            to="/auth"
+            class="hidden md:inline-flex items-center gap-2.5 min-h-12 px-4 border border-border-light rounded-full bg-white/80 text-primary font-bold"
+          >
             {{ profileLabel }}
           </router-link>
-          <button class="header-action" type="button" @click="toggleMiniCart">
+
+          <button
+            class="flex-1 md:flex-none inline-flex items-center justify-center gap-2.5 min-h-12 px-4 border border-border-light rounded-full bg-white/80 text-text-main font-bold"
+            type="button"
+            @click="toggleMiniCart"
+          >
             <span>سبد خرید</span>
-            <strong>{{ cart.count }}</strong>
+            <strong class="w-7 h-7 grid place-items-center rounded-full bg-bg-muted text-primary">{{
+              cart.count
+            }}</strong>
           </button>
-          <button class="header-burger" type="button" @click="toggleMobile">☰</button>
+
+          <button
+            class="inline-flex md:hidden items-center justify-center min-h-12 min-w-12 rounded-2xl border border-border-light bg-white/80"
+            type="button"
+            @click="toggleMobile"
+          >
+            ☰
+          </button>
         </div>
       </div>
 
-      <nav class="header-nav">
-        <router-link to="/">خانه</router-link>
-        <router-link to="/products">محصولات</router-link>
-        <router-link to="/category/digital">کالای دیجیتال</router-link>
-        <router-link to="/category/audio">صوتی و پوشیدنی</router-link>
-        <router-link to="/category/home">خانه و آشپزخانه</router-link>
-        <router-link to="/category/fashion">مد و استایل</router-link>
-        <router-link to="/support">پشتیبانی</router-link>
-        <router-link v-if="user.profile?.role === 'admin'" to="/admin">پنل ادمین</router-link>
-        <router-link v-if="user.profile?.role === 'admin'" to="/admin/products/new"
-          >ادمین محصول</router-link
+      <nav class="hidden md:flex items-center gap-4 pb-4 overflow-x-auto whitespace-nowrap">
+        <router-link
+          v-for="link in navLinks"
+          :key="link.to"
+          :to="link.to"
+          class="text-text-muted text-[0.92rem] py-2 px-3.5 rounded-full transition-colors duration-200 hover:text-text-main [&.router-link-active]:text-primary [&.router-link-active]:bg-primary/10"
         >
+          {{ link.label }}
+        </router-link>
       </nav>
     </div>
 
@@ -68,9 +96,7 @@ import BaseInput from '../base/BaseInput.vue'
 import MiniCart from './MiniCart.vue'
 import MobileNav from './MobileNav.vue'
 
-defineOptions({
-  name: 'SiteHeader',
-})
+defineOptions({ name: 'SiteHeader' })
 
 const admin = useAdminStore()
 const ui = useUIStore()
@@ -79,23 +105,21 @@ const user = useUserStore()
 const router = useRouter()
 const route = useRoute()
 const searchQuery = ref(route.query.q || ui.searchQuery)
-const profileLabel = computed(() => {
-  if (!user.isAuthenticated) {
-    return 'حساب کاربری'
-  }
 
-  return user.profile?.first_name ? `سلام ${user.profile.first_name}` : 'حساب من'
-})
+const profileLabel = computed(() =>
+  !user.isAuthenticated
+    ? 'حساب کاربری'
+    : user.profile?.first_name
+      ? `سلام ${user.profile.first_name}`
+      : 'حساب من',
+)
 
 const toggleMiniCart = () => ui.toggleMiniCart()
 const toggleMobile = () => ui.toggleMobileMenu()
 
 function submitSearch() {
   ui.setSearchQuery(searchQuery.value)
-  router.push({
-    name: 'search',
-    query: searchQuery.value ? { q: searchQuery.value } : {},
-  })
+  router.push({ name: 'search', query: searchQuery.value ? { q: searchQuery.value } : {} })
 }
 
 watch(
@@ -104,197 +128,23 @@ watch(
     searchQuery.value = value || ui.searchQuery
   },
 )
+
+const navLinks = computed(() => {
+  const links = [
+    { to: '/', label: 'خانه' },
+    { to: '/products', label: 'محصولات' },
+    { to: '/category/digital', label: 'کالای دیجیتال' },
+    { to: '/category/audio', label: 'صوتی و پوشیدنی' },
+    { to: '/category/home', label: 'خانه و آشپزخانه' },
+    { to: '/category/fashion', label: 'مد و استایل' },
+    { to: '/support', label: 'پشتیبانی' },
+  ]
+  if (user.profile?.role === 'admin') {
+    links.push(
+      { to: '/admin', label: 'پنل ادمین' },
+      { to: '/admin/products/new', label: 'ادمین محصول' },
+    )
+  }
+  return links
+})
 </script>
-
-<style scoped>
-.site-header {
-  top: 0;
-  z-index: 50;
-  backdrop-filter: blur(18px);
-  background: rgba(244, 247, 251, 0.72);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.header-top {
-  background: linear-gradient(90deg, rgba(91, 61, 245, 0.95), rgba(255, 122, 89, 0.92));
-  color: #fff;
-  font-size: 0.84rem;
-}
-
-.header-top__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 42px;
-}
-
-.header-top__meta {
-  display: flex;
-  gap: 1.2rem;
-  opacity: 0.92;
-}
-
-.header-main {
-  display: grid;
-  grid-template-columns: 280px 1fr auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem 0;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-
-.brand__logo {
-  width: 58px;
-  height: 58px;
-  object-fit: cover;
-  border-radius: 18px;
-  box-shadow: var(--shadow-soft);
-}
-
-.brand__title {
-  display: block;
-  font-size: 1.15rem;
-}
-
-.brand__subtitle {
-  display: block;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  display: -webkit-box;
-  overflow: hidden;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.header-search {
-  position: relative;
-}
-
-.header-search :deep(.base-input__control) {
-  min-height: 56px;
-  padding-right: 2.7rem;
-  background: rgba(255, 255, 255, 0.78);
-}
-
-.header-search__icon {
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  color: var(--text-muted);
-  z-index: 1;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.header-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 48px;
-  padding: 0 1rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  color: var(--text);
-  font-weight: 700;
-}
-
-.header-action strong {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--bg-muted);
-  color: var(--primary);
-}
-
-.header-action--link {
-  color: var(--primary);
-}
-
-.header-burger {
-  display: none;
-  min-height: 48px;
-  min-width: 48px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0 0 1rem;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
-.header-nav a {
-  color: var(--text-muted);
-  font-size: 0.92rem;
-  padding: 0.6rem 0.9rem;
-  border-radius: 999px;
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease;
-}
-
-.header-nav a.router-link-active {
-  color: var(--primary);
-  background: rgba(91, 61, 245, 0.1);
-}
-
-@media (max-width: 980px) {
-  .header-main {
-    grid-template-columns: 1fr;
-  }
-
-  .header-actions {
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-top__inner,
-  .header-top__meta {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.15rem;
-    padding: 0.45rem 0;
-  }
-
-  .header-nav,
-  .header-action--link {
-    display: none;
-  }
-
-  .header-burger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .header-actions {
-    gap: 0.5rem;
-  }
-
-  .header-action {
-    flex: 1;
-    justify-content: center;
-  }
-}
-</style>

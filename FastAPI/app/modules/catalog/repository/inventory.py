@@ -28,6 +28,17 @@ class InventoryRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_product_id(
+        self,
+        variant_id: int,
+    ) -> int | None:
+
+        stmt = select(ProductVariant.product_id).where(ProductVariant.id == variant_id)
+
+        product_id = await self.db.scalar(stmt)
+
+        return product_id
+
     async def list_filtered(
         self,
         variant_id: int | None,

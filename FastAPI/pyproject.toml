@@ -30,6 +30,7 @@ dependencies = [
     "ipaddress>=1.0.23",
     "slowapi>=0.1.9",
     "limits>=5.8.0",
+    "starlette>=0.52.1",
 ]
 
 [dependency-groups]

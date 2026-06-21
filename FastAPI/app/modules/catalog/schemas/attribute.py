@@ -37,7 +37,13 @@ class ProductAttributeCreate(BaseModel):
 
 
 class ProductAttributeUpdate(BaseModel):
+    product_id: int
     value: str = Field(..., max_length=255)
+
+
+class DeleteProductAttribute(BaseModel):
+    product_id: int
+    product_attribute_id: int
 
 
 class ProductAttributeRead(BaseModel):
@@ -60,7 +66,13 @@ class ProductVariantAttributeCreate(BaseModel):
 
 
 class ProductVariantAttributeUpdate(BaseModel):
+    product_id: int
     value: str = Field(..., max_length=255)
+
+
+class DeleteProductVariantAttribute(BaseModel):
+    product_id: int
+    product_variant_attribute_id: int
 
 
 class ProductVariantAttributeRead(BaseModel):

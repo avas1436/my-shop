@@ -19,7 +19,7 @@ from app.modules.catalog.services.attribute import (
 # --------------------------------------------------
 def get_attribute_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("attribute"))],
+    cache: Annotated[RedisCache, Depends(get_cache("products"))],
 ) -> AttributeService:
 
     return AttributeService(db=db, cache=cache)
@@ -30,7 +30,7 @@ def get_attribute_service(
 # --------------------------------------------------
 def get_product_attribute_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("product_attribute"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> ProductAttributeService:
 
     return ProductAttributeService(db=db, cache=cache)
@@ -41,7 +41,7 @@ def get_product_attribute_service(
 # --------------------------------------------------
 def get_product_variant_attribute_service(
     db: Annotated[AsyncSession, Depends(get_db)],
-    cache: Annotated[RedisCache, Depends(get_cache("product_variant_attribute"))],
+    cache: Annotated[RedisCache, Depends(get_cache("catalog"))],
 ) -> ProductVariantAttributeService:
 
     return ProductVariantAttributeService(db=db, cache=cache)

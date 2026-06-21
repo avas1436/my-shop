@@ -43,7 +43,7 @@ axiosClient.interceptors.request.use(
       return config
     }
 
-    const token = getStoredAccessToken().accessToken
+    const token = getStoredAccessToken()?.accessToken
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -73,14 +73,11 @@ axiosClient.interceptors.response.use(
     const originalRequest = error.config
     const errorStore = useErrorStore()
 
-    if (error.response) {
-      // 1. Network Errors
-      if (!error.response) {
-        const msg = getErrorMessage('NETWORK_ERROR')
-        errorStore.addError({ type: 'network', message: msg })
-        return Promise.reject({ message: msg, type: 'network' })
-      }
+    // console.log('AXIOS ERROR:', error)
+    // console.log('STATUS:', error.response?.status)
+    // console.log('DATA:', error.response?.data)
 
+    if (error.response) {
       const backendError = error.response.data || {}
       const status_code = backendError.status_code || error.response.status
       const errorType = backendError.error_type || 'خطای ناشناخته'
@@ -100,6 +97,24 @@ axiosClient.interceptors.response.use(
         errorMessage = detail.message
       } else if (typeof detail === 'string') {
         errorMessage = detail
+      }
+
+      // ارور مربوط به تعداد درخواست بیش از حد مجاز
+      if (status_code === 429 || errorCode === 'RATE_LIMIT_EXCEEDED') {
+        const msg = getErrorMessage(errorCode) || getErrorMessage('DEFAULT_429')
+
+        errorStore.addError({
+          type: 'error',
+          message: msg,
+        })
+
+        return Promise.reject({
+          status: 429,
+          error_type: errorType,
+          message: msg,
+          code: errorCode,
+          path: backendError.path || null,
+        })
       }
 
       // مدیریت ۴۰۱ و رفرش توکن
@@ -168,12 +183,29 @@ axiosClient.interceptors.response.use(
 
       if (status_code !== 401 && !isValidationError && !isBusinessError) {
         errorStore.addError({
-          type: status_code >= 500 ? 'server' : 'client',
+          type: 'error',
           message: standardError.message,
         })
       }
 
       return Promise.reject(standardError)
+    }
+
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      const msg =
+        getErrorMessage('TIMEOUT_ERROR') || 'پاسخی از سرور دریافت نشد. لطفا مجددا تلاش کنید.'
+
+      errorStore.addError({
+        type: 'error',
+        message: msg,
+      })
+
+      return Promise.reject({
+        status: 408,
+        error_type: 'TimeoutError',
+        message: msg,
+        fullError: error,
+      })
     }
 
     // خطاهای شبکه (مثل قطعی اینترنت یا CORS)
@@ -185,7 +217,7 @@ axiosClient.interceptors.response.use(
     }
 
     errorStore.addError({
-      type: 'network',
+      type: 'error',
       message: networkError.message,
     })
 

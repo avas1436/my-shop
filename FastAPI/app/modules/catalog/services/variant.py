@@ -81,7 +81,10 @@ class ProductVariantService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product", data.product_id)
+            await self.cache.invalidate_key("admin", "full", variant.product_id)
+            await self.cache.invalidate_key("user", "full", variant.product_id)
+            await self.cache.invalidate_key("user", variant.product_id)
+            await self.cache.invalidate_key("homepage")
 
         return variant
 
@@ -184,8 +187,10 @@ class ProductVariantService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product_variant", variant_id)
-            await self.cache.invalidate_key("product", variant.product_id)
+            await self.cache.invalidate_key("admin", "full", variant.product_id)
+            await self.cache.invalidate_key("user", "full", variant.product_id)
+            await self.cache.invalidate_key("user", variant.product_id)
+            await self.cache.invalidate_key("homepage")
 
         return variant
 
@@ -198,5 +203,7 @@ class ProductVariantService:
 
         if self.cache.is_available():
             await self.cache.invalidate_lists()
-            await self.cache.invalidate_key("product_variant", variant_id)
-            await self.cache.invalidate_key("product", variant.product_id)
+            await self.cache.invalidate_key("admin", "full", variant.product_id)
+            await self.cache.invalidate_key("user", "full", variant.product_id)
+            await self.cache.invalidate_key("user", variant.product_id)
+            await self.cache.invalidate_key("homepage")
