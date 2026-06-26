@@ -1,6 +1,7 @@
+<!-- src/components/base/BaseSkeleton.vue -->
 <template>
   <div
-    class="rounded-full bg-[linear-gradient(90deg,rgba(226,232,240,0.8),rgba(248,250,252,1),rgba(226,232,240,0.8))] bg-size-[200%_100%] animate-shimmer"
+    class="animate-shimmer rounded-md bg-shimmer-gradient from-slate-200 via-slate-50 to-slate-200 bg-size-[200%_100%]"
     :style="{ height, width }"
   ></div>
 </template>

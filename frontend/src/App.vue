@@ -1,14 +1,14 @@
 <!-- src/App.vue  -->
 <template>
-  <div class="min-h-screen bg-bg text-text-main overflow-x-hidden">
+  <div class="min-h-screen overflow-x-hidden bg-bg text-text-main">
     <div
       v-if="!isAuthReady"
       class="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg-muted"
     >
       <div
-        class="w-12 h-12 border-4 border-border-light border-t-primary rounded-full animate-spin"
+        class="h-12 w-12 animate-spin rounded-full border-4 border-border-light border-t-primary"
       ></div>
-      <p class="text-text-muted font-medium text-lg">در حال آماده‌سازی...</p>
+      <p class="text-lg font-medium text-text-muted">در حال آماده‌سازی...</p>
     </div>
 
     <RouterView v-else v-slot="{ Component }">
@@ -16,20 +16,6 @@
         <component :is="Component" />
       </Transition>
     </RouterView>
-
-    <!-- <RouterView v-else v-slot="{ Component }">
-      <Transition
-        enter-active-class="transition-opacity duration-300 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition-opacity duration-200 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-        mode="out-in"
-      >
-        <component :is="Component" />
-      </Transition>
-    </RouterView> -->
 
     <ToastContainer />
   </div>
