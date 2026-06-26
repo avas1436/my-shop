@@ -12,3 +12,15 @@ defineProps({
   height: { type: String, default: '16px' },
 })
 </script>
+
+<!-- روش استفاده -->
+<!-- در کل پروژه برای لود شدن صفحه نوشته شود -->
+<!--  
+   <div v-if="loading">
+    <BaseSkeleton width="60px" height="60px" class="rounded-full"/>
+
+    <BaseSkeleton width="120px"/>
+
+    <BaseSkeleton width="200px"/>
+  </div>
+  -->
