@@ -3,15 +3,21 @@
   <div class="min-h-screen bg-bg text-text-main overflow-x-hidden">
     <div
       v-if="!isAuthReady"
-      class="flex-1 flex flex-col items-center justify-center bg-bg-muted gap-4"
+      class="flex min-h-screen flex-col items-center justify-center gap-4 bg-bg-muted"
     >
       <div
-        class="w-12 h-12 border-4 border-border border-t-primary rounded-full animate-spin"
+        class="w-12 h-12 border-4 border-border-light border-t-primary rounded-full animate-spin"
       ></div>
       <p class="text-text-muted font-medium text-lg">در حال آماده‌سازی...</p>
     </div>
 
     <RouterView v-else v-slot="{ Component }">
+      <Transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </Transition>
+    </RouterView>
+
+    <!-- <RouterView v-else v-slot="{ Component }">
       <Transition
         enter-active-class="transition-opacity duration-300 ease-out"
         enter-from-class="opacity-0"
@@ -23,7 +29,7 @@
       >
         <component :is="Component" />
       </Transition>
-    </RouterView>
+    </RouterView> -->
 
     <ToastContainer />
   </div>
