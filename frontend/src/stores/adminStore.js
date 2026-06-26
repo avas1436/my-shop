@@ -68,7 +68,9 @@ const initialOrders = [
     shippingCost: 89000,
     shippingMethod: 'post',
     paymentMethod: 'online',
-    items: createItems([{ id: 105, title: 'اسپرسوساز Soma Barista Mini', qty: 1, price: 13200000 }]),
+    items: createItems([
+      { id: 105, title: 'اسپرسوساز Soma Barista Mini', qty: 1, price: 13200000 },
+    ]),
     city: 'تهران',
   },
   {
@@ -143,9 +145,9 @@ export const useAdminStore = defineStore('admin', {
   state: () => ({
     settings: {
       storeName: 'ShopVerse',
-      supportPhone: '۰۲۱-۸۸۸۸۰۰۰۱',
-      supportEmail: 'support@shopverse.local',
-      freeShippingThreshold: '۳۰,۰۰۰,۰۰۰ تومان',
+      supportPhone: '03152420405',
+      supportEmail: 'abas.zade@outlook.com',
+      freeShippingThreshold: '۳,۰۰۰,۰۰۰ تومان',
       heroMessage: 'خرید هوشمند، سریع و مطمئن برای خانه و سبک زندگی مدرن',
       fulfillmentWindow: 'تحویل ۲۴ تا ۴۸ ساعته در شهرهای اصلی',
     },
@@ -158,7 +160,8 @@ export const useAdminStore = defineStore('admin', {
     ordersByCustomer: (state) => (customerId) =>
       state.orders.filter((order) => order.customerId === Number(customerId)),
     getOrderById: (state) => (orderId) => state.orders.find((order) => order.id === orderId),
-    getCustomerById: (state) => (customerId) => state.customers.find((customer) => customer.id === Number(customerId)),
+    getCustomerById: (state) => (customerId) =>
+      state.customers.find((customer) => customer.id === Number(customerId)),
     totalRevenue: (state) =>
       state.orders
         .filter((order) => order.status !== 'لغو شده')

@@ -28,7 +28,7 @@
 <script setup>
 // فعال کردن پراپ‌ها برای استفاده در تمپلیت
 const { tag, variant, size, block } = defineProps({
-  tag: { type: String, default: 'button' },
+  tag: { type: [String, Object], default: 'button' },
   variant: { type: String, default: 'primary' },
   size: { type: String, default: 'md' },
   block: { type: Boolean, default: false },
