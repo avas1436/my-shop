@@ -5,7 +5,7 @@
       <div
         class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-1 md:gap-4 min-h-10.5 py-1.5 md:py-0"
       >
-        <span>ارسال رایگان برای سفارش بالای ۳۰ میلیون تومان</span>
+        <span>ارسال رایگان برای سفارش بالای ۳ میلیون تومان</span>
         <div class="flex flex-col md:flex-row md:gap-5 opacity-90 items-center">
           <span>پشتیبانی {{ admin.settings.supportPhone }}</span>
           <span>ضمانت اصالت کالا</span>
