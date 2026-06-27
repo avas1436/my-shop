@@ -1,6 +1,7 @@
+<!-- src/components/product/ProductCard.vue -->
 <template>
   <article
-    class="grid gap-4 p-4 rounded-(--radius-lg) bg-white border border-border-light shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-custom"
+    class="grid gap-4 p-4 rounded-(--radius-lg) bg-white border border-border-light shadow-(--shadow-soft) transition-all duration-200 hover:-translate-y-1 hover:shadow-(--shadow-custom)"
   >
     <router-link :to="`/product/${product.id}`" class="relative">
       <img
@@ -10,13 +11,13 @@
       />
       <span
         v-if="discountPercent"
-        class="absolute top-3.5 right-3.5 bg-red-500/92 text-white py-1.5 px-2.5 rounded-full text-[0.82rem] font-bold"
+        class="absolute top-3.5 right-3.5 bg-red-500/90 text-white py-1.5 px-2.5 rounded-full text-[0.82rem] font-bold"
       >
         {{ discountPercent }}٪ تخفیف
       </span>
       <span
         v-if="product.stock === 0"
-        class="absolute bottom-3.5 right-3.5 bg-slate-900/78 text-white py-1.5 px-2.5 rounded-full text-[0.82rem] font-bold"
+        class="absolute bottom-3.5 right-3.5 bg-slate-900/80 text-white py-1.5 px-2.5 rounded-full text-[0.82rem] font-bold"
       >
         ناموجود
       </span>
@@ -28,14 +29,14 @@
         <span class="muted">{{ product.brand }}</span>
       </div>
 
-      <router-link :to="`/product/${product.id}`" class="font-bold text-[1.05rem]">
+      <router-link :to="`/product/${product.id}`" class="font-bold text-[1.05rem] line-clamp-2">
         {{ product.title }}
       </router-link>
 
-      <p class="m-0 text-text-muted text-[0.92rem]">{{ product.shortDescription }}</p>
+      <p class="m-0 text-text-muted text-[0.92rem] line-clamp-2">{{ product.shortDescription }}</p>
 
-      <div class="flex items-center justify-start gap-3 text-[0.9rem]">
-        <span>★ {{ product.rating }}</span>
+      <div class="flex items-center gap-3 text-[0.9rem]">
+        <span class="text-amber-500 font-bold">★ {{ product.rating }}</span>
         <span class="muted">({{ product.reviewCount }} نظر)</span>
       </div>
 
@@ -63,10 +64,9 @@ const props = defineProps({
 })
 
 const cart = useCartStore()
+
 const discountPercent = computed(() => {
-  if (!props.product.oldPrice || props.product.oldPrice <= props.product.price) {
-    return 0
-  }
+  if (!props.product.oldPrice || props.product.oldPrice <= props.product.price) return 0
   return Math.round(((props.product.oldPrice - props.product.price) / props.product.oldPrice) * 100)
 })
 

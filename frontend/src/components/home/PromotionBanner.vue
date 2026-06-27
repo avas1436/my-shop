@@ -1,4 +1,5 @@
 <!-- src/components/home/PromotionBanner.vue -->
+<!-- بنر تبلیغاتی تیره داخل صفحه اصلی -->
 <template>
   <section
     class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center p-5 md:py-[1.6rem] md:px-[1.8rem] rounded-xl text-white"

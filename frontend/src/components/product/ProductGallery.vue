@@ -1,3 +1,4 @@
+<!-- src/components/product/ProductGallery.vue -->
 <template>
   <section class="grid gap-4">
     <img

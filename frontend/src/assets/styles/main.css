@@ -91,6 +91,18 @@
   .pill {
     @apply inline-flex items-center py-1 px-3 rounded-full text-sm font-bold bg-primary/10 text-primary;
   }
+
+  .muted {
+    @apply text-text-muted text-sm;
+  }
+
+  .price {
+    @apply text-lg font-bold text-primary;
+  }
+
+  .price-old {
+    @apply text-sm text-text-muted line-through mt-0.5;
+  }
 }
 
 .fade-enter-active,
