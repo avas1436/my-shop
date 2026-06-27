@@ -1,6 +1,12 @@
+<!-- src/components/home/PromotionBanner.vue -->
 <template>
   <section
-    class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center p-5 md:py-[1.6rem] md:px-[1.8rem] rounded-xl bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.22),transparent_24%),linear-gradient(135deg,#172033,rgba(91,61,245,0.96))] text-white"
+    class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center p-5 md:py-[1.6rem] md:px-[1.8rem] rounded-xl text-white"
+    style="
+      background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.22), transparent 24%),
+        linear-gradient(135deg, #172033, rgba(91, 61, 245, 0.96));
+    "
   >
     <div>
       <span
@@ -16,15 +22,15 @@
       </p>
     </div>
 
-    <div class="flex flex-wrap gap-3 mt-4 md:mt-0">
+    <div class="flex flex-wrap gap-3 mt-4 md:mt-0 md:flex-col lg:flex-row">
       <router-link
         to="/category/digital"
-        class="inline-flex items-center justify-center min-h-12 px-5 rounded-full font-bold bg-white text-primary"
+        class="inline-flex items-center justify-center min-h-12 px-5 rounded-full font-bold bg-white text-primary whitespace-nowrap"
         >خرید دیجیتال</router-link
       >
       <router-link
         to="/category/home"
-        class="inline-flex items-center justify-center min-h-12 px-5 rounded-full font-bold border border-white/20 text-white"
+        class="inline-flex items-center justify-center min-h-12 px-5 rounded-full font-bold border border-white/20 text-white whitespace-nowrap"
         >محصولات خانه</router-link
       >
     </div>

@@ -6,12 +6,14 @@
     <ProductCarousel
       title="پیشنهادهای ویژه"
       subtitle="محصولات منتخب با طراحی جذاب، ارزش خرید بالا و تحویل سریع"
+      view-all-link="/products?sort=featured"
       :products="featuredProducts.slice(0, 4)"
     />
     <PromotionBanner />
     <ProductCarousel
       title="پرفروش‌ترین‌ها"
       subtitle="پرطرفدارترین کالاها بر اساس خرید و رضایت مشتریان"
+      view-all-link="/products?sort=bestseller"
       :products="bestsellerProducts.slice(0, 4)"
     />
     <BrandsSection :brands="store.brands" />
