@@ -31,11 +31,17 @@ class TagService:
     async def create_tag(self, data: TagCreate) -> Tag:
 
         if await self.repo.get_by_name(data.name):
-            raise Conflict("Tag name already exists.")
+            raise Conflict(
+                message="Tag name already exists.",
+                code="TAG_NAME_DUPLICATE",
+            )
 
         slug = data.slug or slugify(data.name)
         if slug and await self.repo.get_by_slug(slug):
-            raise Conflict("Tag slug already exists.")
+            raise Conflict(
+                message="Tag slug already exists.",
+                code="TAG_SLUG_DUPLICATE",
+            )
 
         tag = Tag(name=data.name, slug=slug)
         tag = await self.repo.create(tag)
@@ -56,7 +62,10 @@ class TagService:
 
         tag = await self.repo.get_by_id(tag_id)
         if not tag:
-            raise NotFound("Tag not found.")
+            raise NotFound(
+                message="Tag not found.",
+                code="TAG_NOT_FOUND",
+            )
 
         payload = TagRead.model_validate(tag).model_dump(mode="json")
 
@@ -77,7 +86,10 @@ class TagService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="TAG_PAGINATION_INVALID",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list(
@@ -129,16 +141,25 @@ class TagService:
     async def update_tag(self, tag_id: int, data: TagUpdate) -> Tag:
         tag = await self.repo.get_by_id(tag_id)
         if not tag:
-            raise NotFound("Tag not found.")
+            raise NotFound(
+                message="Tag not found.",
+                code="TAG_NOT_FOUND",
+            )
 
         if data.name and data.name != tag.name:
             if await self.repo.get_by_name(data.name):
-                raise Conflict("Tag name already exists.")
+                raise Conflict(
+                    message="Tag name already exists.",
+                    code="TAG_NAME_DUPLICATE",
+                )
             tag.name = data.name
 
         if data.slug:
             if data.slug != tag.slug and await self.repo.get_by_slug(data.slug):
-                raise Conflict("Tag slug already exists.")
+                raise Conflict(
+                    message="Tag slug already exists.",
+                    code="TAG_SLUG_DUPLICATE",
+                )
             tag.slug = data.slug
 
         tag = await self.repo.update(tag)
@@ -155,7 +176,10 @@ class TagService:
     async def delete_tag(self, tag_id: int) -> None:
         tag = await self.repo.get_by_id(tag_id)
         if not tag:
-            raise NotFound("Tag not found.")
+            raise NotFound(
+                message="Tag not found.",
+                code="TAG_NOT_FOUND",
+            )
 
         await self.repo.delete(tag)
 
@@ -175,12 +199,18 @@ class ProductTagService:
     async def attach(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
 
         if not await self.repo.product_exists(product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         existing = await self.repo.existing_tags(tag_ids)
         missing = set(tag_ids) - existing
         if missing:
-            raise NotFound(f"Tags not found: {sorted(missing)}")
+            raise NotFound(
+                message=f"Tags not found: {sorted(missing)}",
+                code="TAG_SOME_NOT_FOUND",
+            )
 
         current = await self.repo.current_tags(product_id)
         to_add = list(set(tag_ids) - current)
@@ -206,7 +236,10 @@ class ProductTagService:
     async def detach(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
 
         if not await self.repo.product_exists(product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         current = await self.repo.current_tags(product_id)
         to_remove = list(set(tag_ids) & current)
@@ -232,12 +265,18 @@ class ProductTagService:
     async def sync(self, product_id: int, tag_ids: list[int]) -> ProductTagResult:
 
         if not await self.repo.product_exists(product_id):
-            raise NotFound("Product not found.")
+            raise NotFound(
+                message="Product not found.",
+                code="PRODUCT_NOT_FOUND",
+            )
 
         existing = await self.repo.existing_tags(tag_ids)
         missing = set(tag_ids) - existing
         if missing:
-            raise NotFound(f"Tags not found: {sorted(missing)}")
+            raise NotFound(
+                message=f"Tags not found: {sorted(missing)}",
+                code="TAG_SOME_NOT_FOUND",
+            )
 
         current = await self.repo.current_tags(product_id)
 

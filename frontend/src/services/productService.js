@@ -220,7 +220,10 @@ export const tagService = {
 
   // ۸. همگام‌سازی (سینک) تگ‌های یک محصول
   async syncTags(productId, data) {
-    return await axiosClient.put(`/v1/tags/${productId}/tags/sync`, data)
+    const payload = {
+      tag_ids: data,
+    }
+    return await axiosClient.put(`/v1/tags/${productId}/tags/sync`, payload)
   },
 }
 

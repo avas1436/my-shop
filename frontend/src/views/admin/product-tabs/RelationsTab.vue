@@ -1,7 +1,9 @@
 <!-- src/views/admin/product-tabs/RelationsTab.vue -->
 <template>
   <div class="grid gap-6">
+    <!-- ========================================== -->
     <!-- کارت دسته‌بندی‌ها -->
+    <!-- ========================================== -->
     <div class="p-6 bg-white border border-border-light rounded-xl shadow-(--shadow-soft)">
       <div class="flex items-center gap-2 mb-5 border-b border-border-light pb-3">
         <Link2Icon class="w-5 h-5 text-blue-500 shrink-0" />
@@ -16,7 +18,10 @@
           <BaseSkeleton height="52px" />
         </div>
 
-        <p v-else-if="!selectedCategories.length" class="m-0 text-sm text-text-muted py-1">
+        <p
+          v-else-if="!selectedCategories.length"
+          class="m-0 text-sm text-text-muted py-1 text-center"
+        >
           هیچ دسته‌بندی برای این محصول انتخاب نشده است.
         </p>
 
@@ -24,7 +29,7 @@
           v-else
           v-for="cat in selectedCategories"
           :key="cat.id"
-          class="flex items-center justify-between gap-4 px-4 py-3 bg-white border border-border-light rounded-xl"
+          class="flex items-center justify-between gap-4 px-4 py-3 bg-white border border-border-light rounded-xl shadow-sm"
         >
           <div class="flex flex-wrap items-center gap-1.5 text-xs">
             <template v-if="productCategoriesPaths[cat.id]">
@@ -52,10 +57,11 @@
           <BaseInput
             v-model="categorySearchQuery"
             type="text"
-            placeholder="      بخشی از نام کتگوری را تایپ کنید..."
+            placeholder="بخشی از نام کتگوری را تایپ کنید..."
+            class="pr-10"
           />
           <SearchIcon
-            class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
+            class="absolute right-15 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
           />
           <button
             v-if="categorySearchQuery"
@@ -67,6 +73,7 @@
           </button>
         </div>
 
+        <!-- نتایج جستجوی دسته‌بندی -->
         <ul
           v-if="categorySearchQuery && searchedCategories.length && !isSearchingCategory"
           class="mt-1 p-0 m-0 list-none border border-border-light rounded-xl bg-white shadow-(--shadow-soft) max-h-50 overflow-y-auto z-10 relative"
@@ -82,7 +89,7 @@
             "
             @click="addCategoryToSelection(category)"
           >
-            <span class="text-sm font-medium">{{ category.name || category.title }}</span>
+            <span class="text-sm font-medium">{{ category.name }}</span>
             <span
               v-if="isCategorySelected(category.id)"
               class="text-xs text-emerald-600 flex items-center gap-1"
@@ -95,23 +102,32 @@
       </div>
 
       <div class="flex justify-end border-t border-border-light pt-4">
-        <BaseButton variant="primary" size="md" :disabled="isSyncing" @click="handleSyncCategories">
-          <Loader2Icon v-if="isSyncing" class="w-4 h-4 animate-spin" />
+        <BaseButton
+          variant="primary"
+          size="md"
+          :disabled="isSyncingCategory"
+          @click="handleSyncCategories"
+        >
+          <Loader2Icon v-if="isSyncingCategory" class="w-4 h-4 animate-spin" />
           <Link2Icon v-else class="w-4 h-4" />
-          {{ isSyncing ? 'در حال ذخیره...' : 'ذخیره و همگام‌سازی دسته‌بندی‌ها' }}
+          {{ isSyncingCategory ? 'در حال ذخیره...' : 'ذخیره و همگام‌سازی دسته‌بندی‌ها' }}
         </BaseButton>
       </div>
     </div>
 
+    <!-- ========================================== -->
     <!-- کارت تگ‌ها -->
+    <!-- ========================================== -->
     <div class="p-6 bg-white border border-border-light rounded-xl shadow-(--shadow-soft)">
-      <div class="flex items-center gap-2 mb-4">
+      <div class="flex items-center gap-2 mb-4 border-b border-border-light pb-3">
         <TagIcon class="w-5 h-5 text-amber-500 shrink-0" />
         <h3 class="m-0 text-[1rem] font-bold">تگ‌ها / برچسب‌ها</h3>
       </div>
 
-      <div class="bg-bg-muted p-4 rounded-xl border border-border-light max-h-48 overflow-y-auto">
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div
+        class="bg-bg-muted p-4 rounded-xl border border-border-light max-h-48 overflow-y-auto mb-4"
+      >
+        <div v-if="allTags.length" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <label
             v-for="tag in allTags"
             :key="tag.id"
@@ -119,22 +135,83 @@
           >
             <input
               type="checkbox"
-              :checked="isTagAttached(tag.id)"
               class="accent-primary w-4 h-4 rounded"
+              :checked="isTagSelected(tag.id)"
               @change="toggleTag($event, tag.id)"
             />
             {{ tag.name }}
           </label>
         </div>
-        <p v-if="!allTags.length" class="m-0 text-sm text-text-muted text-center py-2">
-          هیچ تگی یافت نشد.
+        <p v-else class="m-0 text-sm text-text-muted text-center py-2">
+          هیچ تگی یافت نشد. می‌توانید تگ جدید جستجو و اضافه کنید.
         </p>
+      </div>
+
+      <!-- جستجو و افزودن تگ -->
+      <div class="grid gap-1.5 mb-4">
+        <label class="text-sm font-bold text-text-muted">جستجو و افزودن تگ</label>
+        <div class="relative">
+          <BaseInput
+            v-model="tagSearchQuery"
+            type="text"
+            placeholder="بخشی از نام تگ را تایپ کنید..."
+            class="pr-10"
+          />
+          <SearchIcon
+            class="absolute right-15 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none"
+          />
+          <button
+            v-if="tagSearchQuery"
+            type="button"
+            class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-danger transition-colors border-0 bg-transparent cursor-pointer"
+            @click="tagSearchQuery = ''"
+          >
+            <XIcon class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- نتایج جستجوی تگ -->
+        <ul
+          v-if="tagSearchQuery && searchedTags.length && !isSearchingTags"
+          class="mt-1 p-0 m-0 list-none border border-border-light rounded-xl bg-white shadow-(--shadow-soft) max-h-50 overflow-y-auto z-10 relative"
+        >
+          <li
+            v-for="tag in searchedTags"
+            :key="tag.id"
+            class="flex items-center justify-between px-4 py-3 border-b border-border-light last:border-0 cursor-pointer transition-colors"
+            :class="
+              isTagSelected(tag.id)
+                ? 'bg-emerald-50/80 opacity-70 cursor-not-allowed'
+                : 'hover:bg-bg-muted'
+            "
+            @click="addTagToSelection(tag)"
+          >
+            <span class="text-sm font-medium">{{ tag.name }}</span>
+            <span
+              v-if="isTagSelected(tag.id)"
+              class="text-xs text-emerald-600 flex items-center gap-1"
+            >
+              <CheckIcon class="w-3.5 h-3.5" /> انتخاب شده
+            </span>
+            <PlusIcon v-else class="w-4 h-4 text-text-muted" />
+          </li>
+        </ul>
+      </div>
+
+      <div class="flex justify-end border-t border-border-light pt-4">
+        <BaseButton variant="primary" size="md" :disabled="isSyncingTag" @click="handleSyncTags">
+          <Loader2Icon v-if="isSyncingTag" class="w-4 h-4 animate-spin" />
+          <Link2Icon v-else class="w-4 h-4" />
+          {{ isSyncingTag ? 'در حال ذخیره...' : 'ذخیره و همگام‌سازی تگ‌ها' }}
+        </BaseButton>
       </div>
     </div>
 
+    <!-- ========================================== -->
     <!-- کارت ویژگی‌های فنی -->
+    <!-- ========================================== -->
     <div class="p-6 bg-white border border-border-light rounded-xl shadow-(--shadow-soft)">
-      <div class="flex items-center gap-2 mb-4">
+      <div class="flex items-center gap-2 mb-4 border-b border-border-light pb-3">
         <Settings2Icon class="w-5 h-5 text-purple-500 shrink-0" />
         <h3 class="m-0 text-[1rem] font-bold">ویژگی‌های فنی محصول</h3>
       </div>
@@ -143,12 +220,12 @@
         <div
           v-for="attr in product.attributes"
           :key="attr.attribute_id"
-          class="flex items-center gap-4 bg-bg-muted border border-border-light p-2.5 rounded-xl"
+          class="flex items-center gap-4 bg-bg-muted border border-border-light p-2.5 rounded-xl shadow-sm"
         >
           <span class="text-sm font-bold text-text-main min-w-30">{{ attr.name }}:</span>
           <BaseInput
             :model-value="attr.value"
-            class="flex-1"
+            class="flex-1 bg-white"
             @update:model-value="attr.value = $event"
             @blur="patchAttribute(attr.attribute_id, attr.value)"
           />
@@ -161,8 +238,8 @@
           </BaseButton>
         </div>
 
-        <p v-if="!product.attributes?.length" class="m-0 text-sm text-text-muted py-2">
-          هیچ ویژگی فنی ثبت نشده است.
+        <p v-if="!product.attributes?.length" class="m-0 text-sm text-text-muted text-center py-2">
+          هیچ ویژگی فنی برای این محصول ثبت نشده است.
         </p>
       </div>
 
@@ -174,7 +251,7 @@
           <label class="text-xs font-bold text-text-muted">نام ویژگی</label>
           <select
             v-model="newAttribute.id"
-            class="w-full h-12 bg-white border border-border-light rounded-xl px-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+            class="w-full h-12 bg-white border border-border-light rounded-xl px-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all cursor-pointer"
           >
             <option value="" disabled>انتخاب نام ویژگی...</option>
             <option v-for="a in availableAttributesList" :key="a.id" :value="a.id">
@@ -193,7 +270,9 @@
       </div>
     </div>
 
-    <!-- مودال حذف دسته‌بندی -->
+    <!-- ========================================== -->
+    <!-- مودال‌ها -->
+    <!-- ========================================== -->
     <BaseModal :open="showDeleteCategoryConfirm" @close="showDeleteCategoryConfirm = false">
       <div class="text-center grid gap-4">
         <div class="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center">
@@ -205,22 +284,21 @@
           <BaseButton variant="secondary" @click="showDeleteCategoryConfirm = false"
             >انصراف</BaseButton
           >
-          <BaseButton variant="danger" :disabled="isSyncing" @click="confirmDeleteCategory">
-            <Loader2Icon v-if="isSyncing" class="w-4 h-4 animate-spin" />
+          <BaseButton variant="danger" :disabled="isSyncingCategory" @click="confirmDeleteCategory">
+            <Loader2Icon v-if="isSyncingCategory" class="w-4 h-4 animate-spin" />
             حذف قطعی
           </BaseButton>
         </div>
       </div>
     </BaseModal>
-
-    <!-- مودال حذف ویژگی -->
+    <!-- مودال تایید حذف ویژگی فنی -->
     <BaseModal :open="showDeleteAttributeConfirm" @close="showDeleteAttributeConfirm = false">
       <div class="text-center grid gap-4">
         <div class="w-16 h-16 mx-auto bg-red-50 rounded-full flex items-center justify-center">
           <Trash2Icon class="w-8 h-8 text-danger" />
         </div>
         <h3 class="m-0 text-lg font-bold">آیا اطمینان دارید؟</h3>
-        <p class="m-0 text-text-muted text-sm">این ویژگی از محصول حذف خواهد شد.</p>
+        <p class="m-0 text-text-muted text-sm">این ویژگی بلافاصله از محصول حذف خواهد شد.</p>
         <div class="flex gap-3 justify-center pt-2">
           <BaseButton variant="secondary" @click="showDeleteAttributeConfirm = false"
             >انصراف</BaseButton
@@ -237,7 +315,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseModal from '@/components/base/BaseModal.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton.vue'
-import { categoryService, productService } from '@/services/productService'
+import { categoryService, productService, tagService } from '@/services/productService'
 import { useErrorStore } from '@/stores/errorStore'
 import { getErrorMessage } from '@/utils/errorMessages'
 import {
@@ -263,7 +341,7 @@ const errorStore = useErrorStore()
 const selectedCategories = ref([])
 const isLoadingCategories = ref(false)
 const productCategoriesPaths = ref({})
-const isSyncing = ref(false)
+const isSyncingCategory = ref(false)
 
 // مودال حذف دسته‌بندی
 const showDeleteCategoryConfirm = ref(false)
@@ -318,15 +396,15 @@ watch(
 const categorySearchQuery = ref('')
 const searchedCategories = ref([])
 const isSearchingCategory = ref(false)
-let searchTimeout = null
+let categorySearchTimeout = null
 
 watch(categorySearchQuery, (newQuery) => {
   if (!newQuery?.trim()) {
     searchedCategories.value = []
     return
   }
-  clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(async () => {
+  clearTimeout(categorySearchTimeout)
+  categorySearchTimeout = setTimeout(async () => {
     isSearchingCategory.value = true
     try {
       const response = await categoryService.listCategories({ search: newQuery })
@@ -353,7 +431,7 @@ const addCategoryToSelection = (category) => {
 }
 
 const handleSyncCategories = async () => {
-  isSyncing.value = true
+  isSyncingCategory.value = true
   try {
     const categoryIds = selectedCategories.value.map((c) => c.id)
     await categoryService.syncCategories(product.value.id, categoryIds)
@@ -365,12 +443,12 @@ const handleSyncCategories = async () => {
       message: getErrorMessage(error.code) || 'خطا در همگام‌سازی دسته‌بندی‌ها.',
     })
   } finally {
-    isSyncing.value = false
+    isSyncingCategory.value = false
   }
 }
 
 const handleDetachCategories = async (catId) => {
-  isSyncing.value = true
+  isSyncingCategory.value = true
   try {
     const updatedCategories = selectedCategories.value.filter((c) => c.id !== catId)
     const categoryIds = updatedCategories.map((c) => c.id)
@@ -384,7 +462,7 @@ const handleDetachCategories = async (catId) => {
       message: getErrorMessage(error.code) || 'خطا در حذف دسته‌بندی.',
     })
   } finally {
-    isSyncing.value = false
+    isSyncingCategory.value = false
   }
 }
 
@@ -392,30 +470,88 @@ const handleDetachCategories = async (catId) => {
 // تگ‌ها
 // ==============================
 const allTags = ref([])
+const selectedTags = ref([])
 
 watch(
   () => product.value?.tags,
   (newTags) => {
-    if (newTags) allTags.value = [...newTags]
+    if (newTags) {
+      allTags.value = [...newTags]
+      selectedTags.value = [...newTags]
+    }
   },
   { immediate: true, deep: true },
 )
 
-const isTagAttached = (tagId) => product.value?.tags?.some((t) => t.id === tagId)
+// جستجوی تگ‌ها
+const tagSearchQuery = ref('')
+const searchedTags = ref([])
+const isSearchingTags = ref(false)
+const isSyncingTag = ref(false)
+let tagSearchTimeout = null
 
-const toggleTag = async (event, tagId) => {
-  try {
-    if (event.target.checked) {
-      await productService.attachTag(product.value.id, tagId)
-    } else {
-      await productService.detachTag(product.value.id, tagId)
+watch(tagSearchQuery, (newQuery) => {
+  if (!newQuery?.trim()) {
+    searchedTags.value = []
+    return
+  }
+  clearTimeout(tagSearchTimeout)
+  tagSearchTimeout = setTimeout(async () => {
+    isSearchingTags.value = true
+    try {
+      const response = await tagService.listTags({ search: newQuery })
+      searchedTags.value = response?.items ?? []
+    } catch (error) {
+      errorStore.addError({
+        type: 'error',
+        message: `خطا در جستجوی تگ: ${error?.detail?.message || 'خطای سرور'}`,
+      })
+      searchedTags.value = []
+    } finally {
+      isSearchingTags.value = false
     }
+  }, 500)
+})
+
+const isTagSelected = (tagId) => selectedTags.value.some((t) => t.id === tagId)
+
+const addTagToSelection = (tag) => {
+  if (isTagSelected(tag.id)) return
+  selectedTags.value.push(tag)
+  allTags.value.push(tag)
+  tagSearchQuery.value = ''
+  searchedTags.value = []
+}
+
+const toggleTag = (event, tagId) => {
+  const isChecked = event.target.checked
+
+  if (isChecked) {
+    // اگر تیک زده شد: تگ را پیدا کرده و به لیست انتخاب‌شده‌ها اضافه می‌کنیم
+    const tag = allTags.value.find((t) => t.id === tagId)
+    if (tag && !isTagSelected(tagId)) {
+      selectedTags.value.push(tag)
+    }
+  } else {
+    // اگر تیک برداشته شد: تگ را از لیست انتخاب‌شده‌ها حذف می‌کنیم
+    selectedTags.value = selectedTags.value.filter((t) => t.id !== tagId)
+  }
+}
+
+const handleSyncTags = async () => {
+  isSyncingTag.value = true
+  try {
+    const tagIds = selectedTags.value.map((t) => t.id)
+    await tagService.syncTags(product.value.id, tagIds)
     await refreshProductData()
+    errorStore.addError({ type: 'success', message: 'تگ‌ها با موفقیت بروزرسانی شدند.' })
   } catch (error) {
     errorStore.addError({
       type: 'error',
-      message: getErrorMessage(error.code) || 'خطا در تغییر وضعیت تگ.',
+      message: getErrorMessage(error.code) || 'خطا در همگام‌سازی تگ‌ها.',
     })
+  } finally {
+    isSyncingTag.value = false
   }
 }
 

@@ -67,6 +67,13 @@ export const ERROR_MESSAGES = {
     'برخی از دسته‌بندی‌های ارسالی برای اتصال به محصول، در سیستم وجود ندارند.',
   CATEGORY_PAGINATION_INVALID: 'مقادیر ارسالی برای صفحه‌بندی دسته‌بندی‌ها نامعتبر است.',
 
+  // Tags & Product-Tags
+  TAG_NOT_FOUND: 'برچسب مورد نظر یافت نشد.',
+  TAG_NAME_DUPLICATE: 'برچسبی با این نام از قبل وجود دارد.',
+  TAG_SLUG_DUPLICATE: 'برچسبی با این نامک (Slug) از قبل وجود دارد.',
+  TAG_PAGINATION_INVALID: 'مقادیر ارسالی برای صفحه‌بندی برچسب‌ها نامعتبر است.',
+  TAG_SOME_NOT_FOUND: 'برخی از برچسب‌های ارسالی در سیستم یافت نشدند.',
+
   // Business Logic
   USER_NOT_FOUND: 'کاربر یافت نشد.',
   INVALID_OTP: 'کد وارد شده نامعتبر است.',
