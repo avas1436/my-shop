@@ -1,3 +1,4 @@
+<!-- src/components/layout/Header.vue -->
 <template>
   <header class="sticky top-0 z-50 backdrop-blur-[18px] bg-bg/72 border-b border-slate-900/5">
     <div class="bg-linear-to-r from-primary/95 to-accent/92 text-white text-[0.84rem]">
@@ -5,7 +6,7 @@
         class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-1 md:gap-4 min-h-10.5 py-1.5 md:py-0"
       >
         <span>ارسال رایگان برای سفارش بالای ۳۰ میلیون تومان</span>
-        <div class="flex flex-col md:flex-row md:gap-5 opacity-92 items-center">
+        <div class="flex flex-col md:flex-row md:gap-5 opacity-90 items-center">
           <span>پشتیبانی {{ admin.settings.supportPhone }}</span>
           <span>ضمانت اصالت کالا</span>
         </div>
@@ -18,7 +19,7 @@
           <img
             src="@/assets/images/logo.jpg"
             alt="لوگوی فروشگاه"
-            class="w-14.5 h-14.5 object-cover rounded-md shadow-soft"
+            class="w-14.5 h-14.5 object-cover rounded-md shadow-(--shadow-soft)"
           />
           <div>
             <strong class="block text-[1.15rem]">{{ admin.settings.storeName }}</strong>
@@ -140,10 +141,7 @@ const navLinks = computed(() => {
     { to: '/support', label: 'پشتیبانی' },
   ]
   if (user.profile?.role === 'admin') {
-    links.push(
-      { to: '/admin', label: 'پنل ادمین' },
-      { to: '/admin/products/new', label: 'ادمین محصول' },
-    )
+    links.push({ to: '/admin', label: 'پنل ادمین' })
   }
   return links
 })
