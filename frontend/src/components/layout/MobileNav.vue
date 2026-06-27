@@ -1,14 +1,15 @@
+<!-- src/components/layout/MobileNav.vue -->
 <template>
   <Teleport to="body">
     <div v-if="ui.mobileMenu" class="fixed inset-0 z-65">
       <button
-        class="absolute inset-0 w-full h-full border-0 bg-slate-900/40 backdrop-blur-[6px]"
+        class="absolute inset-0 w-full h-full border-0 bg-slate-900/40 backdrop-blur-[6px] cursor-default"
         type="button"
         @click="close"
       ></button>
 
       <aside
-        class="absolute top-0 right-0 w-[min(320px,100%)] h-full p-5 bg-white/96 shadow-custom border-l border-border-light flex flex-col"
+        class="absolute top-0 right-0 w-[min(320px,100%)] h-full p-5 bg-white/96 shadow-(--shadow-custom) border-l border-border-light flex flex-col"
       >
         <div class="flex items-start justify-between gap-4 mb-4">
           <div>
@@ -19,7 +20,7 @@
           </div>
           <button
             type="button"
-            class="w-10.5 h-10.5 rounded-xl border border-border-light bg-transparent flex items-center justify-center"
+            class="w-10.5 h-10.5 rounded-xl border border-border-light bg-transparent flex items-center justify-center hover:bg-bg-muted transition-colors"
             @click="close"
           >
             ✕
@@ -30,8 +31,8 @@
           <router-link
             v-for="link in links"
             :key="link.to"
-            @click="close"
             :to="link.to"
+            @click="close"
             class="py-3.5 px-4 rounded-md bg-bg-muted text-text-main font-bold hover:bg-border-light transition-colors [&.router-link-active]:bg-primary/10 [&.router-link-active]:text-primary"
           >
             {{ link.label }}

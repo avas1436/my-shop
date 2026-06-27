@@ -1,4 +1,4 @@
-<!-- src/components/layout.MiniCart.vue -->
+<!-- src/components/layout/MiniCart.vue -->
 <template>
   <Teleport to="body">
     <div v-if="ui.miniCart" class="fixed inset-0 z-70">
