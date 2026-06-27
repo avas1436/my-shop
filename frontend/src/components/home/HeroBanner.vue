@@ -1,17 +1,26 @@
+<!-- src/components/home/HeroBanner.vue -->
 <template>
   <section
-    class="grid grid-cols-1 md:grid-cols-[1.15fr_0.85fr] gap-6 p-5 md:p-8 rounded-xl bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.32),transparent_30%),linear-gradient(135deg,var(--color-primary),rgba(255,122,89,0.94))] text-white shadow-custom"
+    class="grid grid-cols-1 md:grid-cols-[1.15fr_0.85fr] gap-6 p-5 md:p-8 rounded-xl text-white shadow-(--shadow-custom)"
+    style="
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 30%),
+        linear-gradient(135deg, var(--color-primary), rgba(255, 122, 89, 0.94));
+    "
   >
+    <!-- ستون چپ: متن + CTA + آمار -->
     <div class="grid content-center gap-4">
       <div>
         <span
-          class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-bg-muted/20 text-white text-sm backdrop-blur-sm"
+          class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-white/20 text-white text-sm backdrop-blur-sm"
           >فروشگاه مدرن با انتخاب‌های خاص</span
         >
       </div>
+
       <h1 class="m-0 text-[clamp(2rem,4vw,3.5rem)] leading-tight">
         یک فروشگاه زیبا برای خرید هوشمند، سریع و لذت‌بخش
       </h1>
+
       <p class="m-0 max-w-[56ch] text-white/80">
         از کالای دیجیتال تا محصولات خانه و استایل، همه‌چیز با طراحی چشم‌نواز، تجربه‌ی روان و
         قیمت‌گذاری حرفه‌ای در دسترس شماست.
@@ -46,6 +55,7 @@
       </div>
     </div>
 
+    <!-- ستون راست: محصول featured + محصولات کوچیک -->
     <div class="grid gap-4">
       <div class="grid gap-4 p-4 rounded-lg bg-white/10 border border-white/10 backdrop-blur-lg">
         <img
@@ -63,7 +73,7 @@
         </div>
       </div>
 
-      <div class="grid gap-3.5">
+      <div v-if="sideHighlights.length" class="grid gap-3.5">
         <article
           v-for="item in sideHighlights"
           :key="item.id"
