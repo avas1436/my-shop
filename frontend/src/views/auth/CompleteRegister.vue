@@ -1,69 +1,57 @@
 <!-- src/views/auth/CompleteRegister.vue -->
 <template>
-  <div class="auth-card page-panel">
-    <h1 class="section-title">تکمیل اطلاعات حساب</h1>
-    <p class="muted mb-4">لطفا برای استفاده از امکانات سایت، اطلاعات زیر را تکمیل کنید.</p>
+  <div
+    class="w-full max-w-100 mx-auto p-8 bg-white rounded-md border border-border-light shadow-(--shadow-soft)"
+  >
+    <h1 class="m-0 text-[1.5rem] font-bold">تکمیل اطلاعات حساب</h1>
+    <p class="mt-2 mb-6 text-text-muted">
+      لطفا برای استفاده از امکانات سایت، اطلاعات زیر را تکمیل کنید.
+    </p>
 
-    <form @submit.prevent="submitProfile" class="auth-form">
-      <!-- نام -->
-      <div class="form-group">
-        <label>نام</label>
-        <input
-          type="text"
+    <form class="grid gap-5" @submit.prevent="submitProfile">
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">نام</label>
+        <BaseInput
           v-model="form.first_name"
           placeholder="مثلا: علی"
-          :class="{ 'has-error': fieldErrors.first_name }"
+          :error="fieldErrors.first_name?.[0]"
         />
-        <span v-if="fieldErrors.first_name" class="error-text field-error">
-          {{ fieldErrors.first_name[0] }}
-        </span>
       </div>
 
-      <!-- نام خانوادگی -->
-      <div class="form-group">
-        <label>نام خانوادگی</label>
-        <input
-          type="text"
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">نام خانوادگی</label>
+        <BaseInput
           v-model="form.last_name"
           placeholder="مثلا: محمدی"
-          :class="{ 'has-error': fieldErrors.last_name }"
+          :error="fieldErrors.last_name?.[0]"
         />
-        <span v-if="fieldErrors.last_name" class="error-text field-error">
-          {{ fieldErrors.last_name[0] }}
-        </span>
       </div>
 
-      <!-- رمز عبور -->
-      <div class="form-group">
-        <label>رمز عبور</label>
-        <input
-          type="password"
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">رمز عبور</label>
+        <BaseInput
           v-model="form.password"
-          placeholder="یک رمز عبور امن وارد کنید"
-          :class="{ 'has-error': fieldErrors.password }"
-        />
-        <span v-if="fieldErrors.password" class="error-text field-error">
-          {{ fieldErrors.password[0] }}
-        </span>
-      </div>
-
-      <!-- تکرار رمز عبور -->
-      <div class="form-group">
-        <label>تکرار رمز عبور</label>
-        <input
           type="password"
-          v-model="form.password_confirm"
-          placeholder="رمز عبور خود را مجددا وارد کنید"
-          :class="{ 'has-error': fieldErrors.password_confirm }"
+          placeholder="یک رمز عبور امن وارد کنید"
+          :error="fieldErrors.password?.[0]"
         />
-        <span v-if="fieldErrors.password_confirm" class="error-text field-error">
-          {{ fieldErrors.password_confirm[0] }}
-        </span>
       </div>
 
-      <p v-if="errorMessage" class="error-text global-error">{{ errorMessage }}</p>
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">تکرار رمز عبور</label>
+        <BaseInput
+          v-model="form.password_confirm"
+          type="password"
+          placeholder="رمز عبور خود را مجددا وارد کنید"
+          :error="fieldErrors.password_confirm?.[0]"
+        />
+      </div>
 
-      <BaseButton type="submit" :disabled="isLoading" block>
+      <p v-if="errorMessage" class="m-0 text-center text-sm text-danger">
+        {{ errorMessage }}
+      </p>
+
+      <BaseButton type="submit" variant="primary" block :disabled="isLoading">
         {{ isLoading ? 'در حال ثبت...' : 'ثبت اطلاعات و ورود' }}
       </BaseButton>
     </form>
@@ -72,6 +60,7 @@
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
+import BaseInput from '@/components/base/BaseInput.vue'
 import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
 import { validateConfirmPassword, validatePassword, validatePersianName } from '@/utils/validators'
@@ -99,42 +88,36 @@ const submitProfile = async () => {
 
   const firstNameError = validatePersianName(form.first_name, 'نام')
   if (firstNameError) {
-    isLoading.value = false
     fieldErrors.value.first_name = [firstNameError]
+    isLoading.value = false
     return
   }
 
   const lastNameError = validatePersianName(form.last_name, 'نام خانوادگی')
   if (lastNameError) {
-    isLoading.value = false
     fieldErrors.value.last_name = [lastNameError]
+    isLoading.value = false
     return
   }
 
   const passwordError = validatePassword(form.password)
   if (passwordError) {
-    isLoading.value = false
     fieldErrors.value.password = [passwordError]
+    isLoading.value = false
     return
   }
 
   if (!validateConfirmPassword(form.password, form.password_confirm)) {
-    isLoading.value = false
     fieldErrors.value.password_confirm = ['رمز عبور و تکرار آن مطابقت ندارند']
+    isLoading.value = false
     return
   }
 
   try {
     const data = await authService.completeRegister(form)
-
     userStore.setProfile(data.data)
-
-    // انتقال به صفحه اصلی یا داشبورد
     await router.push('/profile')
   } catch (error) {
-    // if (error.response?.status === 422) {
-    //   fieldErrors.value = error.response.data.errors || {}
-    // }
     if (error.validation_errors) {
       fieldErrors.value = error.validation_errors.reduce((acc, curr) => {
         const field = curr.loc[curr.loc.length - 1]
@@ -149,39 +132,3 @@ const submitProfile = async () => {
   }
 }
 </script>
-
-<style scoped>
-.auth-card {
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-.form-group {
-  margin-bottom: 1.25rem;
-  display: grid;
-  gap: 0.5rem;
-}
-.form-group input {
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: border-color 0.2s;
-}
-.form-group input:focus {
-  outline: none;
-  border-color: #3b82f6;
-}
-.form-group input.has-error {
-  border-color: #ef4444;
-}
-.error-text {
-  color: #ef4444;
-  font-size: 0.875rem;
-}
-.global-error {
-  margin-bottom: 1rem;
-  text-align: center;
-}
-</style>
