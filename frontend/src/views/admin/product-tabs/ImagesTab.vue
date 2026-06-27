@@ -1,28 +1,40 @@
-<!-- src/views/admin/product-tabs/ImageTab.vue -->
+<!-- src/views/admin/product-tabs/ImagesTab.vue -->
 <template>
-  <div class="tab-content page-panel">
-    <div class="header-section">
-      <h2 class="tab-title">مدیریت تصاویر محصول</h2>
-      <label class="btn-upload" :class="{ 'is-loading': isUploading }">
+  <div class="grid gap-6">
+    <!-- هدر -->
+    <div class="flex items-center justify-between gap-4 border-b border-border-light pb-4">
+      <h2 class="m-0 text-[1.25rem] font-bold">مدیریت تصاویر محصول</h2>
+      <label
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-md font-bold cursor-pointer transition-all duration-200 select-none"
+        :class="
+          isUploading
+            ? 'bg-slate-400 text-white cursor-not-allowed'
+            : 'bg-primary text-white hover:bg-primary-dark active:scale-[0.98]'
+        "
+      >
         <component
           :is="isUploading ? Loader2Icon : UploadIcon"
-          class="w-4 h-4 icon-left"
+          class="w-4 h-4"
           :class="{ 'animate-spin': isUploading }"
         />
         {{ isUploading ? 'در حال آپلود...' : 'آپلود تصویر جدید' }}
         <input
           type="file"
-          @change="handleImageUpload"
           accept="image/*"
           hidden
           :disabled="isUploading"
+          @change="handleImageUpload"
         />
       </label>
     </div>
 
-    <div class="admin-gallery-wrapper">
-      <div class="main-image-holder">
-        <div v-if="isLoadingImages" class="loading-state">
+    <!-- گالری -->
+    <div class="grid gap-6">
+      <!-- تصویر اصلی -->
+      <div
+        class="relative w-full h-87.5 border-2 border-dashed border-border-strong rounded-xl flex items-center justify-center bg-bg-muted overflow-hidden"
+      >
+        <div v-if="isLoadingImages" class="text-center text-text-muted font-medium">
           <Loader2Icon class="w-5 h-5 animate-spin mx-auto mb-2" />
           در حال دریافت تصاویر...
         </div>
@@ -31,53 +43,79 @@
             v-if="primaryImage"
             :src="primaryImage.real_url"
             :alt="primaryImage.alt_text || 'تصویر محصول'"
+            class="max-w-full max-h-full object-contain transition-transform duration-300"
           />
-          <div v-else class="no-image">
-            <ImageMinusIcon class="w-12 h-12 text-gray-400 mb-2 mx-auto" />
-            <p>هیچ تصویری برای این محصول آپلود نشده است</p>
+          <div v-else class="text-center text-text-muted">
+            <ImageMinusIcon class="w-12 h-12 mx-auto mb-2 opacity-40" />
+            <p class="m-0 font-medium">هیچ تصویری برای این محصول آپلود نشده است</p>
           </div>
-          <div class="image-overlay-info">گالری تصاویر ({{ images.length }} عکس)</div>
+          <div
+            class="absolute bottom-0 w-full bg-linear-to-t from-slate-900/70 to-transparent text-white text-center text-[0.95rem] font-medium py-3 px-2"
+          >
+            گالری تصاویر ({{ images.length }} عکس)
+          </div>
         </template>
       </div>
 
-      <div v-if="sortedImages.length > 0" class="thumb-grid">
+      <!-- thumbnail ها -->
+      <div
+        v-if="sortedImages.length"
+        class="grid grid-cols-[repeat(auto-fill,minmax(100px,100px))] gap-4"
+      >
         <div
           v-for="img in sortedImages"
           :key="img.id"
-          class="thumb-container"
-          :class="{ active: img.is_primary }"
+          class="relative overflow-hidden rounded-xl cursor-pointer border-2 transition-all duration-200 group"
+          :class="
+            img.is_primary
+              ? 'border-primary shadow-[0_0_0_3px_rgba(91,61,245,0.2)]'
+              : 'border-transparent hover:shadow-[0_8px_24px_rgba(15,23,42,0.15)]'
+          "
           @click.stop="selectedImage = img"
-          style="cursor: pointer"
         >
-          <img :src="img.real_url" :alt="img.alt_text" />
+          <img
+            :src="img.real_url"
+            :alt="img.alt_text"
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
 
-          <div v-if="img.is_primary" class="primary-badge">
-            <StarIcon class="w-3 h-3 fill-current icon-left" />
+          <!-- badge تصویر اصلی -->
+          <div
+            v-if="img.is_primary"
+            class="absolute top-1.5 left-1.5 flex items-center gap-1 bg-primary text-white text-[0.7rem] font-bold px-1.5 py-0.5 rounded"
+          >
+            <StarIcon class="w-3 h-3 fill-current" />
             اصلی
           </div>
 
-          <div class="thumb-actions">
+          <!-- دکمه‌های hover -->
+          <div
+            class="absolute inset-0 flex items-center justify-center gap-3 bg-slate-900/55 backdrop-blur-xs opacity-0 translate-y-2 scale-[0.96] group-hover:opacity-100 group-hover:translate-y-0 group-hover:scale-100 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          >
             <button
               v-if="!img.is_primary"
-              class="action-btn btn-star"
+              type="button"
+              title="تصویر اصلی"
+              class="w-6 h-6 flex items-center justify-center rounded-md bg-transparent text-slate-200 border-0 transition-all duration-200 hover:bg-yellow-400/15 hover:text-yellow-300 hover:-translate-y-0.5"
               @click.stop="setPrimaryImage(img.id)"
-              title="انتخاب به عنوان تصویر اصلی"
             >
-              <StarIcon class="w-4 h-4" />
+              <StarIcon class="w-3.5 h-3.5" />
             </button>
             <button
-              class="action-btn btn-edit"
+              type="button"
+              title="ویرایش Alt"
+              class="w-6 h-6 flex items-center justify-center rounded-md bg-transparent text-slate-200 border-0 transition-all duration-200 hover:bg-blue-400/15 hover:text-blue-300 hover:-translate-y-0.5"
               @click.stop="editAltText(img)"
-              title="ویرایش متن جایگزین (Alt Text)"
             >
-              <PencilIcon class="w-4 h-4" />
+              <PencilIcon class="w-3.5 h-3.5" />
             </button>
             <button
-              class="action-btn btn-delete"
+              type="button"
+              title="حذف"
+              class="w-6 h-6 flex items-center justify-center rounded-md bg-transparent text-slate-200 border-0 transition-all duration-200 hover:bg-red-400/15 hover:text-red-300 hover:-translate-y-0.5"
               @click.stop="deleteImage(img.id)"
-              title="حذف تصویر"
             >
-              <Trash2Icon class="w-4 h-4" />
+              <Trash2Icon class="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -87,13 +125,9 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, ref } from 'vue'
-
 import { imageService } from '@/services/productService'
-import { getErrorMessage } from '@/utils/errorMessages'
-
-// آیکون‌های مورد نیاز از Lucide
 import { useErrorStore } from '@/stores/errorStore'
+import { getErrorMessage } from '@/utils/errorMessages'
 import {
   ImageMinus as ImageMinusIcon,
   Loader2 as Loader2Icon,
@@ -102,392 +136,108 @@ import {
   Trash2 as Trash2Icon,
   Upload as UploadIcon,
 } from '@lucide/vue'
+import { computed, inject, onMounted, ref } from 'vue'
 
 const errorStore = useErrorStore()
-
-// ==============================
-// دریافت دیتای اصلی از پوسته والد (Inject)
-// ==============================
 const product = inject('product')
 
-// State های داخلی
 const images = ref([])
 const isUploading = ref(false)
 const isLoadingImages = ref(false)
+const selectedImage = ref(null)
 
-// ==============================
-// دریافت لیست تصاویر از سرور
-// ==============================
 const fetchImages = async () => {
   if (!product.value?.id) return
   isLoadingImages.value = true
   try {
-    const response = await imageService.listImages(product.value.id)
-    images.value = response
+    images.value = await imageService.listImages(product.value.id)
   } catch (error) {
-    const msg = getErrorMessage(error.code) || error.message || 'خطا در دریافت لیست تصاویر'
-    errorStore.addError({ type: 'error', message: msg })
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || error.message || 'خطا در دریافت لیست تصاویر',
+    })
   } finally {
     isLoadingImages.value = false
     selectedImage.value = null
   }
 }
 
-onMounted(() => {
-  fetchImages()
-})
-
-// ==============================
-// انتخاب تصویر اصلی محصول
-// ==============================
-const selectedImage = ref(null)
+onMounted(fetchImages)
 
 const primaryImage = computed(() => {
   if (selectedImage.value) return selectedImage.value
-
-  if (!images.value || images.value.length === 0) return null
-
-  return images.value.find((img) => img.is_primary) || images.value[0]
+  if (!images.value?.length) return null
+  return images.value.find((img) => img.is_primary) ?? images.value[0]
 })
 
-// ==============================
-// آپلود تصویر
-// ==============================
+const sortedImages = computed(() => {
+  if (!images.value?.length) return []
+  return [...images.value].sort((a, b) => {
+    if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1
+    return (a.sort_order || 0) - (b.sort_order || 0)
+  })
+})
+
 const handleImageUpload = async (event) => {
   const file = event.target.files[0]
   if (!file) return
-
   isUploading.value = true
-
-  // ایجاد فروم دیتا دقیقاً مطابق با ورودی‌های Form در بک‌اند
   const formData = new FormData()
-
-  // کلید فایل باید 'file' باشد چون در بک‌اند نوشتی file: UploadFile
   formData.append('file', file)
-
-  // ارسال بقیه موارد به صورت خالی
   formData.append('alt_text', '')
   formData.append('is_primary', '')
   formData.append('sort_order', '')
-
   try {
     await imageService.uploadImage(product.value.id, formData)
-    await fetchImages() // دریافت مجدد تصاویر
+    await fetchImages()
   } catch (error) {
-    const msg = getErrorMessage(error.code) || 'خطا در آپلود تصویر جدید'
-    errorStore.addError({ type: 'error', message: msg })
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || 'خطا در آپلود تصویر جدید',
+    })
   } finally {
     isUploading.value = false
-    event.target.value = '' // ریست کردن اینپوت
+    event.target.value = ''
   }
 }
 
-// ==============================
-// حذف تصویر
-// ==============================
 const deleteImage = async (imageId) => {
   if (!confirm('آیا از حذف این تصویر اطمینان دارید؟')) return
   try {
     await imageService.deleteImage(imageId)
     await fetchImages()
   } catch (error) {
-    const msg = getErrorMessage(error.code) || 'حذف تصویر با خطا مواجه شد.'
-    errorStore.addError({ type: 'error', message: msg })
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || 'حذف تصویر با خطا مواجه شد.',
+    })
   }
 }
 
-// ==============================
-// انتخاب یک عکس به عنوان عکس اصلی
-// ==============================
 const setPrimaryImage = async (imageId) => {
   try {
     await imageService.updateImage(imageId, { is_primary: true })
     await fetchImages()
   } catch (error) {
-    const msg = getErrorMessage(error.code) || 'خطا در تنظیم تصویر اصلی'
-    errorStore.addError({ type: 'error', message: msg })
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || 'خطا در تنظیم تصویر اصلی',
+    })
   }
 }
 
-// ==============================
-// ویرایش متن توضیحی عکس
-// ==============================
 const editAltText = async (img) => {
-  const currentAlt = img.alt_text || ''
-  const newAlt = prompt('متن جایگزین (Alt Text) مناسب برای سئو را وارد کنید:', currentAlt)
-
-  if (newAlt !== null && newAlt !== currentAlt) {
+  const newAlt = prompt('متن جایگزین (Alt Text) مناسب برای سئو را وارد کنید:', img.alt_text || '')
+  if (newAlt !== null && newAlt !== img.alt_text) {
     try {
       await imageService.updateImage(img.id, { alt_text: newAlt })
       await fetchImages()
     } catch (error) {
-      const msg = getErrorMessage(error.code) || 'خطا در ذخیره متن جایگزین.'
-      errorStore.addError({ type: 'error', message: msg })
+      errorStore.addError({
+        type: 'error',
+        message: getErrorMessage(error.code) || 'خطا در ذخیره متن جایگزین.',
+      })
     }
   }
 }
-
-// =========================================================
-// مرتب‌سازی تصاویر بر اساس فیلد
-// =========================================================
-const sortedImages = computed(() => {
-  if (!images.value) return []
-
-  return [...images.value].sort((a, b) => {
-    // تصویر اصلی همیشه در ابتدای لیست قرار بگیرد
-    if (a.is_primary && !b.is_primary) return -1
-    if (!a.is_primary && b.is_primary) return 1
-
-    // مرتب‌سازی صعودی بر اساس sort_order
-    return (a.sort_order || 0) - (b.sort_order || 0)
-  })
-})
 </script>
-
-<style scoped>
-.page-panel {
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 1rem;
-}
-
-.tab-title {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #1e293b;
-  font-weight: bold;
-}
-
-.admin-gallery-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.main-image-holder {
-  position: relative;
-  width: 100%;
-  height: 350px;
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8fafc;
-  overflow: hidden;
-}
-
-.main-image-holder img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s ease;
-}
-
-.no-image,
-.loading-state {
-  color: #64748b;
-  font-weight: 500;
-  font-size: 1.1rem;
-}
-
-.image-overlay-info {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-  color: white;
-  padding: 1rem 0.5rem 0.5rem;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.btn-upload {
-  background: #4f46e5;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition:
-    background-color 0.2s,
-    transform 0.1s;
-  display: inline-block;
-}
-
-.btn-upload:hover {
-  background: #4338ca;
-}
-
-.btn-upload:active {
-  transform: scale(0.98);
-}
-
-.btn-upload.is-loading {
-  background: #94a3b8;
-  cursor: not-allowed;
-}
-
-/* شبکه تصاویر کوچک در سمت چپ */
-.thumb-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 100px));
-  gap: 1rem;
-  margin-top: 0 !important;
-}
-
-.thumb-container {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-
-  transition: all 0.25s ease;
-}
-
-.thumb-container img {
-  transition: transform 0.3s ease;
-}
-
-.thumb-container:hover img {
-  transform: scale(1.05);
-}
-
-.thumb-container:hover {
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
-}
-
-.thumb-container.active {
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-}
-
-.primary-badge {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background: #4f46e5;
-  color: white;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.thumb-actions {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
-
-  color: #fff;
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-
-  opacity: 0;
-  transform: translateY(8px) scale(0.96);
-
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    backdrop-filter 0.3s ease;
-}
-
-.thumb-container:hover .thumb-actions {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.thumb-actions button:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px) scale(1.08);
-}
-
-.action-btn {
-  width: 24px;
-  height: 24px;
-
-  border: none;
-  border-radius: 6px;
-
-  background: transparent;
-  color: #e2e8f0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  transition: all 0.2s ease;
-}
-
-.action-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-.action-btn:hover {
-  transform: scale(1.1);
-}
-
-.btn-star:hover {
-  background: rgba(250, 204, 21, 0.15);
-  color: #facc15;
-}
-
-.btn-edit:hover {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-}
-
-.btn-delete:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.icon-left {
-  margin-left: 0.5rem;
-  display: inline-block;
-  vertical-align: middle;
-}
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ریسپانسیو برای موبایل */
-@media (max-width: 768px) {
-  .admin-gallery-wrapper {
-    flex-direction: column; /* زیر هم قرار گرفتن در نمایشگرهای کوچک */
-  }
-  .main-image-holder {
-    max-width: 100%;
-  }
-}
-</style>
