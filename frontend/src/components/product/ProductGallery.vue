@@ -1,4 +1,5 @@
 <!-- src/components/product/ProductGallery.vue -->
+<!-- نمایش عکس های محصول -->
 <template>
   <section class="grid gap-4">
     <img
@@ -7,11 +8,13 @@
       class="w-full aspect-square object-cover rounded-[28px] bg-surface-strong"
     />
 
-    <div class="grid grid-cols-3 gap-3">
+    <div v-if="images.length > 1" class="grid grid-cols-3 gap-3">
       <button
         v-for="image in images"
         :key="image"
         type="button"
+        :aria-label="`نمایش تصویر ${title}`"
+        :aria-pressed="image === activeImage"
         class="p-1.5 rounded-[20px] border bg-surface-strong transition-all"
         :class="[
           image === activeImage
