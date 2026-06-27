@@ -1,7 +1,7 @@
 <!-- src/components/layout/Sidebar.vue -->
 <template>
   <aside
-    class="lg:sticky lg:top-0 lg:h-screen p-5 grid content-start gap-5 border-l border-slate-900/10 bg-[#101828]/96 text-white/90 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+    class="h-screen p-5 grid content-start gap-5 border-l border-slate-900/10 bg-[#101828]/96 text-white/90 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full"
   >
     <router-link
       to="/admin"
