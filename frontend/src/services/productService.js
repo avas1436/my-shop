@@ -185,42 +185,42 @@ export const categoryService = {
 export const tagService = {
   // ۱. ایجاد تگ جدید (ادمین)
   async createTag(tagData) {
-    return await axiosClient.post(`${BASE_URL}/admin`, tagData)
+    return await axiosClient.post(`/v1/tags/admin`, tagData)
   },
 
   // ۲. دریافت لیست تگ‌ها (ادمین)
   async listTags() {
-    return await axiosClient.get(`${BASE_URL}/admin`)
+    return await axiosClient.get(`/v1/tags/admin`)
   },
 
   // ۳. دریافت یک تگ خاص (ادمین)
-  async getTag(tagId) {
-    return await axiosClient.get(`${BASE_URL}/admin/${tagId}`)
-  },
+  // async getTag(tagId) {
+  //   return await axiosClient.get(`/v1/tags/admin/${tagId}`)
+  // },
 
   // ۴. به‌روزرسانی تگ (ادمین)
   async updateTag(tagId, updateData) {
-    return await axiosClient.put(`${BASE_URL}/admin/${tagId}`, updateData)
+    return await axiosClient.put(`/v1/tags/admin/${tagId}`, updateData)
   },
 
   // ۵. حذف تگ (ادمین)
   async deleteTag(tagId) {
-    return await axiosClient.delete(`${BASE_URL}/admin/${tagId}`)
+    return await axiosClient.delete(`/v1/tags/admin/${tagId}`)
   },
 
   // ۶. متصل کردن تگ‌ها به یک محصول
-  async attachTags(productId, data) {
-    return await axiosClient.post(`${BASE_URL}/${productId}/tags/attach`, data)
-  },
+  // async attachTags(productId, data) {
+  //   return await axiosClient.post(`/v1/tags/${productId}/tags/attach`, data)
+  // },
 
-  // ۷. جدا کردن تگ‌ها از یک محصول
-  async detachTags(productId, data) {
-    return await axiosClient.post(`${BASE_URL}/${productId}/tags/detach`, data)
-  },
+  // // ۷. جدا کردن تگ‌ها از یک محصول
+  // async detachTags(productId, data) {
+  //   return await axiosClient.post(`/v1/tags/${productId}/tags/detach`, data)
+  // },
 
   // ۸. همگام‌سازی (سینک) تگ‌های یک محصول
   async syncTags(productId, data) {
-    return await axiosClient.put(`${BASE_URL}/${productId}/tags/sync`, data)
+    return await axiosClient.put(`/v1/tags/${productId}/tags/sync`, data)
   },
 }
 
