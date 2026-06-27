@@ -1,3 +1,4 @@
+<!-- src/components/layout.MiniCart.vue -->
 <template>
   <Teleport to="body">
     <div v-if="ui.miniCart" class="fixed inset-0 z-70">
@@ -8,7 +9,7 @@
       ></button>
 
       <aside
-        class="absolute top-0 right-0 w-[min(420px,100%)] h-full p-5 bg-white/95 border-l border-border-light shadow-custom grid grid-rows-[auto_1fr_auto] gap-4"
+        class="absolute top-0 right-0 w-[min(420px,100%)] h-full p-5 bg-white/95 border-l border-border-light shadow-(--shadow-custom) grid grid-rows-[auto_1fr_auto] gap-4"
       >
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -86,7 +87,7 @@
 
           <router-link
             to="/cart"
-            class="inline-flex items-center justify-center min-h-13 rounded-md bg-linear-to-br from-primary to-primary-dark text-white font-bold shadow-custom hover:-translate-y-0.5 transition-transform"
+            class="inline-flex items-center justify-center min-h-13 rounded-md bg-linear-to-br from-primary to-primary-dark text-white font-bold shadow-(--shadow-custom) hover:-translate-y-0.5 transition-transform"
             @click="ui.closeMiniCart()"
           >
             مشاهده سبد و ادامه خرید
