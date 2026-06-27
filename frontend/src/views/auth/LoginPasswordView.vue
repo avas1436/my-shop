@@ -1,57 +1,56 @@
 <!-- src/views/auth/LoginPasswordView.vue -->
 <template>
-  <div class="auth-card page-panel">
-    <h1 class="section-title">ورود به حساب کاربری</h1>
-    <p class="muted mb-4">لطفا شماره موبایل و رمز عبور خود را وارد کنید.</p>
+  <div
+    class="w-full max-w-100 mx-auto p-8 bg-white rounded-md border border-border-light shadow-(--shadow-soft)"
+  >
+    <h1 class="m-0 text-[1.5rem] font-bold">ورود به حساب کاربری</h1>
+    <p class="mt-2 mb-6 text-text-muted">لطفا شماره موبایل و رمز عبور خود را وارد کنید.</p>
 
-    <form @submit.prevent="handleSubmit" class="auth-form">
-      <div class="form-group">
-        <label>شماره موبایل</label>
-        <input
-          type="text"
+    <form class="grid gap-5" @submit.prevent="handleSubmit">
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">شماره موبایل</label>
+        <BaseInput
           v-model="form.phone"
+          type="text"
           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-          :class="{ 'has-error': fieldErrors.phone }"
+          :error="fieldErrors.phone?.[0]"
         />
-
-        <!-- نمایش خطای فیلد موبایل -->
-        <span v-if="fieldErrors.phone" class="error-text field-error">
-          {{ fieldErrors.phone[0] }}
-        </span>
       </div>
 
-      <div class="form-group">
-        <label>رمز عبور</label>
-        <input
-          type="password"
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">رمز عبور</label>
+        <BaseInput
           v-model="form.password"
+          type="password"
           placeholder="********"
-          :class="{ 'has-error': fieldErrors.password }"
+          :error="fieldErrors.password?.[0]"
         />
-
-        <!-- نمایش خطای فیلد رمز عبور -->
-        <span v-if="fieldErrors.password" class="error-text field-error">
-          {{ fieldErrors.password[0] }}
-        </span>
       </div>
 
-      <!-- نمایش خطاهای کلی بیزینسی (مثل رمز اشتباه) -->
-      <p v-if="errorMessage" class="error-text global-error">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="m-0 text-center text-sm text-danger">{{ errorMessage }}</p>
 
-      <BaseButton type="submit" :disabled="isLoading" block>
+      <BaseButton type="submit" variant="primary" block :disabled="isLoading">
         {{ isLoading ? 'در حال ورود...' : 'ورود' }}
       </BaseButton>
     </form>
 
-    <div class="auth-links mt-3">
-      <router-link :to="{ name: 'login-otp' }">ورود با رمز یکبار مصرف (OTP)</router-link>
-      <router-link :to="{ name: 'register' }">ثبت‌نام نکرده‌اید؟</router-link>
+    <div class="mt-6 grid gap-2 text-center text-sm">
+      <router-link :to="{ name: 'login-otp' }" class="text-primary font-bold">
+        ورود با رمز یکبار مصرف (OTP)
+      </router-link>
+      <router-link
+        :to="{ name: 'register' }"
+        class="text-text-muted hover:text-primary transition-colors"
+      >
+        ثبت‌نام نکرده‌اید؟
+      </router-link>
     </div>
   </div>
 </template>
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
+import BaseInput from '@/components/base/BaseInput.vue'
 import { authService } from '@/services/authService'
 import { useUserStore } from '@/stores/userStore'
 import { getErrorMessage } from '@/utils/errorMessages'
@@ -63,8 +62,8 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const isLoading = ref(false)
-const errorMessage = ref('') // برای خطاهای کلی فرم
-const fieldErrors = ref({}) // برای خطاهای اختصاصی هر فیلد
+const errorMessage = ref('')
+const fieldErrors = ref({})
 
 const form = reactive({ phone: '', password: '' })
 
@@ -72,38 +71,26 @@ const validateForm = () => {
   fieldErrors.value = {}
 
   const errorPhone = validatePhoneNumber(form.phone)
-  if (errorPhone) {
-    fieldErrors.value.phone = [errorPhone]
-  }
+  if (errorPhone) fieldErrors.value.phone = [errorPhone]
 
   const errorPass = validatePassword(form.password)
-  if (errorPass) {
-    fieldErrors.value.password = [errorPass]
-  }
+  if (errorPass) fieldErrors.value.password = [errorPass]
 
-  if (errorPhone || errorPass) {
-    return false
-  }
-
-  return true
+  return !errorPhone && !errorPass
 }
 
 async function handleSubmit() {
   errorMessage.value = ''
   fieldErrors.value = {}
 
-  // ۱. بررسی خطاهای فرانت‌اند قبل از ارسال درخواست
   if (!validateForm()) return
 
   isLoading.value = true
-
   try {
     const data = await authService.loginWithPassword(form.phone, form.password)
     userStore.setAuthSuccess(data)
-    // console.log(data)
     await userStore.initializeAuth(true)
     router.push('/profile')
-    // setTimeout(() => router.push('/profile'), 1000)
   } catch (error) {
     errorMessage.value = getErrorMessage(error.code)
   } finally {
@@ -111,36 +98,3 @@ async function handleSubmit() {
   }
 }
 </script>
-
-<style scoped>
-/* استایل‌های پایه برای فرم‌های احراز هویت */
-.auth-card {
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-.form-group {
-  margin-bottom: 1rem;
-  display: grid;
-  gap: 0.5rem;
-}
-.form-group input {
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-.error-text {
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-.auth-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  text-align: center;
-  font-size: 0.875rem;
-}
-</style>
