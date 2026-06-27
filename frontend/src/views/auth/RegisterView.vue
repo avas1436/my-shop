@@ -1,66 +1,74 @@
 <!-- src/views/auth/RegisterView.vue -->
 <template>
-  <div class="auth-card page-panel">
-    <h1 class="section-title">ثبت نام در سایت</h1>
+  <div
+    class="w-full max-w-100 mx-auto p-8 bg-white rounded-md border border-border-light shadow-(--shadow-soft)"
+  >
+    <h1 class="m-0 text-[1.5rem] font-bold">ثبت‌نام در سایت</h1>
 
     <!-- مرحله اول: دریافت شماره موبایل -->
-    <form v-if="!otpSent" @submit.prevent="handleRequest" class="auth-form">
-      <p class="muted mb-4">شماره موبایل خود را وارد کنید.</p>
+    <form v-if="!otpSent" class="grid gap-5 mt-6" @submit.prevent="handleRequest">
+      <p class="m-0 text-text-muted">شماره موبایل خود را وارد کنید.</p>
 
-      <div class="form-group">
-        <label>شماره موبایل</label>
-        <input
-          type="text"
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">شماره موبایل</label>
+        <BaseInput
           v-model="form.phone"
+          type="text"
           placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-          :class="{ 'has-error': fieldErrors.phone }"
+          :error="fieldErrors.phone?.[0]"
         />
-        <span v-if="fieldErrors.phone" class="error-text field-error">
-          {{ fieldErrors.phone[0] }}
-        </span>
       </div>
 
-      <p v-if="errorMessage" class="error-text global-error">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="m-0 text-center text-sm text-danger">{{ errorMessage }}</p>
 
-      <BaseButton type="submit" :disabled="isLoading" block>
+      <BaseButton type="submit" variant="primary" block :disabled="isLoading">
         {{ isLoading ? 'در حال ارسال...' : 'ارسال کد تایید' }}
       </BaseButton>
+
+      <div class="text-center text-sm">
+        <router-link :to="{ name: 'login-password' }" class="text-primary font-bold">
+          حساب کاربری دارید؟ ورود
+        </router-link>
+      </div>
     </form>
 
     <!-- مرحله دوم: تایید کد OTP -->
-    <form v-else @submit.prevent="handleVerify" class="auth-form">
-      <p class="muted mb-4">کد ارسال شده به {{ form.phone }} را وارد کنید.</p>
+    <form v-else class="grid gap-5 mt-6" @submit.prevent="handleVerify">
+      <p class="m-0 text-text-muted">
+        کد ارسال شده به <span class="font-bold text-text-main">{{ form.phone }}</span> را وارد کنید.
+      </p>
 
-      <div class="form-group">
-        <label>کد تایید</label>
-        <input
-          type="text"
+      <div class="grid gap-1.5">
+        <label class="text-sm font-bold">کد تایید</label>
+        <BaseInput
           v-model="form.otpCode"
+          type="text"
           placeholder="۱۲۳۴۵"
-          :class="{ 'has-error': fieldErrors.otpCode }"
+          :error="fieldErrors.otpCode?.[0]"
         />
-        <span v-if="fieldErrors.otpCode" class="error-text field-error">
-          {{ fieldErrors.otpCode[0] }}
-        </span>
       </div>
 
-      <p v-if="errorMessage" class="error-text global-error">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="m-0 text-center text-sm text-danger">{{ errorMessage }}</p>
 
-      <BaseButton type="submit" :disabled="isLoading" block>
+      <BaseButton type="submit" variant="primary" block :disabled="isLoading">
         {{ isLoading ? 'در حال بررسی...' : 'تایید کد' }}
       </BaseButton>
-    </form>
 
-    <div class="auth-links mt-3" v-if="!otpSent">
-      <router-link :to="{ name: 'login-password' }">حساب کاربری دارید؟ ورود</router-link>
-    </div>
+      <button
+        type="button"
+        class="text-sm text-text-muted hover:text-primary transition-colors text-center bg-transparent border-0 cursor-pointer"
+        @click="otpSent = false"
+      >
+        ویرایش شماره موبایل
+      </button>
+    </form>
   </div>
 </template>
 
 <script setup>
 import BaseButton from '@/components/base/BaseButton.vue'
+import BaseInput from '@/components/base/BaseInput.vue'
 import { useOtpAuth } from '@/composable/auth/useOtpAuth'
-
 import { useUserStore } from '@/stores/userStore'
 import { useRouter } from 'vue-router'
 
@@ -75,7 +83,7 @@ const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyO
   },
   onVerifySuccess: async () => {
     if (!userStore.user?.firstName || !userStore.user?.lastName) {
-      await router.push('/auth/complete') // هدایت به صفحه تکمیل پروفایل
+      await router.push('/auth/complete')
     } else {
       await router.push('/profile')
     }
@@ -91,38 +99,6 @@ const { form, isLoading, otpSent, errorMessage, fieldErrors, requestOtp, verifyO
   },
 })
 
-// استفاده از توابع کمکی برای ارسال کلمه 'register' به عنوان purpose و جلوگیری از ارسال رویداد (Event)
 const handleRequest = () => requestOtp('register')
 const handleVerify = () => verifyOtp('register')
 </script>
-
-<style scoped>
-.auth-card {
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-.form-group {
-  margin-bottom: 1rem;
-  display: grid;
-  gap: 0.5rem;
-}
-.form-group input {
-  padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-}
-.error-text {
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
-}
-.auth-links {
-  text-align: center;
-  font-size: 0.875rem;
-  display: block;
-  margin-top: 1rem;
-}
-</style>
