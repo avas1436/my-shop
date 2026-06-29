@@ -216,6 +216,7 @@
         <h3 class="m-0 text-[1rem] font-bold">ویژگی‌های فنی محصول</h3>
       </div>
 
+      <!-- قسمت مربوط به خود محصول -->
       <div class="grid gap-2 mb-4">
         <div
           v-for="attr in product.attributes"
@@ -240,6 +241,52 @@
 
         <p v-if="!product.attributes?.length" class="m-0 text-sm text-text-muted text-center py-2">
           هیچ ویژگی فنی برای این محصول ثبت نشده است.
+        </p>
+      </div>
+
+      <!-- قسمت مربوط به واریانت ها -->
+      <div class="grid gap-4 mb-4">
+        <!-- حلقه اول: چرخیدن روی واریانت‌هایی که ویژگی دارند -->
+        <div
+          v-for="variant in activeVariantsWithAttributes"
+          :key="variant.id"
+          class="border-b pb-4 last:border-0"
+        >
+          <div class="text-xs font-semibold text-text-muted mb-2 px-1">
+            تنوع با شناسه انبار: {{ variant.sku }}
+          </div>
+
+          <div class="grid gap-2">
+            <!-- حلقه دوم: چرخیدن روی تک‌تک ویژگی‌های آن واریانت -->
+            <div
+              v-for="attr in variant.attributes"
+              :key="attr.attribute_id"
+              class="flex items-center gap-4 bg-bg-muted border border-border-light p-2.5 rounded-xl shadow-sm"
+            >
+              <span class="text-sm font-bold text-text-main min-w-30">{{ attr.name }}:</span>
+              <BaseInput
+                :model-value="attr.value"
+                class="flex-1 bg-white"
+                @update:model-value="attr.value = $event"
+                @blur="patchAttribute(attr.attribute_id, attr.value)"
+              />
+              <BaseButton
+                variant="danger-ghost"
+                size="sm"
+                @click="requestDeleteAttribute(attr.attribute_id)"
+              >
+                <Trash2Icon class="w-4 h-4" />
+              </BaseButton>
+            </div>
+          </div>
+        </div>
+
+        <!-- پیام در صورت عدم وجود ویژگی برای هیچکدام از واریانت‌ها -->
+        <p
+          v-if="!activeVariantsWithAttributes.length"
+          class="m-0 text-sm text-text-muted text-center py-2"
+        >
+          هیچ ویژگی فنی برای تنوع‌های این محصول ثبت نشده است.
         </p>
       </div>
 
@@ -329,7 +376,7 @@ import {
   Trash2Icon,
   XIcon,
 } from '@lucide/vue'
-import { inject, ref, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 
 const product = inject('product')
 const refreshProductData = inject('refreshProductData')
@@ -560,6 +607,16 @@ const handleSyncTags = async () => {
 // ==============================
 const availableAttributesList = ref([])
 const newAttribute = ref({ id: '', value: '' })
+
+// ذخیره لیست واریانت های حاوی ویژگی‌ها و فیلتر کردن آن‌ها برای نمایش فقط واریانت‌هایی که ویژگی دارند
+const activeVariantsWithAttributes = computed(() => {
+  if (!product.value?.inventory) {
+    return []
+  }
+
+  // فقط واریانت‌هایی که آرایه attributes آن‌ها عضو دارد را برمی‌گرداند
+  return product.value.inventory.filter((item) => item.attributes && item.attributes.length > 0)
+})
 
 // مودال حذف ویژگی
 const showDeleteAttributeConfirm = ref(false)
