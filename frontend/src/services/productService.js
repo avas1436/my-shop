@@ -237,82 +237,82 @@ export const attributeService = {
 
   // ۱. ایجاد ویژگی جدید
   async createAttribute(data) {
-    return await axiosClient.post(`${BASE_URL}/`, data)
+    return await axiosClient.post(`/v1/attributes/`, data)
   },
 
   // ۲. دریافت لیست ویژگی‌ها
   async listAttributes() {
-    return await axiosClient.get(`${BASE_URL}/list`)
+    return await axiosClient.get(`/v1/attributes/list`)
   },
 
   // ۳. دریافت یک ویژگی خاص
-  async getAttribute(attributeId) {
-    return await axiosClient.get(`${BASE_URL}/${attributeId}`)
-  },
+  // async getAttribute(attributeId) {
+  //   return await axiosClient.get(`/v1/attributes/${attributeId}`)
+  // },
 
   // ۴. به‌روزرسانی ویژگی
   async updateAttribute(attributeId, data) {
-    return await axiosClient.put(`${BASE_URL}/${attributeId}`, data)
+    return await axiosClient.put(`/v1/attributes/${attributeId}`, data)
   },
 
   // ۵. حذف ویژگی
   async deleteAttribute(attributeId) {
-    return await axiosClient.delete(`${BASE_URL}/${attributeId}`)
+    return await axiosClient.delete(`/v1/attributes/${attributeId}`)
   },
 
   // --- ویژگی‌های محصول (Product Attributes) ---
 
   // ۶. ایجاد ویژگی برای محصول
   async createProductAttribute(data) {
-    return await axiosClient.post(`${BASE_URL}/product`, data)
+    return await axiosClient.post(`/v1/attributes/product`, data)
   },
 
   // ۷. دریافت ویژگی یک محصول
-  async getProductAttribute(paId) {
-    return await axiosClient.get(`${BASE_URL}/product/${paId}`)
-  },
+  // async getProductAttribute(paId) {
+  //   return await axiosClient.get(`/v1/attributes/product/${paId}`)
+  // },
 
   // ۸. به‌روزرسانی ویژگی یک محصول
   async updateProductAttribute(paId, data) {
-    return await axiosClient.put(`${BASE_URL}/product/${paId}`, data)
+    return await axiosClient.put(`/v1/attributes/product/${paId}`, data)
   },
 
   // ۹. حذف ویژگی یک محصول
-  async deleteProductAttribute(paId) {
-    return await axiosClient.delete(`${BASE_URL}/product/${paId}`)
+  async deleteProductAttribute(paId, data) {
+    return await axiosClient.delete(`/v1/attributes/product/${paId}`, data)
   },
 
   // ۱۰. دریافت لیست تمام ویژگی‌های متصل به محصولات
-  async listProductAttributes() {
-    return await axiosClient.get(`${BASE_URL}/list/product/list`)
-  },
+  // async listProductAttributes() {
+  //   return await axiosClient.get(`/v1/attributes/list/product/list`)
+  // },
 
   // --- ویژگی‌های متغیر محصول (Product Variant Attributes) ---
 
   // ۱۱. ایجاد ویژگی برای متغیر محصول
   async createProductVariantAttribute(data) {
-    return await axiosClient.post(`${BASE_URL}/product/variant`, data)
+    return await axiosClient.post(`/v1/attributes/product/variant`, data)
   },
 
   // ۱۲. دریافت ویژگی یک متغیر محصول
-  async getProductVariantAttribute(pvaId) {
-    return await axiosClient.get(`${BASE_URL}/product/variant/${pvaId}`)
-  },
+  // async getProductVariantAttribute(pvaId) {
+  //   return await axiosClient.get(`/v1/attributes/product/variant/${pvaId}`)
+  // },
 
   // ۱۳. به‌روزرسانی ویژگی یک متغیر محصول
   async updateProductVariantAttribute(pvaId, data) {
-    return await axiosClient.put(`${BASE_URL}/product/variant/${pvaId}`, data)
+    return await axiosClient.put(`/v1/attributes/product/variant/${pvaId}`, data)
   },
 
   // ۱۴. حذف ویژگی یک متغیر محصول
-  async deleteProductVariantAttribute(pvaId) {
-    return await axiosClient.delete(`${BASE_URL}/product/variant/${pvaId}`)
+  async deleteProductVariantAttribute(pvaId, data) {
+    return await axiosClient.delete(`/v1/attributes/product/variant/${pvaId}`, data)
   },
 
   // ۱۵. دریافت لیست ویژگی‌های متغیر محصولات
-  async listProductVariantAttributes() {
-    return await axiosClient.get(`${BASE_URL}/list/product/variant`)
-  },
+  // async listProductVariantAttributes() {
+  //   return await axiosClient.get(`/v1/attributes/list/product/variant`)
+  // },
 }
 
 /**

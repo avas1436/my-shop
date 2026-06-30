@@ -208,7 +208,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- کارت ویژگی‌های فنی -->
+    <!-- کارت ویژگی‌های فنی (خود محصول) -->
     <!-- ========================================== -->
     <div class="p-6 bg-white border border-border-light rounded-xl shadow-(--shadow-soft)">
       <div class="flex items-center gap-2 mb-4 border-b border-border-light pb-3">
@@ -216,104 +216,211 @@
         <h3 class="m-0 text-[1rem] font-bold">ویژگی‌های فنی محصول</h3>
       </div>
 
-      <!-- قسمت مربوط به خود محصول -->
+      <!-- لیست ویژگی‌های فعلی محصول -->
       <div class="grid gap-2 mb-4">
-        <div
-          v-for="attr in product.attributes"
-          :key="attr.attribute_id"
-          class="flex items-center gap-4 bg-bg-muted border border-border-light p-2.5 rounded-xl shadow-sm"
-        >
-          <span class="text-sm font-bold text-text-main min-w-30">{{ attr.name }}:</span>
-          <BaseInput
-            :model-value="attr.value"
-            class="flex-1 bg-white"
-            @update:model-value="attr.value = $event"
-            @blur="patchAttribute(attr.attribute_id, attr.value)"
-          />
-          <BaseButton
-            variant="danger-ghost"
-            size="sm"
-            @click="requestDeleteAttribute(attr.attribute_id)"
+        <template v-if="product.attributes?.length">
+          <div
+            v-for="attr in product.attributes"
+            :key="attr.id"
+            class="flex items-center gap-4 bg-bg-muted border border-border-light p-2.5 rounded-xl shadow-sm"
           >
-            <Trash2Icon class="w-4 h-4" />
-          </BaseButton>
-        </div>
-
-        <p v-if="!product.attributes?.length" class="m-0 text-sm text-text-muted text-center py-2">
-          هیچ ویژگی فنی برای این محصول ثبت نشده است.
+            <span class="text-sm font-bold text-text-main min-w-30">{{ attr.name }}:</span>
+            <BaseInput
+              :model-value="attr.value"
+              class="flex-1 bg-white"
+              @update:model-value="attr.value = $event"
+              @blur="patchProductAttribute(attr.id, attr.value)"
+            />
+            <BaseButton variant="danger-ghost" size="sm" @click="removeProductAttribute(attr.id)">
+              <Trash2Icon class="w-4 h-4" />
+            </BaseButton>
+          </div>
+        </template>
+        <!-- نمایش پیام در صورت نبود ویژگی -->
+        <p
+          v-else
+          class="m-0 text-sm text-text-muted text-center py-4 bg-bg-muted border rounded-xl"
+        >
+          برای این قسمت هیچ ویژگی ای نیست.
         </p>
       </div>
 
-      <!-- قسمت مربوط به واریانت ها -->
-      <div class="grid gap-4 mb-4">
-        <!-- حلقه اول: چرخیدن روی واریانت‌هایی که ویژگی دارند -->
+      <!-- افزودن ویژگی جدید به محصول -->
+      <div class="pt-4 border-t border-dashed border-border-light grid gap-3">
+        <label class="text-sm font-bold text-text-muted">افزودن ویژگی جدید به محصول</label>
+        <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <div class="relative w-full sm:w-1/2">
+            <BaseInput
+              v-model="attributeSearchQuery"
+              placeholder="جستجوی نام ویژگی..."
+              @focus="newAttribute.id = ''"
+            />
+            <!-- منوی دراپ‌داون جستجو -->
+            <ul
+              v-if="attributeSearchQuery && searchedAttributes.length && !newAttribute.id"
+              class="absolute w-full mt-1 p-0 m-0 list-none bg-white border border-border-light rounded-xl shadow-lg max-h-48 overflow-y-auto z-20"
+            >
+              <li
+                v-for="sa in searchedAttributes"
+                :key="sa.id"
+                @click="selectProductAttribute(sa)"
+                class="px-4 py-2 hover:bg-bg-muted cursor-pointer text-sm border-b border-border-light last:border-0"
+              >
+                {{ sa.name }}
+              </li>
+            </ul>
+          </div>
+          <BaseInput
+            v-model="newAttribute.value"
+            placeholder="مقدار ویژگی..."
+            class="w-full sm:w-1/3"
+          />
+          <BaseButton
+            variant="primary"
+            size="md"
+            class="w-full sm:w-auto"
+            @click="addProductAttribute(newAttribute)"
+          >
+            <PlusIcon class="w-4 h-4" /> افزودن
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- کارت ویژگی‌های واریانت‌ها (تنوع‌ها) -->
+    <!-- ========================================== -->
+    <div class="p-6 bg-white border border-border-light rounded-xl shadow-(--shadow-soft) mb-4">
+      <div class="flex items-center gap-2 mb-4 border-b border-border-light pb-3">
+        <Settings2Icon class="w-5 h-5 text-indigo-500 shrink-0" />
+        <h3 class="m-0 text-[1rem] font-bold">ویژگی‌های تنوع‌ها (Variants)</h3>
+      </div>
+
+      <!-- اگر اصلاً واریانتی وجود نداشت -->
+      <p
+        v-if="!product.inventory?.length"
+        class="m-0 text-sm text-text-muted text-center py-4 border rounded-xl bg-bg-muted"
+      >
+        هیچ تنوعی برای این محصول تعریف نشده است.
+      </p>
+
+      <!-- حلقه اصلی واریانت‌ها -->
+      <div class="grid gap-6">
         <div
-          v-for="variant in activeVariantsWithAttributes"
+          v-for="variant in product.inventory"
           :key="variant.id"
-          class="border-b pb-4 last:border-0"
+          class="border border-border-light p-4 rounded-2xl bg-white shadow-sm"
         >
-          <div class="text-xs font-semibold text-text-muted mb-2 px-1">
-            تنوع با شناسه انبار: {{ variant.sku }}
+          <!-- هدر واریانت -->
+          <div
+            class="text-xs font-semibold text-text-muted mb-3 px-1 flex justify-between items-center bg-bg-muted p-2 rounded-lg"
+          >
+            <span>
+              شناسه انبار (SKU):
+              <span class="font-mono text-text-main font-bold">{{ variant.sku }}</span>
+            </span>
           </div>
 
-          <div class="grid gap-2">
-            <!-- حلقه دوم: چرخیدن روی تک‌تک ویژگی‌های آن واریانت -->
-            <div
-              v-for="attr in variant.attributes"
-              :key="attr.attribute_id"
-              class="flex items-center gap-4 bg-bg-muted border border-border-light p-2.5 rounded-xl shadow-sm"
+          <!-- لیست ویژگی‌های فعلی این واریانت -->
+          <div class="grid gap-2 mb-4">
+            <template v-if="variant.attributes?.length">
+              <div
+                v-for="attr in variant.attributes"
+                :key="attr.id"
+                class="flex items-center gap-4 bg-white border border-border-light p-2.5 rounded-xl shadow-sm"
+              >
+                <span class="text-sm font-bold text-text-main min-w-30">{{ attr.name }}:</span>
+                <BaseInput
+                  :model-value="attr.value"
+                  class="flex-1 bg-white"
+                  @update:model-value="attr.value = $event"
+                  @blur="patchProductVariantAttribute(attr.id, attr.value)"
+                />
+                <BaseButton
+                  variant="danger-ghost"
+                  size="sm"
+                  @click="removeProductVariantAttribute(attr.id)"
+                >
+                  <Trash2Icon class="w-4 h-4" />
+                </BaseButton>
+              </div>
+            </template>
+
+            <!-- در صورت نبود ویژگی برای واریانت -->
+            <p
+              v-else
+              class="m-0 text-sm text-text-muted text-center py-4 border border-dashed rounded-xl bg-bg-muted"
             >
-              <span class="text-sm font-bold text-text-main min-w-30">{{ attr.name }}:</span>
+              برای این قسمت هیچ ویژگی ای نیست.
+            </p>
+          </div>
+
+          <!-- جستجو و افزودن ویژگی مخصوص همین واریانت -->
+          <div class="pt-4 border-t border-dashed border-border-light grid gap-3">
+            <label class="text-xs font-bold text-text-muted">افزودن ویژگی جدید به این تنوع</label>
+            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div class="relative w-full sm:w-1/2">
+                <!-- استفاده از مدل داینامیک تا جستجو در یک واریانت روی بقیه تاثیری نگذارد -->
+                <BaseInput
+                  :model-value="
+                    newVariantAttribute.variant_id === variant.id ? attributeSearchQuery : ''
+                  "
+                  placeholder="جستجوی نام ویژگی..."
+                  @update:model-value="
+                    (val) => {
+                      attributeSearchQuery = val
+                      newVariantAttribute.variant_id = variant.id
+                      newVariantAttribute.attribute_id = ''
+                    }
+                  "
+                  @focus="newVariantAttribute.variant_id = variant.id"
+                />
+
+                <!-- نتایج جستجوی ویژگی مخصوص این واریانت -->
+                <ul
+                  v-if="
+                    newVariantAttribute.variant_id === variant.id &&
+                    attributeSearchQuery &&
+                    searchedAttributes.length &&
+                    !newVariantAttribute.attribute_id
+                  "
+                  class="absolute w-full mt-1 p-0 m-0 list-none bg-white border border-border-light rounded-xl shadow-lg max-h-48 overflow-y-auto z-20"
+                >
+                  <li
+                    v-for="sa in searchedAttributes"
+                    :key="sa.id"
+                    class="px-4 py-2 hover:bg-bg-muted cursor-pointer text-sm border-b border-border-light last:border-0"
+                    @click="selectVariantAttribute(sa)"
+                  >
+                    {{ sa.name }}
+                  </li>
+                </ul>
+              </div>
+
               <BaseInput
-                :model-value="attr.value"
-                class="flex-1 bg-white"
-                @update:model-value="attr.value = $event"
-                @blur="patchAttribute(attr.attribute_id, attr.value)"
+                :model-value="
+                  newVariantAttribute.variant_id === variant.id ? newVariantAttribute.value : ''
+                "
+                placeholder="مقدار ویژگی..."
+                class="w-full sm:w-1/3"
+                @update:model-value="
+                  (val) => {
+                    newVariantAttribute.value = val
+                    newVariantAttribute.variant_id = variant.id
+                  }
+                "
               />
               <BaseButton
-                variant="danger-ghost"
-                size="sm"
-                @click="requestDeleteAttribute(attr.attribute_id)"
+                variant="primary"
+                size="md"
+                class="w-full sm:w-auto"
+                @click="addProductVariantAttribute()"
               >
-                <Trash2Icon class="w-4 h-4" />
+                <PlusIcon class="w-4 h-4" /> افزودن
               </BaseButton>
             </div>
           </div>
         </div>
-
-        <!-- پیام در صورت عدم وجود ویژگی برای هیچکدام از واریانت‌ها -->
-        <p
-          v-if="!activeVariantsWithAttributes.length"
-          class="m-0 text-sm text-text-muted text-center py-2"
-        >
-          هیچ ویژگی فنی برای تنوع‌های این محصول ثبت نشده است.
-        </p>
-      </div>
-
-      <!-- افزودن ویژگی جدید -->
-      <div
-        class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-4 border-t border-border-light"
-      >
-        <div class="grid gap-1.5">
-          <label class="text-xs font-bold text-text-muted">نام ویژگی</label>
-          <select
-            v-model="newAttribute.id"
-            class="w-full h-12 bg-white border border-border-light rounded-xl px-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all cursor-pointer"
-          >
-            <option value="" disabled>انتخاب نام ویژگی...</option>
-            <option v-for="a in availableAttributesList" :key="a.id" :value="a.id">
-              {{ a.name }}
-            </option>
-          </select>
-        </div>
-        <div class="grid gap-1.5">
-          <label class="text-xs font-bold text-text-muted">مقدار ویژگی</label>
-          <BaseInput v-model="newAttribute.value" placeholder="مقدار..." />
-        </div>
-        <BaseButton variant="success" size="md" class="h-12" @click="addAttribute">
-          <PlusIcon class="w-4 h-4" />
-          افزودن ویژگی
-        </BaseButton>
       </div>
     </div>
 
@@ -362,7 +469,12 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseModal from '@/components/base/BaseModal.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton.vue'
-import { categoryService, productService, tagService } from '@/services/productService'
+import {
+  attributeService,
+  categoryService,
+  productService,
+  tagService,
+} from '@/services/productService'
 import { useErrorStore } from '@/stores/errorStore'
 import { getErrorMessage } from '@/utils/errorMessages'
 import {
@@ -376,7 +488,7 @@ import {
   Trash2Icon,
   XIcon,
 } from '@lucide/vue'
-import { computed, inject, ref, watch } from 'vue'
+import { inject, ref, watch } from 'vue'
 
 const product = inject('product')
 const refreshProductData = inject('refreshProductData')
@@ -605,38 +717,65 @@ const handleSyncTags = async () => {
 // ==============================
 // ویژگی‌های فنی
 // ==============================
-const availableAttributesList = ref([])
-const newAttribute = ref({ id: '', value: '' })
+const attributeSearchQuery = ref('')
+const searchedAttributes = ref([])
+const isSearchingAttributes = ref(false)
+let attributeSearchTimeout = null
+const selectedAttributes = ref([])
 
-// ذخیره لیست واریانت های حاوی ویژگی‌ها و فیلتر کردن آن‌ها برای نمایش فقط واریانت‌هایی که ویژگی دارند
-const activeVariantsWithAttributes = computed(() => {
-  if (!product.value?.inventory) {
-    return []
+// جستجوی ویژگی‌ها
+watch(attributeSearchQuery, (newQuery) => {
+  if (!newQuery?.trim()) {
+    searchedAttributes.value = []
+    return
   }
-
-  // فقط واریانت‌هایی که آرایه attributes آن‌ها عضو دارد را برمی‌گرداند
-  return product.value.inventory.filter((item) => item.attributes && item.attributes.length > 0)
+  clearTimeout(attributeSearchTimeout)
+  attributeSearchTimeout = setTimeout(async () => {
+    isSearchingAttributes.value = true
+    try {
+      const response = await attributeService.listAttributes({ search: newQuery })
+      searchedAttributes.value = response?.items ?? []
+    } catch (error) {
+      errorStore.addError({
+        type: 'error',
+        message: `خطا در جستجوی ویژگی: ${error?.detail?.message || 'خطای سرور'}`,
+      })
+      searchedAttributes.value = []
+    } finally {
+      isSearchingAttributes.value = false
+    }
+  }, 500)
 })
 
-// مودال حذف ویژگی
-const showDeleteAttributeConfirm = ref(false)
-const attributeToDelete = ref(null)
+const isAttributeSelected = (attributeId) =>
+  selectedAttributes.value.some((a) => a.id === attributeId)
 
-const requestDeleteAttribute = (attributeId) => {
-  attributeToDelete.value = attributeId
-  showDeleteAttributeConfirm.value = true
+const addAttributeToSelection = (attribute) => {
+  if (isAttributeSelected(attribute.id)) return
+  selectedAttributes.value.push(attribute)
+  attributeSearchQuery.value = ''
+  searchedAttributes.value = []
 }
 
-const confirmDeleteAttribute = async () => {
-  if (!attributeToDelete.value) return
-  showDeleteAttributeConfirm.value = false
-  await removeAttribute(attributeToDelete.value)
-  attributeToDelete.value = null
+const selectProductAttribute = (sa) => {
+  newAttribute.value.id = sa.id
+  attributeSearchQuery.value = sa.name
+  searchedAttributes.value = []
 }
 
-const patchAttribute = async (attributeId, value) => {
+const selectVariantAttribute = (sa) => {
+  newVariantAttribute.value.attribute_id = sa.id
+  attributeSearchQuery.value = sa.name
+  searchedAttributes.value = []
+}
+
+// حذف ویرایش و افزودن ویژگی محصول
+const patchProductAttribute = async (productAttributeId, value) => {
   try {
-    await productService.updateAttribute(product.value.id, attributeId, { value })
+    await attributeService.updateProductAttribute(productAttributeId, {
+      product_id: product.value.id,
+      value: value,
+    })
   } catch (error) {
     errorStore.addError({
       type: 'error',
@@ -645,15 +784,20 @@ const patchAttribute = async (attributeId, value) => {
   }
 }
 
-const addAttribute = async () => {
+const newAttribute = ref({ id: '', value: '' })
+
+const addProductAttribute = async (newAttribute) => {
   if (!newAttribute.value.id || !newAttribute.value.value) {
     errorStore.addError({ type: 'warning', message: 'لطفاً نام و مقدار ویژگی را وارد کنید.' })
     return
   }
   try {
-    await productService.attachAttribute(product.value.id, newAttribute.value.id, {
+    await attributeService.createProductAttribute({
+      product_id: product.value.id,
+      attribute_id: newAttribute.value.id,
       value: newAttribute.value.value,
     })
+
     newAttribute.value = { id: '', value: '' }
     await refreshProductData()
   } catch (error) {
@@ -664,9 +808,62 @@ const addAttribute = async () => {
   }
 }
 
-const removeAttribute = async (attributeId) => {
+const removeProductAttribute = async (attributeId) => {
   try {
-    await productService.detachAttribute(product.value.id, attributeId)
+    await productService.detachAttribute(attributeId, {
+      product_id: product.value.id,
+      product_attribute_id: attributeId,
+    })
+    await refreshProductData()
+    errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت حذف شد.' })
+  } catch (error) {
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || 'خطا در حذف ویژگی.',
+    })
+  }
+}
+
+// حذف ویرایش و افزودن ویژگی واریانت
+const patchProductVariantAttribute = async (productVariantAttribute, value) => {
+  try {
+    await attributeService.updateProductVariantAttribute(productVariantAttribute, {
+      product_id: product.value.id,
+      value: value,
+    })
+  } catch (error) {
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || 'خطا در بروزرسانی ویژگی.',
+    })
+  }
+}
+
+const newVariantAttribute = ref({ variant_id: '', attribute_id: '', value: '' })
+
+const addProductVariantAttribute = async () => {
+  if (!newVariantAttribute.value.id || !newVariantAttribute.value.value) {
+    errorStore.addError({ type: 'warning', message: 'لطفاً نام و مقدار ویژگی را وارد کنید.' })
+    return
+  }
+  try {
+    await attributeService.attachProductVariantAttribute(newVariantAttribute)
+    newVariantAttribute.value = { variant_id: '', attribute_id: '', value: '' }
+    await refreshProductData()
+  } catch (error) {
+    errorStore.addError({
+      type: 'error',
+      message: getErrorMessage(error.code) || 'خطا در افزودن ویژگی.',
+    })
+  }
+}
+
+const removeProductVariantAttribute = async (productVariantAttributeId) => {
+  try {
+    await attributeService.detachProductVariantAttribute(productVariantAttributeId, {
+      product_id: product.value.id,
+      product_variant_attribute_id: productVariantAttributeId,
+    })
     await refreshProductData()
     errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت حذف شد.' })
   } catch (error) {
