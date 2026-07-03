@@ -126,10 +126,6 @@ class ProductAdminRead(BaseModel):
 
     images: list[GetImage] = Field(default_factory=list)
 
-    # product_attributes: list[ProductAttributeRead] = Field(default_factory=list)
-
-    # variant_attributes: list[ProductVariantAttributeRead] = Field(default_factory=list)
-
     inventory: list[InventoryItem] = Field(default_factory=list)
 
     attributes: list[AttributeItem] = Field(default_factory=list)

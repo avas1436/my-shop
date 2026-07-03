@@ -54,7 +54,7 @@ async def create_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -117,7 +117,7 @@ async def update_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -143,7 +143,7 @@ async def delete_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -175,7 +175,7 @@ async def create_product_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -236,7 +236,7 @@ async def update_product_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -262,7 +262,7 @@ async def delete_product_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -296,7 +296,7 @@ async def create_product_variant_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -363,7 +363,7 @@ async def update_product_variant_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -392,7 +392,7 @@ async def delete_product_variant_attribute(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(minutes=30),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),

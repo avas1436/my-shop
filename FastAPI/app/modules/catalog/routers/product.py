@@ -38,7 +38,7 @@ async def admin_create_draft_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -68,7 +68,7 @@ async def admin_soft_delete_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -147,7 +147,7 @@ async def show_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -179,7 +179,7 @@ async def admin_patch_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),
@@ -210,7 +210,7 @@ async def admin_publish_product(
             require_access(
                 allowed_roles=[UserRole.ADMIN],
                 deny_roles=[UserRole.CUSTOMER],
-                require_recent_login_within=timedelta(days=1),
+                require_recent_login_within=timedelta(days=5),
                 require_password=True,
                 require_profile_complete=True,
                 profile_required_fields=("first_name", "last_name", "birth_date"),

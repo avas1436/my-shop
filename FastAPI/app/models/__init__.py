@@ -14,7 +14,14 @@ from app.modules.catalog.models.image import ProductImage
 # inventory
 from app.modules.catalog.models.inventory import Inventory
 from app.modules.catalog.models.product import Product
+
+# views
+from app.modules.catalog.models.product_view import ProductAdminView
+
+# Tags
 from app.modules.catalog.models.tag import ProductTag, Tag
+
+# Variant
 from app.modules.catalog.models.variant import ProductVariant
 
 # comments
