@@ -77,7 +77,11 @@ class AdminProductService:
     # ---------------------------
     # Get a Product by ID for Admin show
     # ---------------------------
-    async def get_product_admin(self, product_id: int) -> ProductAdminRead | None:
+    async def get_product_admin(
+        self,
+        product_id: int,
+    ) -> ProductAdminRead | None:
+
         if product_id < 1:
             raise BadRequest(
                 message="Invalid product id.",
@@ -89,19 +93,20 @@ class AdminProductService:
             if cached is not None:
                 return cached
 
-        product = await self.repo.get_full_product(
+        product_view_data = await self.repo.get_admin_product_view(
             product_id=product_id,
             include_deleted=True,
         )
 
-        if not product:
+        if not product_view_data:
             raise NotFound(
                 message="Product not found.",
                 code="PRODUCT_NOT_FOUND",
             )
 
-        # payload = ProductAdminRead.model_validate(product).model_dump()
-        payload = ProductAdminRead.model_validate(product).model_dump(mode="json")
+        payload = ProductAdminRead.model_validate(product_view_data).model_dump(
+            mode="json"
+        )
 
         if self.cache.is_available():
             await self.cache.set("admin", "full", product_id, payload=payload)

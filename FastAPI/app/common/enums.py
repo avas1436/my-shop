@@ -24,6 +24,14 @@ class ProductStatus(StrEnum):
     DRAFT = "draft"
     ARCHIVED = "archived"
 
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.lower():
+                    return member
+        return None
+
 
 class ProductSortEnum(StrEnum):
     NEWEST = "newest"

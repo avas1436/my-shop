@@ -13,6 +13,7 @@ from app.modules.catalog.models.attribute import (
 from app.modules.catalog.models.brand import Brand
 from app.modules.catalog.models.category import Category
 from app.modules.catalog.models.product import Product
+from app.modules.catalog.models.product_view import ProductAdminView
 from app.modules.catalog.models.tag import Tag
 from app.modules.catalog.models.variant import ProductVariant
 from app.modules.catalog.schemas.product import (
@@ -56,60 +57,34 @@ class AdminProductRepository:
     # ---------------------------
     # Get a Product by ID (admin view)
     # ---------------------------
-    async def get_full_product(
+    async def get_admin_product_view(
         self,
         product_id: int | None = None,
         slug: str | None = None,
         include_deleted: bool = False,
-    ) -> Product | None:
+    ) -> ProductAdminView | None:
 
-        stmt = select(Product)
+        stmt = select(ProductAdminView)
 
         if product_id is not None and slug is not None:
-            raise ValueError(
-                "Provide either product_id or slug, not both",
-            )
+            raise ValueError("Provide either product_id or slug, not both")
+
         elif product_id is not None:
-            stmt = stmt.where(Product.id == product_id)
+            stmt = stmt.where(ProductAdminView.id == product_id)
+
         elif slug is not None:
-            stmt = stmt.where(Product.slug == slug)
+            stmt = stmt.where(ProductAdminView.slug == slug)
+
         else:
             return None
 
         # فیلتر کردن رکوردهای حذف شده در صورت نیاز
         if not include_deleted:
-            stmt = stmt.where(Product.deleted_at.is_(None))
-
-        stmt = stmt.options(
-            # برای رابطه To-one از جوین استفاده میکنیم
-            joinedload(Product.brand),
-            # استفاده از selectinload برای روابط To-Many
-            selectinload(Product.categories),
-            selectinload(Product.tags),
-            selectinload(Product.images),
-            # ویژگی‌های خود محصول
-            # selectinload(Product.attribute_values).joinedload(
-            #     ProductAttribute.attribute
-            # ),
-            selectinload(Product.attribute_values),
-            selectinload(Product.attribute_values).joinedload(
-                ProductAttribute.attribute
-            ),
-            # ادغام لودینگ‌های مربوط به Variants
-            selectinload(Product.variants).options(
-                # لود کردن inventory برای هر واریانت (اگر One-to-One است از joinedload استفاده کنید)
-                joinedload(ProductVariant.inventory),
-                # لود کردن ویژگی‌های هر واریانت
-                selectinload(ProductVariant.attribute_values).joinedload(
-                    ProductVariantAttribute.attribute
-                ),
-            ),
-        )
+            stmt = stmt.where(ProductAdminView.deleted_at.is_(None))
 
         result = await self.db.execute(stmt)
-        product = result.unique().scalar_one_or_none()
 
-        return product
+        return result.scalar_one_or_none()
 
     # ---------------------------
     # Create Product
