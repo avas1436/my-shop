@@ -32,7 +32,10 @@ class CommentService:
     # ---------------------------
     async def get_comment_by_id(self, comment_id: int) -> Comment:
         if comment_id < 1:
-            raise BadRequest("Invalid comment id.")
+            raise BadRequest(
+                message="Invalid comment id.",
+                code="INVALID_COMMENT_ID",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get(comment_id)
@@ -41,7 +44,10 @@ class CommentService:
 
         comment = await self.repo.get_by_id(comment_id)
         if not comment:
-            raise NotFound("Comment not found.")
+            raise NotFound(
+                message="Comment not found.",
+                code="COMMENT_NOT_FOUND",
+            )
 
         payload = CommentRead.model_validate(comment).model_dump(mode="json")
 
@@ -59,12 +65,22 @@ class CommentService:
     ) -> PageResponse[dict]:
 
         if page < 1 or size < 1 or size > 100:
-            raise BadRequest("Invalid pagination values.")
+            raise BadRequest(
+                message="Invalid pagination values.",
+                code="COMMENT_PAGINATION_INVALID_VALUES",
+            )
 
         if user_id is not None and user_id < 1:
-            raise BadRequest("Invalid user id.")
+            raise BadRequest(
+                message="Invalid user id.",
+                code="COMMENT_USER_INVALID_ID",
+            )
+
         if product_id is not None and product_id < 1:
-            raise BadRequest("Invalid product id.")
+            raise BadRequest(
+                message="Invalid product id.",
+                code="COMMENT_PRODUCT_INVALID_ID",
+            )
 
         if self.cache.is_available():
             cached = await self.cache.get_list("list", user_id, product_id, page, size)
@@ -106,8 +122,6 @@ class CommentService:
     async def create_comment(
         self, data: CommentCreate, user_id: int, product_id: int
     ) -> Comment:
-        if not data:
-            raise BadRequest("Comment data is required.")
 
         try:
             comment = Comment(
@@ -135,7 +149,10 @@ class CommentService:
 
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to create comment.") from exc
+            raise InternalServerError(
+                message="Failed to create comment.",
+                code="COMMENT_CREATE_FAILED",
+            ) from exc
 
     # ---------------------------
     # Update
@@ -144,18 +161,30 @@ class CommentService:
         self, comment_id: int, data: CommentUpdate, user: User
     ) -> Comment:
         if comment_id < 1:
-            raise BadRequest("Invalid comment id.")
+            raise BadRequest(
+                message="Invalid comment id.",
+                code="COMMENT_INVALID_ID",
+            )
 
         comment = await self.repo.get_by_id(comment_id)
         if not comment:
-            raise NotFound("Comment not found.")
+            raise NotFound(
+                message="Comment not found.",
+                code="COMMENT_NOT_FOUND",
+            )
 
         if user.role != UserRole.ADMIN or comment.user_id != user.id:
-            raise Forbidden("Cant change this comment")
+            raise Forbidden(
+                message="Cant change this comment",
+                code="COMMENT_ACCESS_DENIED",
+            )
 
         payload = data.model_dump(exclude_unset=True)
         if not payload:
-            raise BadRequest("No fields to update.")
+            raise BadRequest(
+                message="No fields to update.",
+                code="COMMENT_NO_FIELDS_TO_UPDATE",
+            )
 
         try:
             for k, v in payload.items():
@@ -179,21 +208,33 @@ class CommentService:
             raise
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to update comment.") from exc
+            raise InternalServerError(
+                message="Failed to update comment.",
+                code="COMMENT_UPDATE_FAILED",
+            ) from exc
 
     # ---------------------------
     # Delete
     # ---------------------------
     async def delete_comment(self, comment_id: int, user: User) -> None:
         if comment_id < 1:
-            raise BadRequest("Invalid comment id.")
+            raise BadRequest(
+                message="Invalid comment id.",
+                code="COMMENT_INVALID_ID",
+            )
 
         comment = await self.repo.get_by_id(comment_id)
         if not comment:
-            raise NotFound("Comment not found.")
+            raise NotFound(
+                message="Comment not found.",
+                code="COMMENT_NOT_FOUND",
+            )
 
         if user.role != UserRole.ADMIN or comment.user_id != user.id:
-            raise Forbidden("Cant change this comment")
+            raise Forbidden(
+                message="Cant change this comment",
+                code="COMMENT_ACCESS_DENIED",
+            )
 
         try:
             await self.repo.delete(comment)
@@ -205,4 +246,7 @@ class CommentService:
                 await self.cache.invalidate_key("comment", comment_id)
         except Exception as exc:
             await self.repo.rollback()
-            raise InternalServerError("Failed to delete comment.") from exc
+            raise InternalServerError(
+                message="Failed to delete comment.",
+                code="COMMENT_DELETE_FAILED",
+            ) from exc

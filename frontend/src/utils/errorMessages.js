@@ -74,6 +74,19 @@ export const ERROR_MESSAGES = {
   TAG_PAGINATION_INVALID: 'مقادیر ارسالی برای صفحه‌بندی برچسب‌ها نامعتبر است.',
   TAG_SOME_NOT_FOUND: 'برخی از برچسب‌های ارسالی در سیستم یافت نشدند.',
 
+  // Comments Module
+  COMMENT_INVALID_ID: 'شناسه دیدگاه وارد شده نامعتبر است.',
+  COMMENT_NOT_FOUND: 'دیدگاه مورد نظر یافت نشد یا ممکن است حذف شده باشد.',
+  COMMENT_PAGINATION_INVALID_VALUES: 'مقادیر ارسالی برای صفحه‌بندی دیدگاه‌ها نامعتبر است.',
+  COMMENT_USER_INVALID_ID: 'شناسه کاربر ارسالی برای فیلتر دیدگاه‌ها نامعتبر است.',
+  COMMENT_PRODUCT_INVALID_ID: 'شناسه محصول ارسالی برای فیلتر دیدگاه‌ها نامعتبر است.',
+  COMMENT_DATA_REQUIRED: 'اطلاعات و متن دیدگاه نمی‌تواند خالی باشد.',
+  COMMENT_ACCESS_DENIED: 'شما اجازه تغییر یا حذف این دیدگاه را ندارید.',
+  COMMENT_NO_FIELDS_TO_UPDATE: 'هیچ فیلدی برای به‌روزرسانی دیدگاه ارسال نشده است.',
+  COMMENT_CREATE_FAILED: 'خطایی در ثبت و ایجاد دیدگاه رخ داد. لطفا مجددا تلاش کنید.',
+  COMMENT_UPDATE_FAILED: 'خطایی در ویرایش دیدگاه رخ داد. لطفا مجددا تلاش کنید.',
+  COMMENT_DELETE_FAILED: 'خطایی در حذف دیدگاه رخ داد. لطفا مجددا تلاش کنید.',
+
   // Business Logic
   USER_NOT_FOUND: 'کاربر یافت نشد.',
   INVALID_OTP: 'کد وارد شده نامعتبر است.',
