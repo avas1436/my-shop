@@ -201,7 +201,6 @@
               @update:model-value="attr.value = $event"
               @blur="patchProductAttribute(attr.product_attribute_id, attr.value)"
             />
-
             <BaseButton
               variant="danger-ghost"
               size="sm"
@@ -219,7 +218,6 @@
         </p>
       </div>
 
-      <!-- افزودن ویژگی جدید -->
       <div class="grid gap-3 pt-4 border-t border-dashed border-border-light">
         <label class="text-sm font-bold text-text-muted">افزودن ویژگی جدید</label>
         <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
@@ -323,7 +321,6 @@
             </p>
           </div>
 
-          <!-- افزودن ویژگی به واریانت -->
           <div class="grid gap-3 pt-3 border-t border-dashed border-border-light">
             <label class="text-xs font-bold text-text-muted">افزودن ویژگی جدید به این تنوع</label>
             <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
@@ -352,13 +349,11 @@
                   </li>
                 </ul>
               </div>
-
               <BaseInput
                 v-model="variant.tmp_value"
                 placeholder="مقدار ویژگی..."
                 class="w-full sm:w-1/2"
               />
-
               <BaseButton
                 variant="primary"
                 size="md"
@@ -429,7 +424,7 @@ import {
   TagIcon,
   Trash2Icon,
   XIcon,
-} from '@lucide/vue'
+} from '@lucide/vue‍'
 import { inject, ref, watch } from 'vue'
 
 const product = inject('product')
@@ -656,8 +651,6 @@ const handleSyncTags = async () => {
 // ==============================
 const showDeleteAttributeConfirm = ref(false)
 const attributeToDelete = ref(null)
-
-// جستجوی مشترک ویژگی‌ها (برای هر دو محصول و واریانت)
 const searchedAttributes = ref([])
 const isSearchingAttributes = ref(false)
 let attributeSearchTimeout = null
@@ -685,7 +678,6 @@ const searchAttributes = (query) => {
   }, 400)
 }
 
-// ویژگی محصول
 const productAttrSearch = ref('')
 const newAttribute = ref({ id: '', value: '' })
 
@@ -701,12 +693,9 @@ const patchProductAttribute = async (productAttributeId, value) => {
   try {
     await attributeService.updateProductAttribute(productAttributeId, {
       product_id: product.value.id,
-      value: value,
+      value,
     })
-    errorStore.addError({
-      type: 'success',
-      message: 'ویژگی با موفقیت بروزرسانی شد.',
-    })
+    errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت بروزرسانی شد.' })
   } catch (error) {
     errorStore.addError({
       type: 'error',
@@ -717,10 +706,7 @@ const patchProductAttribute = async (productAttributeId, value) => {
 
 const addProductAttribute = async () => {
   if (!newAttribute.value.id || !newAttribute.value.value) {
-    errorStore.addError({
-      type: 'warning',
-      message: 'لطفاً نام و مقدار ویژگی را وارد کنید.',
-    })
+    errorStore.addError({ type: 'warning', message: 'لطفاً نام و مقدار ویژگی را وارد کنید.' })
     return
   }
   try {
@@ -740,7 +726,6 @@ const addProductAttribute = async () => {
   }
 }
 
-// حذف ویژگی محصول
 const requestDeleteAttribute = (attributeId) => {
   attributeToDelete.value = attributeId
   showDeleteAttributeConfirm.value = true
@@ -748,9 +733,7 @@ const requestDeleteAttribute = (attributeId) => {
 
 const confirmDeleteAttribute = async () => {
   if (!attributeToDelete.value) return
-
   const success = await removeProductAttribute(attributeToDelete.value)
-
   if (success) {
     showDeleteAttributeConfirm.value = false
     attributeToDelete.value = null
@@ -763,39 +746,31 @@ const removeProductAttribute = async (attributeId) => {
       product_id: product.value.id,
       product_attribute_id: attributeId,
     })
-
     await refreshProductData()
-
-    errorStore.addError({
-      type: 'success',
-      message: 'ویژگی با موفقیت حذف شد.',
-    })
-
+    errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت حذف شد.' })
     return true
   } catch (error) {
     errorStore.addError({
       type: 'error',
       message: getErrorMessage(error.code) || 'خطا در حذف ویژگی.',
     })
-
     return false
   }
 }
 
+// ==============================
 // ویژگی واریانت
+// ==============================
 const activeSearchingVariantId = ref(null)
 
-// ۲. اصلاح تابع جستجو به صورت مستقل
 const searchVariantAttributes = (variant, query) => {
   variant.tmp_search = query
-  variant.tmp_attribute_id = '' // ریست کردن آیدی قبلی به محض تایپ جدید
-  activeSearchingVariantId.value = variant.id // مشخص کردن واریانت فعال
-
+  variant.tmp_attribute_id = ''
+  activeSearchingVariantId.value = variant.id
   if (!query?.trim()) {
     searchedAttributes.value = []
     return
   }
-
   clearTimeout(attributeSearchTimeout)
   attributeSearchTimeout = setTimeout(async () => {
     isSearchingAttributes.value = true
@@ -832,13 +807,9 @@ const patchProductVariantAttribute = async (productVariantAttributeId, value) =>
   try {
     await attributeService.updateProductVariantAttribute(productVariantAttributeId, {
       product_id: product.value.id,
-      value: value,
+      value,
     })
-
-    errorStore.addError({
-      type: 'success',
-      message: 'ویژگی با موفقیت بروزرسانی شد.',
-    })
+    errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت بروزرسانی شد.' })
   } catch (error) {
     errorStore.addError({
       type: 'error',
@@ -855,7 +826,6 @@ const addProductVariantAttribute = async (variant) => {
     })
     return
   }
-
   try {
     await attributeService.createProductVariantAttribute({
       product_id: product.value.id,
@@ -863,12 +833,9 @@ const addProductVariantAttribute = async (variant) => {
       attribute_id: variant.tmp_attribute_id,
       value: variant.tmp_value,
     })
-
-    // ریست کردن فیلدهای موقت
     variant.tmp_attribute_id = ''
     variant.tmp_value = ''
     variant.tmp_search = ''
-
     await refreshProductData()
     errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت به تنوع اضافه شد.' })
   } catch (error) {
