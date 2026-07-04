@@ -150,6 +150,7 @@ LEFT JOIN LATERAL (
 LEFT JOIN LATERAL (
     SELECT json_agg(
         json_build_object(
+            'product_attribute_id', pattr.id,
             'attribute_id', attr.id,
             'name', attr.name,
             'value', pattr.value,
@@ -200,6 +201,7 @@ LEFT JOIN LATERAL (
                     (
                         SELECT json_agg(
                             json_build_object(
+                                'product_variant_attribute_id', pva.id,
                                 'attribute_id', atr.id,
                                 'name', atr.name,
                                 'value', pva.value,

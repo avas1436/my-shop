@@ -47,7 +47,17 @@ class DraftProductCreate(BaseModel):
 # =========================================================
 # Get attribute, product attribute and product variant attribute
 # =========================================================
-class AttributeItem(BaseModel):
+class ProductAttributeItem(BaseModel):
+    product_attribute_id: int
+    attribute_id: int
+    name: str | None
+    value: str
+    scope: str
+    variant_id: int | None = None
+
+
+class VariantAttributeItem(BaseModel):
+    product_variant_attribute_id: int
     attribute_id: int
     name: str | None
     value: str
@@ -72,7 +82,7 @@ class InventoryItem(BaseModel):
     updated_at: datetime | None
     available_quantity: int
     is_in_stock: bool
-    attributes: list[AttributeItem]
+    attributes: list[VariantAttributeItem]
 
 
 # =========================================================
@@ -128,7 +138,7 @@ class ProductAdminRead(BaseModel):
 
     inventory: list[InventoryItem] = Field(default_factory=list)
 
-    attributes: list[AttributeItem] = Field(default_factory=list)
+    attributes: list[ProductAttributeItem] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -326,7 +336,7 @@ class ProductFullUserRead(BaseModel):
 
     inventory: list[InventoryItem] = Field(default_factory=list)
 
-    attributes: list[AttributeItem] = Field(default_factory=list)
+    attributes: list[ProductAttributeItem] = Field(default_factory=list)
 
     comments: list[CommentRead] = Field(default_factory=list)
 
