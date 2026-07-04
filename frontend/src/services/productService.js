@@ -389,22 +389,22 @@ export const inventoryService = {
 export const commentService = {
   // ۱. ثبت نظر جدید
   async createComment(commentData) {
-    return await axiosClient.post(`${BASE_URL}/`, commentData)
+    return await axiosClient.post(`/v1/comments/`, commentData)
   },
 
   // ۲. دریافت لیست نظرات
   async listComments() {
-    return await axiosClient.get(`${BASE_URL}/`)
+    return await axiosClient.get(`/v1/comments/`)
   },
 
   // ۳. به‌روزرسانی نظر
   async updateComment(commentId, updateData) {
-    return await axiosClient.put(`${BASE_URL}/${commentId}`, updateData)
+    return await axiosClient.put(`/v1/comments/${commentId}`, updateData)
   },
 
   // ۴. حذف نظر
   async deleteComment(commentId) {
-    return await axiosClient.delete(`${BASE_URL}/${commentId}`)
+    return await axiosClient.delete(`/v1/comments/${commentId}`)
   },
 }
 

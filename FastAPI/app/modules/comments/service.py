@@ -150,7 +150,7 @@ class CommentService:
         if not comment:
             raise NotFound("Comment not found.")
 
-        if user.role != UserRole.ADMIN and comment.user_id != user.id:
+        if user.role != UserRole.ADMIN or comment.user_id != user.id:
             raise Forbidden("Cant change this comment")
 
         payload = data.model_dump(exclude_unset=True)
@@ -192,7 +192,7 @@ class CommentService:
         if not comment:
             raise NotFound("Comment not found.")
 
-        if user.role != UserRole.ADMIN and comment.user_id != user.id:
+        if user.role != UserRole.ADMIN or comment.user_id != user.id:
             raise Forbidden("Cant change this comment")
 
         try:

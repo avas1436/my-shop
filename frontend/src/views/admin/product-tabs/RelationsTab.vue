@@ -424,7 +424,7 @@ import {
   TagIcon,
   Trash2Icon,
   XIcon,
-} from '@lucide/vue‍'
+} from '@lucide/vue'
 import { inject, ref, watch } from 'vue'
 
 const product = inject('product')
