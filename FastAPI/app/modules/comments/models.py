@@ -58,4 +58,11 @@ class Comment(Base):
     product = relationship("Product", back_populates="comments")
     user = relationship("User", back_populates="comments")
 
-    __table_args__ = (Index("ix_comments_product_user", "product_id", "user_id"),)
+    __table_args__ = (
+        Index(
+            "ix_comments_product_created_rating",
+            "product_id",
+            "created_at",
+            "rating",
+        ),
+    )
