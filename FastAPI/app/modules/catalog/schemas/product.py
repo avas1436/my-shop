@@ -3,7 +3,14 @@ import re
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from app.common.enums import ProductStatus
 from app.modules.catalog.schemas.brand import BrandRead
@@ -86,6 +93,28 @@ class InventoryItem(BaseModel):
 
 
 # =========================================================
+# Show Comments for admin and user
+# =========================================================
+class UserCommentItem(BaseModel):
+    id: int
+    author_name: str
+    content: str
+    rating: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdminCommentItem(BaseModel):
+    id: int
+    user_id: int
+    rating: int
+    content: str
+    author_name: str
+    created_at: datetime
+    updated_at: datetime
+
+
+# =========================================================
 # Get Product Data for Admin
 # =========================================================
 class ProductAdminRead(BaseModel):
@@ -139,6 +168,14 @@ class ProductAdminRead(BaseModel):
     inventory: list[InventoryItem] = Field(default_factory=list)
 
     attributes: list[ProductAttributeItem] = Field(default_factory=list)
+
+    comments: list[AdminCommentItem] = Field(default_factory=list)
+
+    average_rating: float = Field(default=0.0)
+
+    @field_serializer("average_rating")
+    def format_rating(self, value: float):
+        return round(value or 0.0, 2)
 
     model_config = ConfigDict(from_attributes=True)
 

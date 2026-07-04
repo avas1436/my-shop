@@ -89,7 +89,7 @@ SELECT
     COALESCE(img_agg.images, '[]'::json) AS images,
     COALESCE(inv_agg.inventory, '[]'::json) AS inventory,
     COALESCE(attr_agg.attributes, '[]'::json) AS attributes,
-    COALESCE(comment_agg.avg_rating, 0) AS avg_rating,
+    COALESCE(comment_agg.average_rating, 0) AS average_rating,
     COALESCE(comment_agg.comments, '[]'::json) AS comments
 
 FROM products p
@@ -230,7 +230,7 @@ LEFT JOIN LATERAL (
 -- کامنت‌ها و میانگین امتیاز
 LEFT JOIN LATERAL (
     SELECT
-        AVG(c.rating) AS avg_rating,
+        AVG(c.rating) AS average_rating,
         (
             SELECT json_agg(
                 json_build_object(
@@ -315,3 +315,7 @@ class ProductAdminView(Base):
     images = Column(JSONB)
     inventory = Column(JSONB)
     attributes = Column(JSONB)
+
+    # کامنت‌ها و امتیاز
+    average_rating = Column(Float)
+    comments = Column(JSONB)
