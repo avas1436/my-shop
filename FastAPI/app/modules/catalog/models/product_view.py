@@ -88,7 +88,9 @@ SELECT
     COALESCE(tag_agg.tags, '[]'::json) AS tags,
     COALESCE(img_agg.images, '[]'::json) AS images,
     COALESCE(inv_agg.inventory, '[]'::json) AS inventory,
-    COALESCE(attr_agg.attributes, '[]'::json) AS attributes
+    COALESCE(attr_agg.attributes, '[]'::json) AS attributes,
+    COALESCE(comment_agg.avg_rating, 0) AS avg_rating,
+    COALESCE(comment_agg.comments, '[]'::json) AS comments
 
 FROM products p
 
@@ -223,7 +225,36 @@ LEFT JOIN LATERAL (
         JOIN inventories inv ON inv.variant_id = var.id
         WHERE var.product_id = p.id
     ) inv_row
-) inv_agg ON true;
+) inv_agg ON true
+
+-- کامنت‌ها و میانگین امتیاز
+LEFT JOIN LATERAL (
+    SELECT
+        AVG(c.rating) AS avg_rating,
+        (
+            SELECT json_agg(
+                json_build_object(
+                    'id', c2.id,
+                    'user_id', c2.user_id,
+                    'rating', c2.rating,
+                    'content', c2.content,
+                    'author_name', c2.author_name,
+                    'created_at', c2.created_at,
+                    'updated_at', c2.updated_at
+                )
+                ORDER BY c2.created_at DESC
+            )
+            FROM (
+                SELECT *
+                FROM comments
+                WHERE product_id = p.id
+                ORDER BY created_at DESC
+                LIMIT 10
+            ) c2
+        ) AS comments
+    FROM comments c
+    WHERE c.product_id = p.id
+) comment_agg ON true;
 """
 
 DROP_PRODUCT_ADMIN_VIEW_SQL = "DROP VIEW IF EXISTS product_admin_view;"
