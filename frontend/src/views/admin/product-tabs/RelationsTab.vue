@@ -859,7 +859,7 @@ const addProductVariantAttribute = async (variant) => {
   try {
     await attributeService.createProductVariantAttribute({
       product_id: product.value.id,
-      variant_id: variant.id,
+      variant_id: variant.variant_id,
       attribute_id: variant.tmp_attribute_id,
       value: variant.tmp_value,
     })
@@ -868,7 +868,6 @@ const addProductVariantAttribute = async (variant) => {
     variant.tmp_attribute_id = ''
     variant.tmp_value = ''
     variant.tmp_search = ''
-    // variantAttrSearch پاک شد
 
     await refreshProductData()
     errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت به تنوع اضافه شد.' })
