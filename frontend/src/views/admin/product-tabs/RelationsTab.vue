@@ -199,13 +199,13 @@
               :model-value="attr.value"
               class="flex-1"
               @update:model-value="attr.value = $event"
-              @blur="patchProductAttribute(attr.attribute_id, attr.value)"
+              @blur="patchProductAttribute(attr.product_attribute_id, attr.value)"
             />
 
             <BaseButton
               variant="danger-ghost"
               size="sm"
-              @click="requestDeleteAttribute(attr.attribute_id)"
+              @click="requestDeleteAttribute(attr.product_attribute_id)"
             >
               <Trash2Icon class="w-4 h-4" />
             </BaseButton>
@@ -302,12 +302,14 @@
                   :model-value="attr.value"
                   class="flex-1"
                   @update:model-value="attr.value = $event"
-                  @blur="patchProductVariantAttribute(attr.id, attr.value)"
+                  @blur="
+                    patchProductVariantAttribute(attr.product_variant_attribute_id, attr.value)
+                  "
                 />
                 <BaseButton
                   variant="danger-ghost"
                   size="sm"
-                  @click="removeProductVariantAttribute(attr.id)"
+                  @click="removeProductVariantAttribute(attr.product_variant_attribute_id)"
                 >
                   <Trash2Icon class="w-4 h-4" />
                 </BaseButton>
@@ -327,56 +329,41 @@
             <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
               <div class="relative w-full sm:w-1/2">
                 <BaseInput
-                  :model-value="
-                    newVariantAttribute.variant_id === variant.id ? variantAttrSearch : ''
-                  "
+                  :model-value="variant.tmp_search || ''"
                   placeholder="جستجوی نام ویژگی..."
-                  @update:model-value="
-                    (val) => {
-                      variantAttrSearch = val
-                      newVariantAttribute.variant_id = variant.id
-                      newVariantAttribute.attribute_id = ''
-                    }
-                  "
-                  @focus="newVariantAttribute.variant_id = variant.id"
+                  @update:model-value="(val) => searchVariantAttributes(variant, val)"
                 />
                 <ul
                   v-if="
-                    newVariantAttribute.variant_id === variant.id &&
-                    variantAttrSearch &&
-                    searchedAttributes.length &&
-                    !newVariantAttribute.attribute_id
+                    variant.tmp_search &&
+                    activeSearchingVariantId === variant.id &&
+                    getFilteredVariantAttributes(variant).length &&
+                    !variant.tmp_attribute_id
                   "
                   class="absolute top-full right-0 left-0 z-20 mt-1 p-0 m-0 list-none bg-white border border-border-light rounded-xl shadow-(--shadow-soft) max-h-50 overflow-y-auto"
                 >
                   <li
-                    v-for="sa in searchedAttributes"
+                    v-for="sa in getFilteredVariantAttributes(variant)"
                     :key="sa.id"
                     class="px-4 py-2.5 hover:bg-bg-muted cursor-pointer text-sm border-b border-border-light last:border-0"
-                    @click="selectVariantAttribute(sa)"
+                    @click="selectVariantAttribute(variant, sa)"
                   >
                     {{ sa.name }}
                   </li>
                 </ul>
               </div>
+
               <BaseInput
-                :model-value="
-                  newVariantAttribute.variant_id === variant.id ? newVariantAttribute.value : ''
-                "
+                v-model="variant.tmp_value"
                 placeholder="مقدار ویژگی..."
                 class="w-full sm:w-1/2"
-                @update:model-value="
-                  (val) => {
-                    newVariantAttribute.value = val
-                    newVariantAttribute.variant_id = variant.id
-                  }
-                "
               />
+
               <BaseButton
                 variant="primary"
                 size="md"
                 class="w-full sm:w-auto shrink-0"
-                @click="addProductVariantAttribute"
+                @click="addProductVariantAttribute(variant)"
               >
                 <PlusIcon class="w-4 h-4" /> افزودن
               </BaseButton>
@@ -430,12 +417,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseModal from '@/components/base/BaseModal.vue'
 import BaseSkeleton from '@/components/base/BaseSkeleton.vue'
-import {
-  attributeService,
-  categoryService,
-  productService,
-  tagService,
-} from '@/services/productService'
+import { attributeService, categoryService, tagService } from '@/services/productService'
 import { useErrorStore } from '@/stores/errorStore'
 import { getErrorMessage } from '@/utils/errorMessages'
 import {
@@ -675,18 +657,6 @@ const handleSyncTags = async () => {
 const showDeleteAttributeConfirm = ref(false)
 const attributeToDelete = ref(null)
 
-const requestDeleteAttribute = (attributeId) => {
-  attributeToDelete.value = attributeId
-  showDeleteAttributeConfirm.value = true
-}
-
-const confirmDeleteAttribute = async () => {
-  if (!attributeToDelete.value) return
-  showDeleteAttributeConfirm.value = false
-  await removeProductAttribute(attributeToDelete.value)
-  attributeToDelete.value = null
-}
-
 // جستجوی مشترک ویژگی‌ها (برای هر دو محصول و واریانت)
 const searchedAttributes = ref([])
 const isSearchingAttributes = ref(false)
@@ -733,6 +703,10 @@ const patchProductAttribute = async (productAttributeId, value) => {
       product_id: product.value.id,
       value: value,
     })
+    errorStore.addError({
+      type: 'success',
+      message: 'ویژگی با موفقیت بروزرسانی شد.',
+    })
   } catch (error) {
     errorStore.addError({
       type: 'error',
@@ -743,7 +717,10 @@ const patchProductAttribute = async (productAttributeId, value) => {
 
 const addProductAttribute = async () => {
   if (!newAttribute.value.id || !newAttribute.value.value) {
-    errorStore.addError({ type: 'warning', message: 'لطفاً نام و مقدار ویژگی را وارد کنید.' })
+    errorStore.addError({
+      type: 'warning',
+      message: 'لطفاً نام و مقدار ویژگی را وارد کنید.',
+    })
     return
   }
   try {
@@ -763,39 +740,104 @@ const addProductAttribute = async () => {
   }
 }
 
+// حذف ویژگی محصول
+const requestDeleteAttribute = (attributeId) => {
+  attributeToDelete.value = attributeId
+  showDeleteAttributeConfirm.value = true
+}
+
+const confirmDeleteAttribute = async () => {
+  if (!attributeToDelete.value) return
+
+  const success = await removeProductAttribute(attributeToDelete.value)
+
+  if (success) {
+    showDeleteAttributeConfirm.value = false
+    attributeToDelete.value = null
+  }
+}
+
 const removeProductAttribute = async (attributeId) => {
   try {
-    await productService.detachAttribute(attributeId, {
+    await attributeService.deleteProductAttribute(attributeId, {
       product_id: product.value.id,
       product_attribute_id: attributeId,
     })
+
     await refreshProductData()
-    errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت حذف شد.' })
+
+    errorStore.addError({
+      type: 'success',
+      message: 'ویژگی با موفقیت حذف شد.',
+    })
+
+    return true
   } catch (error) {
     errorStore.addError({
       type: 'error',
       message: getErrorMessage(error.code) || 'خطا در حذف ویژگی.',
     })
+
+    return false
   }
 }
 
 // ویژگی واریانت
-const variantAttrSearch = ref('')
-const newVariantAttribute = ref({ variant_id: '', attribute_id: '', value: '' })
+const activeSearchingVariantId = ref(null)
 
-watch(variantAttrSearch, searchAttributes)
+// ۲. اصلاح تابع جستجو به صورت مستقل
+const searchVariantAttributes = (variant, query) => {
+  variant.tmp_search = query
+  variant.tmp_attribute_id = '' // ریست کردن آیدی قبلی به محض تایپ جدید
+  activeSearchingVariantId.value = variant.id // مشخص کردن واریانت فعال
 
-const selectVariantAttribute = (sa) => {
-  newVariantAttribute.value.attribute_id = sa.id
-  variantAttrSearch.value = sa.name
-  searchedAttributes.value = []
+  if (!query?.trim()) {
+    searchedAttributes.value = []
+    return
+  }
+
+  clearTimeout(attributeSearchTimeout)
+  attributeSearchTimeout = setTimeout(async () => {
+    isSearchingAttributes.value = true
+    try {
+      const response = await attributeService.listAttributes({ search: query })
+      searchedAttributes.value = response?.items ?? []
+    } catch (error) {
+      errorStore.addError({
+        type: 'error',
+        message: `خطا در جستجوی ویژگی: ${error?.detail?.message || 'خطای سرور'}`,
+      })
+      searchedAttributes.value = []
+    } finally {
+      isSearchingAttributes.value = false
+    }
+  }, 400)
+}
+
+const getFilteredVariantAttributes = (variant) => {
+  if (!searchedAttributes.value || activeSearchingVariantId.value !== variant.id) return []
+  return searchedAttributes.value.filter(
+    (sa) =>
+      !variant.attributes?.some((attr) => attr.attribute_id === sa.id || attr.name === sa.name),
+  )
+}
+
+const selectVariantAttribute = (variant, sa) => {
+  variant.tmp_attribute_id = sa.id
+  variant.tmp_search = sa.name
+  activeSearchingVariantId.value = null
 }
 
 const patchProductVariantAttribute = async (productVariantAttributeId, value) => {
   try {
     await attributeService.updateProductVariantAttribute(productVariantAttributeId, {
       product_id: product.value.id,
-      value,
+      value: value,
+    })
+
+    errorStore.addError({
+      type: 'success',
+      message: 'ویژگی با موفقیت بروزرسانی شد.',
     })
   } catch (error) {
     errorStore.addError({
@@ -805,31 +847,42 @@ const patchProductVariantAttribute = async (productVariantAttributeId, value) =>
   }
 }
 
-const addProductVariantAttribute = async () => {
-  if (
-    !newVariantAttribute.value.attribute_id ||
-    !newVariantAttribute.value.value ||
-    !newVariantAttribute.value.variant_id
-  ) {
-    errorStore.addError({ type: 'warning', message: 'لطفاً نام و مقدار ویژگی را وارد کنید.' })
+const addProductVariantAttribute = async (variant) => {
+  if (!variant.tmp_attribute_id || !variant.tmp_value) {
+    errorStore.addError({
+      type: 'warning',
+      message: 'لطفاً نام و مقدار ویژگی را از لیست انتخاب و وارد کنید.',
+    })
     return
   }
+
   try {
-    await attributeService.attachProductVariantAttribute(newVariantAttribute.value)
-    newVariantAttribute.value = { variant_id: '', attribute_id: '', value: '' }
-    variantAttrSearch.value = ''
+    await attributeService.createProductVariantAttribute({
+      product_id: product.value.id,
+      variant_id: variant.id,
+      attribute_id: variant.tmp_attribute_id,
+      value: variant.tmp_value,
+    })
+
+    // ریست کردن فیلدهای موقت
+    variant.tmp_attribute_id = ''
+    variant.tmp_value = ''
+    variant.tmp_search = ''
+    // variantAttrSearch پاک شد
+
     await refreshProductData()
+    errorStore.addError({ type: 'success', message: 'ویژگی با موفقیت به تنوع اضافه شد.' })
   } catch (error) {
     errorStore.addError({
       type: 'error',
-      message: getErrorMessage(error.code) || 'خطا در افزودن ویژگی.',
+      message: getErrorMessage(error.code) || 'خطا در افزودن ویژگی به تنوع.',
     })
   }
 }
 
 const removeProductVariantAttribute = async (productVariantAttributeId) => {
   try {
-    await attributeService.detachProductVariantAttribute(productVariantAttributeId, {
+    await attributeService.deleteProductVariantAttribute(productVariantAttributeId, {
       product_id: product.value.id,
       product_variant_attribute_id: productVariantAttributeId,
     })

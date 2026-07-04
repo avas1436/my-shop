@@ -60,6 +60,7 @@ class ProductAttributeRead(BaseModel):
 # Product Variant Attribure Schema
 # --------------------------------------------------
 class ProductVariantAttributeCreate(BaseModel):
+    product_id: int
     variant_id: int
     attribute_id: int
     value: str = Field(..., max_length=255)

@@ -279,7 +279,9 @@ export const attributeService = {
 
   // ۹. حذف ویژگی یک محصول
   async deleteProductAttribute(paId, data) {
-    return await axiosClient.delete(`/v1/attributes/product/${paId}`, data)
+    return await axiosClient.delete(`/v1/attributes/product/${paId}`, {
+      data,
+    })
   },
 
   // ۱۰. دریافت لیست تمام ویژگی‌های متصل به محصولات
@@ -306,7 +308,7 @@ export const attributeService = {
 
   // ۱۴. حذف ویژگی یک متغیر محصول
   async deleteProductVariantAttribute(pvaId, data) {
-    return await axiosClient.delete(`/v1/attributes/product/variant/${pvaId}`, data)
+    return await axiosClient.delete(`/v1/attributes/product/variant/${pvaId}`, { data })
   },
 
   // ۱۵. دریافت لیست ویژگی‌های متغیر محصولات
