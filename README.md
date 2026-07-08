@@ -1,4 +1,4 @@
-# ShopVerse
+# Shop
 
 A comprehensive, high-performance e-commerce platform built with a microservices-inspired architecture. This project delivers a modern, responsive user interface with native Right-to-Left (RTL) support, powered by a robust dual-backend system designed for scalability and speed.
 
